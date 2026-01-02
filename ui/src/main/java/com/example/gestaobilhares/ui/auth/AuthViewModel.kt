@@ -297,36 +297,134 @@ class AuthViewModel @Inject constructor(
                 // (isso já foi tratado no bloco de login online acima)
                 
                 // ✅ CORREÇÃO CRÍTICA: Se não encontrou localmente E estiver online, buscar na nuvem
+                // Isso é especialmente importante quando o app foi limpo e o usuário existe na nuvem
                 if (colaborador == null && online) {
                     Timber.d("AuthViewModel", "🔍 Colaborador não encontrado localmente. Buscando na nuvem...")
-                    val result = buscarColaboradorNaNuvemPorEmail(email)
-                    if (result != null) {
-                        colaborador = result.first
-                        Timber.d("AuthViewModel", "✅ Colaborador encontrado na nuvem: ${colaborador.nome}")
-                        // Salvar colaborador localmente para próximos logins offline
-                        try {
-                            appRepository.inserirColaborador(colaborador)
-                            Timber.d("AuthViewModel", "✅ Colaborador salvo localmente")
-                        } catch (e: Exception) {
-                            Timber.w("AuthViewModel", "⚠️ Erro ao salvar colaborador localmente: ${e.message}")
+                    try {
+                        val result = buscarColaboradorNaNuvemPorEmail(email)
+                        if (result != null) {
+                            colaborador = result.first
+                            val detectedCompanyId = result.second
+                            Timber.d("AuthViewModel", "✅ Colaborador encontrado na nuvem: ${colaborador.nome}")
+                            Timber.d("AuthViewModel", "   Aprovado: ${colaborador.aprovado}")
+                            Timber.d("AuthViewModel", "   Ativo: ${colaborador.ativo}")
+                            Timber.d("AuthViewModel", "   Primeiro acesso: ${colaborador.primeiroAcesso}")
+                            Timber.d("AuthViewModel", "   Senha temporária presente: ${colaborador.senhaTemporaria != null}")
+                            
+                            // ✅ CORREÇÃO CRÍTICA: Verificar se está aprovado ANTES de salvar
+                            if (!colaborador.aprovado) {
+                                Timber.w("AuthViewModel", "❌ Colaborador encontrado na nuvem mas não está aprovado")
+                                _errorMessage.value = "Sua conta está aguardando aprovação do administrador."
+                                hideLoading()
+                                return@launch
+                            }
+                            
+                            if (!colaborador.ativo) {
+                                Timber.w("AuthViewModel", "❌ Colaborador encontrado na nuvem mas está inativo")
+                                _errorMessage.value = "Sua conta está inativa. Contate o administrador."
+                                hideLoading()
+                                return@launch
+                            }
+                            
+                            // Salvar colaborador localmente para próximos logins offline
+                            try {
+                                appRepository.inserirColaborador(colaborador)
+                                Timber.d("AuthViewModel", "✅ Colaborador salvo localmente")
+                            } catch (e: Exception) {
+                                Timber.w("AuthViewModel", "⚠️ Erro ao salvar colaborador localmente: ${e.message}")
+                                // Continuar mesmo com erro - o colaborador foi encontrado na nuvem
+                            }
+                            
+                            // ✅ CORREÇÃO CRÍTICA: Validar senha e verificar primeiro acesso IMEDIATAMENTE
+                            // Usar mesma lógica de validação de senha
+                            val senhaLimpa = senha.trim()
+                            val senhaHashLimpa = colaborador.senhaHash?.trim()
+                            val senhaTemporariaLimpa = colaborador.senhaTemporaria?.trim()
+                            
+                            Timber.d("AuthViewModel", "🔍 Validação de senha (DADOS DA NUVEM - LOGIN OFFLINE):")
+                            Timber.d("AuthViewModel", "   Senha fornecida: '${senhaLimpa}' (${senhaLimpa.length} caracteres)")
+                            Timber.d("AuthViewModel", "   Hash armazenado: ${if (senhaHashLimpa != null) "'$senhaHashLimpa' (${senhaHashLimpa.length} caracteres)" else "ausente"}")
+                            Timber.d("AuthViewModel", "   Senha temporária: ${if (senhaTemporariaLimpa != null) "'$senhaTemporariaLimpa' (${senhaTemporariaLimpa.length} caracteres)" else "ausente"}")
+                            
+                            val senhaValida = when {
+                                senhaHashLimpa != null && senhaLimpa == senhaHashLimpa -> {
+                                    Timber.d("AuthViewModel", "✅ Senha pessoal válida")
+                                    true
+                                }
+                                senhaTemporariaLimpa != null && senhaLimpa == senhaTemporariaLimpa -> {
+                                    Timber.d("AuthViewModel", "✅ Senha temporária válida")
+                                    true
+                                }
+                                else -> {
+                                    Timber.d("AuthViewModel", "❌ Senha inválida")
+                                    false
+                                }
+                            }
+                            
+                            if (!senhaValida) {
+                                Timber.w("AuthViewModel", "❌ Senha inválida para colaborador da nuvem")
+                                _errorMessage.value = "Senha incorreta"
+                                hideLoading()
+                                return@launch
+                            }
+                            
+                            // ✅ CORREÇÃO CRÍTICA: Verificar se é primeiro acesso (exceto superadmin)
+                            val isSuperAdmin = email == "rossinys@gmail.com"
+                            val isPrimeiroAcesso = !isSuperAdmin && 
+                                                  colaborador.primeiroAcesso && 
+                                                  colaborador.senhaHash == null &&
+                                                  senhaTemporariaLimpa != null && 
+                                                  senhaLimpa == senhaTemporariaLimpa
+                            
+                            Timber.d("AuthViewModel", "🔍 Verificação de primeiro acesso (DADOS DA NUVEM):")
+                            Timber.d("AuthViewModel", "   É superadmin: $isSuperAdmin")
+                            Timber.d("AuthViewModel", "   Primeiro acesso flag: ${colaborador.primeiroAcesso}")
+                            Timber.d("AuthViewModel", "   SenhaHash presente: ${colaborador.senhaHash != null}")
+                            Timber.d("AuthViewModel", "   Senha temporária presente: ${senhaTemporariaLimpa != null}")
+                            Timber.d("AuthViewModel", "   Senha corresponde à temporária: ${senhaLimpa == senhaTemporariaLimpa}")
+                            Timber.d("AuthViewModel", "   É primeiro acesso: $isPrimeiroAcesso")
+                            
+                            if (isPrimeiroAcesso) {
+                                Timber.d("AuthViewModel", "⚠️ PRIMEIRO ACESSO DETECTADO (DADOS DA NUVEM) - Redirecionando para alteração de senha")
+                                // ✅ CORREÇÃO CRÍTICA: Iniciar sessão ANTES de redirecionar
+                                userSessionManager.startSession(colaborador, detectedCompanyId)
+                                Timber.d("AuthViewModel", "✅ Sessão iniciada para primeiro acesso: ${colaborador.nome}")
+                                
+                                _authState.value = AuthState.FirstAccessRequired(colaborador)
+                                hideLoading()
+                                return@launch
+                            }
+                            
+                            // ✅ Se não é primeiro acesso, continuar com o fluxo normal de login offline
+                            // (o código abaixo já trata isso)
+                        } else {
+                            Timber.w("AuthViewModel", "⚠️ Colaborador não encontrado na nuvem")
                         }
+                    } catch (e: Exception) {
+                        Timber.e("AuthViewModel", "❌ Erro ao buscar colaborador na nuvem: ${e.message}", e)
+                        // Continuar para tentar outras formas de login
                     }
                 } else if (colaborador != null && online) {
                     // ✅ NOVO: Se encontrou localmente E estiver online, verificar se há atualizações na nuvem
                     Timber.d("AuthViewModel", "🔍 Colaborador encontrado localmente. Verificando atualizações na nuvem...")
-                    val result = buscarColaboradorNaNuvemPorEmail(email)
-                    if (result != null) {
-                        val colaboradorNuvem = result.first
-                        Timber.d("AuthViewModel", "✅ Colaborador encontrado na nuvem. Atualizando dados locais...")
-                        // Atualizar colaborador local com dados da nuvem (preservando ID local)
-                        val colaboradorAtualizado = colaboradorNuvem.copy(id = colaborador.id)
-                        try {
-                            appRepository.atualizarColaborador(colaboradorAtualizado)
-                            colaborador = colaboradorAtualizado
-                            Timber.d("AuthViewModel", "✅ Colaborador atualizado com dados da nuvem")
-                        } catch (e: Exception) {
-                            Timber.w("AuthViewModel", "⚠️ Erro ao atualizar colaborador local: ${e.message}")
+                    try {
+                        val result = buscarColaboradorNaNuvemPorEmail(email)
+                        if (result != null) {
+                            val colaboradorNuvem = result.first
+                            Timber.d("AuthViewModel", "✅ Colaborador encontrado na nuvem. Atualizando dados locais...")
+                            // Atualizar colaborador local com dados da nuvem (preservando ID local)
+                            val colaboradorAtualizado = colaboradorNuvem.copy(id = colaborador.id)
+                            try {
+                                appRepository.atualizarColaborador(colaboradorAtualizado)
+                                colaborador = colaboradorAtualizado
+                                Timber.d("AuthViewModel", "✅ Colaborador atualizado com dados da nuvem")
+                            } catch (e: Exception) {
+                                Timber.w("AuthViewModel", "⚠️ Erro ao atualizar colaborador local: ${e.message}")
+                            }
                         }
+                    } catch (e: Exception) {
+                        Timber.w("AuthViewModel", "⚠️ Erro ao buscar atualizações na nuvem: ${e.message}")
+                        // Continuar com dados locais
                     }
                 }
                 
