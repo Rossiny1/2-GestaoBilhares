@@ -17,6 +17,7 @@ import com.google.firebase.Timestamp
 import com.google.firebase.firestore.Query
 import com.google.firebase.firestore.DocumentSnapshot
 import kotlinx.coroutines.tasks.await
+import kotlinx.coroutines.CancellationException
 import timber.log.Timber
 import java.util.Date
 import java.time.LocalDateTime
@@ -559,6 +560,10 @@ abstract class BaseSyncHandler(
                 hasMore = documents.size == batchSize
                 lastDocument = documents.lastOrNull()
                 
+            } catch (e: CancellationException) {
+                // ✅ CORREÇÃO: CancellationException deve ser re-lançada para propagar cancelamento
+                Timber.tag(TAG).d("⏹️ Operação de paginação cancelada")
+                throw e
             } catch (e: Exception) {
                 Timber.tag(TAG).e("❌ Erro ao processar lote paginado: ${e.message}", e)
                 hasMore = false
