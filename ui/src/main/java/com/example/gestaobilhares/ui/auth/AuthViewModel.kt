@@ -259,13 +259,13 @@ class AuthViewModel @Inject constructor(
                             val uid = result.user!!.uid
                             val nomeUsuario = result.user!!.displayName ?: email.split("@")[0]
                             
-                            // ✅ CORREÇÃO: Usar getOrCreateColaborador ao invés de criarOuAtualizarColaboradorOnline
-                            // Isso garante que o colaborador seja criado automaticamente se não existir
+                            // ✅ CORREÇÃO DEFINITIVA: Usar APENAS busca por UID (não usar fallback por email)
+                            // Isso garante que estamos lendo o documento correto do novo schema
                             var colaborador = getOrCreateColaborador(uid, email, nomeUsuario, "empresa_001")
                             
-                            // Se ainda não encontrou (erro na criação), tentar método antigo como último recurso
-                            if (colaborador == null) {
-                                Timber.w("AuthViewModel", "⚠️ getOrCreateColaborador retornou null, tentando método antigo...")
+                            // Se ainda não encontrou, tentar método antigo APENAS para superadmin
+                            if (colaborador == null && email == "rossinys@gmail.com") {
+                                Timber.w("AuthViewModel", "⚠️ getOrCreateColaborador retornou null para superadmin, tentando método antigo...")
                                 colaborador = criarOuAtualizarColaboradorOnline(result.user!!, senha)
                             }
                             
@@ -1693,8 +1693,8 @@ class AuthViewModel @Inject constructor(
     /**
      * ✅ NOVO: Converte DocumentSnapshot do Firestore para Colaborador
      * 
-     * ✅ CORREÇÃO BUG APROVADO: Usa valores diretos do documento para campos boolean
-     * para evitar problemas de mapeamento (prefixo 'is', etc)
+     * ✅ CORREÇÃO DEFINITIVA: Com @PropertyName no model, toObject() deve mapear corretamente
+     * Mas ainda usamos valores diretos como fallback de segurança
      */
     private fun converterDocumentoParaColaborador(
         doc: DocumentSnapshot,
@@ -1702,21 +1702,28 @@ class AuthViewModel @Inject constructor(
         colaboradorId: Long = 0L
     ): Colaborador? {
         return try {
-            // ✅ CORREÇÃO: Ler valores boolean diretamente do documento ANTES de converter
+            // ✅ CORREÇÃO: Ler valores boolean diretamente do documento como fallback
             val aprovadoDireto = doc.getBoolean("aprovado") ?: false
             val ativoDireto = doc.getBoolean("ativo") ?: true
             val primeiroAcessoDireto = doc.getBoolean("primeiro_acesso") ?: true
             
-            // Tentar usar toObject primeiro (mais eficiente)
+            // Tentar usar toObject primeiro (com @PropertyName deve funcionar corretamente agora)
             val colaboradorToObject = doc.toObject(Colaborador::class.java)
             if (colaboradorToObject != null) {
-                // ✅ CORREÇÃO: Sempre usar valores diretos do documento para campos boolean
-                return colaboradorToObject.copy(
-                    id = colaboradorId,
-                    aprovado = aprovadoDireto,
-                    ativo = ativoDireto,
-                    primeiroAcesso = primeiroAcessoDireto
-                )
+                // ✅ CORREÇÃO: Validar se o mapeamento funcionou, senão usar valor direto
+                val colaboradorFinal = if (colaboradorToObject.aprovado != aprovadoDireto) {
+                    // Mapeamento falhou, usar valor direto
+                    colaboradorToObject.copy(
+                        id = colaboradorId,
+                        aprovado = aprovadoDireto,
+                        ativo = ativoDireto,
+                        primeiroAcesso = primeiroAcessoDireto
+                    )
+                } else {
+                    // Mapeamento funcionou, usar objeto convertido
+                    colaboradorToObject.copy(id = colaboradorId)
+                }
+                return colaboradorFinal
             }
             
             // Fallback: usar Gson se toObject falhar
@@ -1724,13 +1731,18 @@ class AuthViewModel @Inject constructor(
             val colaboradorGson = gson.fromJson(colaboradorJson, Colaborador::class.java)
             
             if (colaboradorGson != null) {
-                // ✅ CORREÇÃO: Sempre usar valores diretos do documento para campos boolean
-                return colaboradorGson.copy(
-                    id = colaboradorId,
-                    aprovado = aprovadoDireto,
-                    ativo = ativoDireto,
-                    primeiroAcesso = primeiroAcessoDireto
-                )
+                // ✅ CORREÇÃO: Validar e corrigir se necessário
+                val colaboradorFinal = if (colaboradorGson.aprovado != aprovadoDireto) {
+                    colaboradorGson.copy(
+                        id = colaboradorId,
+                        aprovado = aprovadoDireto,
+                        ativo = ativoDireto,
+                        primeiroAcesso = primeiroAcessoDireto
+                    )
+                } else {
+                    colaboradorGson.copy(id = colaboradorId)
+                }
+                return colaboradorFinal
             }
             
             null
@@ -1745,11 +1757,11 @@ class AuthViewModel @Inject constructor(
      * ✅ NOVO: Obtém ou cria colaborador automaticamente
      * 
      * Fluxo:
-     * 1. Tenta buscar por UID no novo schema (colaboradores/{uid})
-     * 2. Se não encontrar, tenta buscar no schema antigo (fallback)
-     * 3. Se ainda não encontrar, cria automaticamente com dados mínimos
+     * 1. Busca APENAS por UID no novo schema (colaboradores/{uid})
+     * 2. Se não encontrar, cria automaticamente com dados mínimos
      * 
-     * Por quê: Evita signOut automático e permite onboarding suave
+     * ✅ CORREÇÃO DEFINITIVA: NÃO usa fallback para schema antigo
+     * Por quê: Evita ler documento errado que pode ter aprovado=false
      */
     private suspend fun getOrCreateColaborador(
         uid: String,
@@ -1759,11 +1771,9 @@ class AuthViewModel @Inject constructor(
     ): Colaborador? {
         return try {
             Timber.d("AuthViewModel", "🔍 getOrCreateColaborador: UID=$uid, Email=$email")
-            crashlytics.log("[GET_OR_CREATE] Iniciando: UID=$uid")
             
-            // ✅ CORREÇÃO: Sempre buscar no novo schema primeiro (por UID)
-            // Se não encontrar, criar automaticamente - NÃO usar schema antigo
-            // Isso evita ler documento errado que pode ter aprovado=false
+            // ✅ CORREÇÃO DEFINITIVA: Buscar APENAS no novo schema por UID
+            // NÃO usar fallback para schema antigo (evita documento errado)
             var colaborador = buscarColaboradorPorUid(uid, empresaId)
             
             // 3. Se ainda não encontrou, criar automaticamente

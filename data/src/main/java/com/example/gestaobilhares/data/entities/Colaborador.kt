@@ -3,6 +3,7 @@ package com.example.gestaobilhares.data.entities
 import androidx.room.ColumnInfo
 import androidx.room.Entity
 import androidx.room.PrimaryKey
+import com.google.firebase.firestore.PropertyName
 import com.google.gson.annotations.SerializedName
 import java.io.Serializable
 
@@ -87,10 +88,14 @@ data class Colaborador(
     @SerializedName("nivel_acesso")
     val nivelAcesso: NivelAcesso = NivelAcesso.USER,
     
+    @get:PropertyName("ativo")
+    @set:PropertyName("ativo")
     @ColumnInfo(name = "ativo")
     @SerializedName("ativo")
     val ativo: Boolean = true,
     
+    @get:PropertyName("aprovado")
+    @set:PropertyName("aprovado")
     @ColumnInfo(name = "aprovado")
     @SerializedName("aprovado")
     val aprovado: Boolean = false,
@@ -116,6 +121,8 @@ data class Colaborador(
     @SerializedName("senha_hash")
     val senhaHash: String? = null, // Hash da senha pessoal (para login offline)
     
+    @get:PropertyName("primeiro_acesso")
+    @set:PropertyName("primeiro_acesso")
     @ColumnInfo(name = "primeiro_acesso")
     @SerializedName("primeiro_acesso")
     val primeiroAcesso: Boolean = true,
