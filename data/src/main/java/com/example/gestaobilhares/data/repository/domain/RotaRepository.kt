@@ -59,7 +59,7 @@ class RotaRepository(
             rotaDao.getAllRotasAtivas(),
             cicloAcertoDao.listarTodos(),
             clienteDao.obterTodos(), // ✅ NOVO: Incluir clientes para atualizar quando houver mudanças nos débitos
-            acertoDao.obterTodos() // ✅ CORREÇÃO: Incluir acertos para atualizar quando houver mudanças nos débitos (afeta cálculo de pendências)
+            acertoDao.listarTodos() // ✅ CORREÇÃO: Incluir acertos para atualizar quando houver mudanças nos débitos (afeta cálculo de pendências)
         ) { rotas, ciclos, clientes, acertos ->
             Timber.tag("RotaRepository").d("🔄 Atualizando resumo de rotas: ${rotas.size} rotas, ${ciclos.size} ciclos, ${clientes.size} clientes, ${acertos.size} acertos")
             
