@@ -12,6 +12,7 @@ import com.google.firebase.firestore.FieldValue
 import com.google.firebase.Timestamp
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.tasks.await
+import kotlinx.coroutines.CancellationException
 import timber.log.Timber
 import java.util.Date
 
@@ -61,6 +62,10 @@ class ClienteSyncHandler(
             }
             
             result
+        } catch (e: CancellationException) {
+            // ✅ CORREÇÃO: CancellationException deve ser re-lançada para propagar cancelamento
+            Timber.tag(TAG).d("⏹️ Pull de clientes cancelado")
+            throw e
         } catch (e: Exception) {
             Timber.tag(TAG).e("Erro no pull de clientes: ${e.message}", e)
             Result.failure(e)
@@ -92,6 +97,9 @@ class ClienteSyncHandler(
             )
             
             Result.success(syncCount)
+        } catch (e: CancellationException) {
+            Timber.tag(TAG).d("⏹️ Pull incremental de clientes cancelado")
+            throw e
         } catch (e: Exception) {
             Timber.tag(TAG).w("⚠️ Incremental falhou, tentando completo: ${e.message}")
             pullComplete(collectionRef, startTime, timestampOverride)
@@ -222,6 +230,9 @@ class ClienteSyncHandler(
             savePushMetadata(entityType, count, System.currentTimeMillis() - startTime)
             Timber.tag(TAG).d("✅ Push Clientes concluído: $count enviados")
             Result.success(count)
+        } catch (e: CancellationException) {
+            Timber.tag(TAG).d("⏹️ Push de clientes cancelado")
+            throw e
         } catch (e: Exception) {
             Timber.tag(TAG).e("Erro no push de clientes: ${e.message}", e)
             Result.failure(e)
