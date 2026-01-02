@@ -934,7 +934,7 @@ class AppRepository @Inject constructor(
      * ✅ REFATORAÇÃO: Cria colaborador pendente SE não existir
      * Caminho: empresas/{empresaId}/colaboradores/{uid}
      * 
-     * IMPORTANTE: NÃO cria em entidades/colaboradores/items/*
+     * IMPORTANTE: NÃO cria em entidades/colaboradores/items/ (caminho antigo)
      * 
      * @param empresaId ID da empresa (padrão: "empresa_001")
      * @param uid Firebase UID do usuário
