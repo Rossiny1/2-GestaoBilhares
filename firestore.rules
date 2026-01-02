@@ -247,16 +247,8 @@ service cloud.firestore {
     // ✅ VERSÃO SEGURA: SEM FALLBACKS PERMISSIVOS
     // =================================================================
     
-    // Função auxiliar: Verifica se usuário pertence à empresa
-    // ✅ VERSÃO SEGURA: Exige companyId obrigatório (sem fallback)
-    function hasCompanyAccess(empresaId) {
-      return request.auth != null && (
-        isAdmin() ||
-        // ✅ SEGURO: Exige companyId no token (sem fallback permissivo)
-        ('companyId' in request.auth.token && 
-         request.auth.token.companyId == empresaId)
-      );
-    }
+    // ✅ REMOVIDO: Função hasCompanyAccess não utilizada
+    // A função belongsToCompany() já cobre essa funcionalidade
     
     // CICLOS: Dados de ciclos de trabalho
     match /ciclos/{cicloId} {
