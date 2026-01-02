@@ -223,7 +223,9 @@ class AuthViewModel @Inject constructor(
                                 Timber.e("AuthViewModel", "❌ ERRO FINAL: Colaborador não encontrado após todas as tentativas")
                                 Timber.e("AuthViewModel", "   Email: $email")
                                 Timber.e("AuthViewModel", "   Firebase UID: ${result.user!!.uid}")
+                                firebaseAuth.signOut() // Fazer logout do Firebase
                                 _errorMessage.value = "Usuário não encontrado. Contate o administrador."
+                                hideLoading()
                                 return@launch
                             }
                             
@@ -258,6 +260,7 @@ class AuthViewModel @Inject constructor(
                             if (!isSuperAdmin && colaborador.primeiroAcesso && colaborador.senhaHash == null) {
                                 Timber.d("AuthViewModel", "⚠️ PRIMEIRO ACESSO DETECTADO - Redirecionando para alteração de senha")
                                 _authState.value = AuthState.FirstAccessRequired(colaborador)
+                                hideLoading()
                                 return@launch
                             }
                             
@@ -284,6 +287,7 @@ class AuthViewModel @Inject constructor(
                             
                             _authState.value = AuthState.Authenticated(localUser, true)
                             Timber.d("AuthViewModel", "✅ Estado de autenticação definido - sessão ativa")
+                            hideLoading()
                             return@launch
                         }
                     } catch (e: Exception) {
