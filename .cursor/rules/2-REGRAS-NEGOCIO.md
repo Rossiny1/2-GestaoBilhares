@@ -1,8 +1,8 @@
 # 2️⃣ REGRAS DE NEGÓCIO
 
 > **Propósito**: Definição da lógica operacional, financeira e multi-tenancy.  
-> **Última Atualização**: Dezembro 2025  
-> **Versão**: 3.0
+> **Última Atualização**: 02 de Janeiro de 2026  
+> **Versão**: 3.1
 
 ---
 
