@@ -800,28 +800,22 @@ class AppRepository @Inject constructor(
      */
     suspend fun getColaboradorByUid(empresaId: String, uid: String): Colaborador? {
         return try {
-            android.util.Log.d("AppRepository", "═══════════════════════════════════════")
-            android.util.Log.d("AppRepository", "🔍 [FIRESTORE] Buscando colaborador por UID")
-            android.util.Log.d("AppRepository", "   UID buscado: $uid")
-            android.util.Log.d("AppRepository", "   Empresa: $empresaId")
-            android.util.Log.d("AppRepository", "═══════════════════════════════════════")
-            
-            Timber.d("AppRepository", "🔍 [FIRESTORE] Buscando colaborador por UID: empresas/$empresaId/colaboradores/$uid")
+            // ✅ LOGS OBRIGATÓRIOS: UID buscado
+            Timber.d("AppRepository", "═══════════════════════════════════════")
+            Timber.d("AppRepository", "🔍 [FIRESTORE] Buscando colaborador por UID")
+            Timber.d("AppRepository", "   UID buscado: $uid")
+            Timber.d("AppRepository", "   Empresa: $empresaId")
+            Timber.d("AppRepository", "   Caminho: empresas/$empresaId/colaboradores/$uid")
+            Timber.d("AppRepository", "═══════════════════════════════════════")
             
             // ✅ Usar getColaboradorDoc() que já força Source.SERVER
             val doc = getColaboradorDoc(empresaId, uid)
             
-            // ✅ LOGS OBRIGATÓRIOS: Path, exists, data, aprovado
-            android.util.Log.d("AppRepository", "═══════════════════════════════════════")
-            android.util.Log.d("AppRepository", "📋 [DIAGNÓSTICO] Documento do Firestore:")
-            android.util.Log.d("AppRepository", "   doc.reference.path: ${doc.reference.path}")
-            android.util.Log.d("AppRepository", "   doc.exists(): ${doc.exists()}")
-            android.util.Log.d("AppRepository", "═══════════════════════════════════════")
-            
+            // ✅ LOGS OBRIGATÓRIOS: Path, exists
             Timber.d("AppRepository", "═══════════════════════════════════════")
             Timber.d("AppRepository", "📋 [DIAGNÓSTICO] Documento do Firestore:")
-            Timber.d("AppRepository", "   Path: ${doc.reference.path}")
-            Timber.d("AppRepository", "   Exists: ${doc.exists()}")
+            Timber.d("AppRepository", "   doc.reference.path: ${doc.reference.path}")
+            Timber.d("AppRepository", "   doc.exists(): ${doc.exists()}")
             Timber.d("AppRepository", "═══════════════════════════════════════")
             
             if (!doc.exists()) {
@@ -835,33 +829,22 @@ class AppRepository @Inject constructor(
                 return null
             }
             
-            // ✅ LOGS OBRIGATÓRIOS: Dados brutos ANTES de converter
-            android.util.Log.d("AppRepository", "📋 [DIAGNÓSTICO] doc.data (Map bruto):")
-            android.util.Log.d("AppRepository", "   Data keys: ${data.keys.joinToString(", ")}")
-            android.util.Log.d("AppRepository", "   Campo 'aprovado' (bruto): ${data["aprovado"]} (tipo: ${data["aprovado"]?.javaClass?.simpleName})")
-            android.util.Log.d("AppRepository", "   Campo 'ativo' (bruto): ${data["ativo"]} (tipo: ${data["ativo"]?.javaClass?.simpleName})")
-            android.util.Log.d("AppRepository", "   Campo 'primeiro_acesso' (bruto): ${data["primeiro_acesso"]} (tipo: ${data["primeiro_acesso"]?.javaClass?.simpleName})")
+            // ✅ LOGS OBRIGATÓRIOS: doc.data (Map bruto) ANTES de converter
+            Timber.d("AppRepository", "📋 [DIAGNÓSTICO] doc.data (Map bruto):")
+            Timber.d("AppRepository", "   Data keys: ${data.keys.joinToString(", ")}")
+            Timber.d("AppRepository", "   Campo 'aprovado' (bruto): ${data["aprovado"]} (tipo: ${data["aprovado"]?.javaClass?.simpleName})")
+            Timber.d("AppRepository", "   Campo 'ativo' (bruto): ${data["ativo"]} (tipo: ${data["ativo"]?.javaClass?.simpleName})")
+            Timber.d("AppRepository", "   Campo 'primeiro_acesso' (bruto): ${data["primeiro_acesso"]} (tipo: ${data["primeiro_acesso"]?.javaClass?.simpleName})")
             
             // ✅ LOGS OBRIGATÓRIOS: doc.getBoolean("aprovado")
             val aprovadoDireto = doc.getBoolean("aprovado") ?: false
             val ativoDireto = doc.getBoolean("ativo") ?: true
             val primeiroAcessoDireto = doc.getBoolean("primeiro_acesso") ?: true
             
-            android.util.Log.d("AppRepository", "📋 [DIAGNÓSTICO] Valores diretos (doc.getBoolean):")
-            android.util.Log.d("AppRepository", "   doc.getBoolean(\"aprovado\"): $aprovadoDireto")
-            android.util.Log.d("AppRepository", "   doc.getBoolean(\"ativo\"): $ativoDireto")
-            android.util.Log.d("AppRepository", "   doc.getBoolean(\"primeiro_acesso\"): $primeiroAcessoDireto")
-            android.util.Log.d("AppRepository", "═══════════════════════════════════════")
-            
-            Timber.d("AppRepository", "📋 [DIAGNÓSTICO] Dados brutos do documento:")
-            Timber.d("AppRepository", "   Data keys: ${data.keys.joinToString(", ")}")
-            Timber.d("AppRepository", "   Campo 'aprovado' (bruto): ${data["aprovado"]} (tipo: ${data["aprovado"]?.javaClass?.simpleName})")
-            Timber.d("AppRepository", "   Campo 'ativo' (bruto): ${data["ativo"]} (tipo: ${data["ativo"]?.javaClass?.simpleName})")
-            Timber.d("AppRepository", "   Campo 'primeiro_acesso' (bruto): ${data["primeiro_acesso"]} (tipo: ${data["primeiro_acesso"]?.javaClass?.simpleName})")
             Timber.d("AppRepository", "📋 [DIAGNÓSTICO] Valores diretos (doc.getBoolean):")
-            Timber.d("AppRepository", "   aprovado: $aprovadoDireto")
-            Timber.d("AppRepository", "   ativo: $ativoDireto")
-            Timber.d("AppRepository", "   primeiro_acesso: $primeiroAcessoDireto")
+            Timber.d("AppRepository", "   doc.getBoolean(\"aprovado\"): $aprovadoDireto")
+            Timber.d("AppRepository", "   doc.getBoolean(\"ativo\"): $ativoDireto")
+            Timber.d("AppRepository", "   doc.getBoolean(\"primeiro_acesso\"): $primeiroAcessoDireto")
             Timber.d("AppRepository", "═══════════════════════════════════════")
             
             // Converter Timestamps para Date
@@ -939,11 +922,11 @@ class AppRepository @Inject constructor(
             Timber.d("AppRepository", "   Aprovado: ${colaboradorFinal.aprovado}")
             Timber.d("AppRepository", "   Ativo: ${colaboradorFinal.ativo}")
             Timber.d("AppRepository", "   Path: ${doc.reference.path}")
-            colaboradorFinal
+            return colaboradorFinal
             
         } catch (e: Exception) {
             Timber.e(e, "❌ [FIRESTORE] Erro ao buscar colaborador por UID: %s", e.message)
-            null
+            return null
         }
     }
     
@@ -966,12 +949,12 @@ class AppRepository @Inject constructor(
         // ✅ Verificar se já existe
         val doc = getColaboradorDoc(empresaId, uid)
         if (doc.exists()) {
-            android.util.Log.d("AppRepository", "✅ [CRIAR_PENDENTE] Colaborador já existe, retornando existente")
             Timber.d("AppRepository", "✅ [CRIAR_PENDENTE] Colaborador já existe: ${doc.reference.path}")
             return getColaboradorByUid(empresaId, uid) ?: throw IllegalStateException("Colaborador existe mas não foi possível converter")
         }
         
         // ✅ Criar novo colaborador pendente
+        Timber.d("AppRepository", "🔧 [CRIAR_PENDENTE] Colaborador não existe, criando pendente...")
         return createPendingColaborador(empresaId, uid, email, null)
     }
     
@@ -1066,12 +1049,17 @@ class AppRepository @Inject constructor(
             colaboradorMap["primeiro_acesso"] = colaboradorComId.primeiroAcesso
             colaboradorMap["nivel_acesso"] = colaboradorComId.nivelAcesso.name
             
+            // ✅ MULTI-TENANCY: Adicionar empresaId ao documento
+            colaboradorMap["empresa_id"] = empresaId
+            colaboradorMap["companyId"] = empresaId // Compatibilidade com custom claims
+            
             Timber.d("AppRepository", "🔧 [CRIAR_PENDENTE] Campos boolean:")
             Timber.d("AppRepository", "   aprovado: ${colaboradorMap["aprovado"]}")
             Timber.d("AppRepository", "   ativo: ${colaboradorMap["ativo"]}")
             Timber.d("AppRepository", "   primeiro_acesso: ${colaboradorMap["primeiro_acesso"]}")
+            Timber.d("AppRepository", "   empresa_id: ${colaboradorMap["empresa_id"]}")
             
-            // ✅ AGUARDAR criação no Firestore
+            // ✅ AGUARDAR criação no Firestore (await bloqueante)
             docRef.set(colaboradorMap).await()
             
             Timber.d("AppRepository", "✅ [FIRESTORE] Colaborador criado no Firestore: ${colaboradorComId.nome} (Aprovado: ${colaboradorComId.aprovado})")

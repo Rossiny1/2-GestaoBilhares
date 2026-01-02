@@ -197,18 +197,16 @@ class AuthViewModel @Inject constructor(
                     try {
                         // PASSO 1: Emitir estado Loading
                         _loginUiState.value = LoginUiState.Loading
-                        android.util.Log.d("AuthViewModel", "═══════════════════════════════════════")
-                        android.util.Log.d("AuthViewModel", "🔄 [LOGIN] Estado: Loading")
-                        android.util.Log.d("AuthViewModel", "═══════════════════════════════════════")
+                        Timber.d("AuthViewModel", "═══════════════════════════════════════")
+                        Timber.d("AuthViewModel", "🔄 [LOGIN] Estado: Loading")
+                        Timber.d("AuthViewModel", "═══════════════════════════════════════")
                         
-                        // PASSO 2: Autenticar no Firebase Auth
-                        android.util.Log.d("AuthViewModel", "🔐 [LOGIN] PASSO 2: signInWithEmailAndPassword...")
-                        Timber.d("AuthViewModel", "🔐 [LOGIN] PASSO 2: Autenticando no Firebase Auth...")
+                        // PASSO 2: Autenticar no Firebase Auth (await bloqueante)
+                        Timber.d("AuthViewModel", "🔐 [LOGIN] PASSO 2: signInWithEmailAndPassword...")
                         val result = firebaseAuth.signInWithEmailAndPassword(email, senha).await()
                         
                         if (result.user == null) {
                             val error = "Firebase Auth retornou user null"
-                            android.util.Log.e("AuthViewModel", "❌ [LOGIN] $error")
                             Timber.e("AuthViewModel", "❌ [LOGIN] $error")
                             _loginUiState.value = LoginUiState.Erro(error, null)
                             hideLoading()
@@ -217,24 +215,19 @@ class AuthViewModel @Inject constructor(
                         
                         // PASSO 3: Obter UID
                         val uid = result.user!!.uid
-                        android.util.Log.d("AuthViewModel", "✅ [LOGIN] PASSO 3: Firebase Auth OK - UID: $uid")
-                        Timber.d("AuthViewModel", "✅ [LOGIN] PASSO 3: UID obtido: $uid")
+                        Timber.d("AuthViewModel", "✅ [LOGIN] PASSO 3: Firebase Auth OK - UID: $uid")
                         
-                        // PASSO 4: Criar colaborador pendente SE não existir
-                        android.util.Log.d("AuthViewModel", "🔧 [LOGIN] PASSO 4: createPendingColaboradorIfMissing...")
-                        Timber.d("AuthViewModel", "🔧 [LOGIN] PASSO 4: Garantindo que colaborador existe...")
+                        // PASSO 4: Criar colaborador pendente SE não existir (await bloqueante)
+                        Timber.d("AuthViewModel", "🔧 [LOGIN] PASSO 4: createPendingColaboradorIfMissing...")
                         val colaboradorCriado = appRepository.createPendingColaboradorIfMissing("empresa_001", uid, email)
-                        android.util.Log.d("AuthViewModel", "✅ [LOGIN] PASSO 4: Colaborador garantido: ${colaboradorCriado.nome}")
-                        Timber.d("AuthViewModel", "✅ [LOGIN] PASSO 4: Colaborador: ${colaboradorCriado.nome}")
+                        Timber.d("AuthViewModel", "✅ [LOGIN] PASSO 4: Colaborador garantido: ${colaboradorCriado.nome}")
                         
-                        // PASSO 5: Recarregar do servidor (Source.SERVER) para obter dados atualizados
-                        android.util.Log.d("AuthViewModel", "🔍 [LOGIN] PASSO 5: Recarregando do servidor (Source.SERVER)...")
-                        Timber.d("AuthViewModel", "🔍 [LOGIN] PASSO 5: Buscando colaborador do servidor...")
+                        // PASSO 5: Recarregar do servidor (Source.SERVER) para obter dados atualizados (await bloqueante)
+                        Timber.d("AuthViewModel", "🔍 [LOGIN] PASSO 5: Recarregando do servidor (Source.SERVER)...")
                         val colaborador = appRepository.getColaboradorByUid("empresa_001", uid)
                         
                         if (colaborador == null) {
                             val error = "Colaborador não encontrado após criação"
-                            android.util.Log.e("AuthViewModel", "❌ [LOGIN] $error")
                             Timber.e("AuthViewModel", "❌ [LOGIN] $error")
                             _loginUiState.value = LoginUiState.Erro(error, null)
                             hideLoading()
@@ -242,26 +235,18 @@ class AuthViewModel @Inject constructor(
                         }
                         
                         // ✅ LOGS OBRIGATÓRIOS: Documento lido e campo usado para decisão
-                        android.util.Log.d("AuthViewModel", "═══════════════════════════════════════")
-                        android.util.Log.d("AuthViewModel", "📋 [LOGIN] DECISÃO DE ACESSO:")
-                        android.util.Log.d("AuthViewModel", "   Colaborador: ${colaborador.nome}")
-                        android.util.Log.d("AuthViewModel", "   Email: ${colaborador.email}")
-                        android.util.Log.d("AuthViewModel", "   Campo 'aprovado' lido: ${colaborador.aprovado}")
-                        android.util.Log.d("AuthViewModel", "   Campo 'ativo' lido: ${colaborador.ativo}")
-                        android.util.Log.d("AuthViewModel", "═══════════════════════════════════════")
-                        
                         Timber.d("AuthViewModel", "═══════════════════════════════════════")
                         Timber.d("AuthViewModel", "📋 [LOGIN] DECISÃO DE ACESSO:")
                         Timber.d("AuthViewModel", "   Colaborador: ${colaborador.nome}")
-                        Timber.d("AuthViewModel", "   Aprovado: ${colaborador.aprovado}")
-                        Timber.d("AuthViewModel", "   Ativo: ${colaborador.ativo}")
+                        Timber.d("AuthViewModel", "   Email: ${colaborador.email}")
+                        Timber.d("AuthViewModel", "   Campo 'aprovado' lido do Firestore: ${colaborador.aprovado}")
+                        Timber.d("AuthViewModel", "   Campo 'ativo' lido do Firestore: ${colaborador.ativo}")
                         Timber.d("AuthViewModel", "═══════════════════════════════════════")
                         
-                        // PASSO 6: Decisão de acesso baseada APENAS em colaborador.aprovado
+                        // PASSO 6: Decisão de acesso baseada APENAS em colaborador.aprovado (lido do servidor)
                         when {
                             !colaborador.ativo -> {
                                 val error = "Conta inativa"
-                                android.util.Log.w("AuthViewModel", "⚠️ [LOGIN] $error")
                                 Timber.w("AuthViewModel", "⚠️ [LOGIN] $error")
                                 _loginUiState.value = LoginUiState.Erro(error, null)
                                 hideLoading()
@@ -269,8 +254,7 @@ class AuthViewModel @Inject constructor(
                             }
                             colaborador.aprovado -> {
                                 // PASSO 7: Aprovado - iniciar sessão e navegar
-                                android.util.Log.d("AuthViewModel", "✅ [LOGIN] PASSO 7: Colaborador APROVADO - iniciando sessão")
-                                Timber.d("AuthViewModel", "✅ [LOGIN] PASSO 7: Colaborador APROVADO")
+                                Timber.d("AuthViewModel", "✅ [LOGIN] PASSO 7: Colaborador APROVADO - iniciando sessão")
                                 
                                 val empresaId = "empresa_001"
                                 userSessionManager.startSession(colaborador, empresaId)
@@ -296,8 +280,7 @@ class AuthViewModel @Inject constructor(
                             }
                             else -> {
                                 // PASSO 7: Pendente - mostrar mensagem
-                                android.util.Log.d("AuthViewModel", "⏳ [LOGIN] PASSO 7: Colaborador PENDENTE")
-                                Timber.d("AuthViewModel", "⏳ [LOGIN] PASSO 7: Colaborador PENDENTE")
+                                Timber.d("AuthViewModel", "⏳ [LOGIN] PASSO 7: Colaborador PENDENTE (aprovado=false)")
                                 _loginUiState.value = LoginUiState.Pendente(colaborador)
                                 hideLoading()
                                 return@launch
@@ -305,14 +288,6 @@ class AuthViewModel @Inject constructor(
                         }
                     } catch (e: Exception) {
                         // PASSO 8: Erro - emitir estado de erro com stacktrace completo
-                        android.util.Log.e("AuthViewModel", "═══════════════════════════════════════")
-                        android.util.Log.e("AuthViewModel", "❌ [LOGIN] EXCEÇÃO CAPTURADA")
-                        android.util.Log.e("AuthViewModel", "   Tipo: ${e.javaClass.simpleName}")
-                        android.util.Log.e("AuthViewModel", "   Mensagem: ${e.message}")
-                        android.util.Log.e("AuthViewModel", "   Stacktrace:")
-                        e.printStackTrace()
-                        android.util.Log.e("AuthViewModel", "═══════════════════════════════════════")
-                        
                         Timber.e("AuthViewModel", "═══════════════════════════════════════")
                         Timber.e("AuthViewModel", "❌ [LOGIN] EXCEÇÃO CAPTURADA")
                         Timber.e("AuthViewModel", "   Tipo: ${e.javaClass.simpleName}")
@@ -337,24 +312,6 @@ class AuthViewModel @Inject constructor(
                         _loginUiState.value = LoginUiState.Erro(mensagemErro, e)
                         hideLoading()
                         return@launch
-                        
-                        Timber.w("AuthViewModel", "Login online falhou: ${e.message}")
-                        Timber.w("AuthViewModel", "Tipo de erro: ${e.javaClass.simpleName}")
-                        
-                        // ✅ CORREÇÃO: Se o erro for "wrong password" ou "user not found", 
-                        // continuar para tentar login offline (pode ser senha temporária)
-                        Timber.d("AuthViewModel", "Código de erro Firebase: $errorCode")
-                        
-                        // Se for erro de credenciais inválidas, pode ser senha temporária
-                        // Continuar para tentar login offline
-                        if (errorCode == "ERROR_WRONG_PASSWORD" || errorCode == "ERROR_USER_NOT_FOUND" || errorCode == "ERROR_INVALID_EMAIL") {
-                            crashlytics.log("[LOGIN_FLOW] Erro de credenciais - tentando login offline com senha temporária...")
-                            Timber.d("AuthViewModel", "Erro de credenciais - tentando login offline com senha temporária...")
-                        } else {
-                            // Para outros erros (rede, etc), também tentar offline
-                            crashlytics.log("[LOGIN_FLOW] Erro de conexão ou outro - tentando login offline...")
-                            Timber.d("AuthViewModel", "Erro de conexão ou outro - tentando login offline...")
-                        }
                     }
                 }
                 
