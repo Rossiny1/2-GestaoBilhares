@@ -1,4 +1,4 @@
-﻿package com.example.gestaobilhares.ui.clients
+package com.example.gestaobilhares.ui.clients
 import com.example.gestaobilhares.ui.R
 
 import android.view.LayoutInflater
@@ -197,7 +197,17 @@ class ClientAdapter(
         }
 
         override fun areContentsTheSame(oldItem: Cliente, newItem: Cliente): Boolean {
-            return oldItem == newItem
+            // ✅ CORREÇÃO: Comparar explicitamente o débito para detectar mudanças
+            // Mesmo que os objetos sejam iguais, se o débito mudou, o DiffUtil deve detectar
+            val debitoMudou = oldItem.debitoAtual != newItem.debitoAtual
+            val outrosCamposIguais = oldItem == newItem
+            
+            if (debitoMudou && outrosCamposIguais) {
+                android.util.Log.d("ClientAdapter", "⚠️ Débito mudou para cliente ${oldItem.nome}: R$ ${oldItem.debitoAtual} -> R$ ${newItem.debitoAtual}")
+                return false // Forçar atualização do item
+            }
+            
+            return outrosCamposIguais
         }
     }
 } 

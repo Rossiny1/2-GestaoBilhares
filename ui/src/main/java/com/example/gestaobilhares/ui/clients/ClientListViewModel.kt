@@ -279,23 +279,36 @@ class ClientListViewModel @Inject constructor(
                 // ✅ NOVO: Calcular dados do card de progresso
                 calcularDadosProgressoCiclo(clientes)
                 
-                // ✅ NOVO: Continuar observando mudanças
-                appRepository.obterClientesPorRotaComDebitoAtual(rotaId).collect { clientesAtualizados ->
-                    val clientesAnteriores = _clientesTodos.value
-                    if (clientesAtualizados != clientesAnteriores) {
-                        Timber.d("ClientListViewModel", "🔄 Clientes atualizados detectados: ${clientesAtualizados.size} clientes")
-                        
-                        // ✅ DEBUG: Log detalhado do débito de cada cliente atualizado
-                        clientesAtualizados.forEach { cliente ->
-                            Timber.d("ClientListViewModel", "   Cliente atualizado: ${cliente.nome} | débitoAtual: R$ ${cliente.debitoAtual}")
+                // ✅ CORREÇÃO: Continuar observando mudanças com debounce para evitar atualizações excessivas
+                appRepository.obterClientesPorRotaComDebitoAtual(rotaId)
+                    .distinctUntilChanged() // ✅ Evita atualizações desnecessárias
+                    .collect { clientesAtualizados ->
+                        val clientesAnteriores = _clientesTodos.value
+                        // ✅ CORREÇÃO: Comparar também por débito para detectar mudanças mesmo com mesma lista
+                        val mudouDebito = clientesAtualizados.any { novo ->
+                            val antigo = clientesAnteriores.find { it.id == novo.id }
+                            antigo?.debitoAtual != novo.debitoAtual
                         }
                         
-                        _clientesTodos.value = clientesAtualizados
-                        Timber.d("ClientListViewModel", "📋 Reaplicando filtros após atualização de clientes...")
-                        aplicarFiltrosCombinados()
-                        calcularDadosProgressoCiclo(clientesAtualizados)
+                        if (clientesAtualizados != clientesAnteriores || mudouDebito) {
+                            Timber.d("ClientListViewModel", "🔄 Clientes atualizados detectados: ${clientesAtualizados.size} clientes (mudou débito: $mudouDebito)")
+                            
+                            // ✅ DEBUG: Log detalhado do débito de cada cliente atualizado
+                            clientesAtualizados.forEach { cliente ->
+                                val debitoAnterior = clientesAnteriores.find { it.id == cliente.id }?.debitoAtual ?: 0.0
+                                if (cliente.debitoAtual != debitoAnterior) {
+                                    Timber.d("ClientListViewModel", "   ⚠️ Débito mudou: ${cliente.nome} | R$ $debitoAnterior -> R$ ${cliente.debitoAtual}")
+                                } else {
+                                    Timber.d("ClientListViewModel", "   Cliente atualizado: ${cliente.nome} | débitoAtual: R$ ${cliente.debitoAtual}")
+                                }
+                            }
+                            
+                            _clientesTodos.value = clientesAtualizados
+                            Timber.d("ClientListViewModel", "📋 Reaplicando filtros após atualização de clientes...")
+                            aplicarFiltrosCombinados()
+                            calcularDadosProgressoCiclo(clientesAtualizados)
+                        }
                     }
-                }
                 
             } catch (e: Exception) {
                 logError("CLIENTES_LOAD_OTIMIZADO", "Erro ao carregar clientes otimizado: ${e.message}", e)
@@ -336,15 +349,35 @@ class ClientListViewModel @Inject constructor(
                 
                 Timber.d("ClientListViewModel", "✅ Clientes carregados imediatamente: ${clientes.size} clientes")
                 
-                // ✅ NOVO: Continuar observando mudanças com query otimizada
-                appRepository.obterClientesPorRotaComDebitoAtual(rotaId).collect { clientesAtualizados ->
-                    if (clientesAtualizados != _clientesTodos.value) {
-                        _clientesTodos.value = clientesAtualizados
-                        aplicarFiltrosCombinados()
-                        calcularDadosProgressoCiclo(clientesAtualizados)
-                        Timber.d("ClientListViewModel", "🔄 Clientes atualizados: ${clientesAtualizados.size} clientes")
+                // ✅ CORREÇÃO: Continuar observando mudanças com query otimizada e debounce
+                appRepository.obterClientesPorRotaComDebitoAtual(rotaId)
+                    .distinctUntilChanged() // ✅ Evita atualizações desnecessárias
+                    .collect { clientesAtualizados ->
+                        val clientesAnteriores = _clientesTodos.value
+                        // ✅ CORREÇÃO: Comparar também por débito para detectar mudanças mesmo com mesma lista
+                        val mudouDebito = clientesAtualizados.any { novo ->
+                            val antigo = clientesAnteriores.find { it.id == novo.id }
+                            antigo?.debitoAtual != novo.debitoAtual
+                        }
+                        
+                        if (clientesAtualizados != clientesAnteriores || mudouDebito) {
+                            Timber.d("ClientListViewModel", "🔄 Clientes atualizados: ${clientesAtualizados.size} clientes (mudou débito: $mudouDebito)")
+                            
+                            // ✅ DEBUG: Log quando débito muda
+                            if (mudouDebito) {
+                                clientesAtualizados.forEach { cliente ->
+                                    val debitoAnterior = clientesAnteriores.find { it.id == cliente.id }?.debitoAtual ?: 0.0
+                                    if (cliente.debitoAtual != debitoAnterior) {
+                                        Timber.d("ClientListViewModel", "   ⚠️ Débito mudou: ${cliente.nome} | R$ $debitoAnterior -> R$ ${cliente.debitoAtual}")
+                                    }
+                                }
+                            }
+                            
+                            _clientesTodos.value = clientesAtualizados
+                            aplicarFiltrosCombinados()
+                            calcularDadosProgressoCiclo(clientesAtualizados)
+                        }
                     }
-                }
             } catch (e: Exception) {
                 logError("CLIENTES_LOAD", "Erro ao carregar clientes: ${e.message}", e)
                 showError("Erro ao carregar clientes: ${e.message}", e)

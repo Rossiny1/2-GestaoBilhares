@@ -1,4 +1,4 @@
-﻿package com.example.gestaobilhares.ui.clients
+package com.example.gestaobilhares.ui.clients
 
 import android.os.Bundle
 import android.view.LayoutInflater
@@ -84,7 +84,9 @@ class ClientListFragment : Fragment() {
             // Carregar dados da rota
             val rotaId = args.rotaId
             viewModel.carregarRota(rotaId)
-            viewModel.carregarClientes(rotaId)
+            // ✅ CORREÇÃO CRÍTICA: Usar método otimizado que calcula débito em tempo real
+            // Isso garante que após importação, o débito seja recalculado corretamente
+            viewModel.carregarClientesOtimizado(rotaId)
         } catch (e: Exception) {
             Timber.e("ClientListFragment", "Erro na inicialização: ${e.message}")
             // Mostrar erro para o usuário
@@ -108,10 +110,11 @@ class ClientListFragment : Fragment() {
         
         // ✅ CORREÇÃO: Usar a MESMA lógica que funciona quando vem do RoutesFragment
         viewModel.carregarRota(rotaId)
-        // ✅ CORREÇÃO: Usar recarregamento forçado para garantir que os dados apareçam
-        viewModel.forcarRecarregamentoClientes(rotaId)
+        // ✅ CORREÇÃO CRÍTICA: Usar método otimizado que calcula débito em tempo real
+        // Isso garante que após importação, o débito seja recalculado corretamente
+        viewModel.forcarRecarregamentoClientesOtimizado(rotaId)
         
-        Timber.d("ClientListFragment", "✅ onResume - Dados forçados recarregados para rotaId=$rotaId (mesma lógica do onViewCreated)")
+        Timber.d("ClientListFragment", "✅ onResume - Dados forçados recarregados (com débito calculado) para rotaId=$rotaId")
     }
 
     override fun onStart() {
@@ -120,9 +123,10 @@ class ClientListFragment : Fragment() {
         Timber.d("ClientListFragment", "🔄 onStart - Garantindo carregamento de dados")
         
         val rotaId = args.rotaId
-        // ✅ CORREÇÃO: Usar recarregamento forçado para garantir que os dados apareçam
-        viewModel.forcarRecarregamentoClientes(rotaId)
-        Timber.d("ClientListFragment", "✅ onStart - Dados forçados recarregados para rotaId=$rotaId")
+        // ✅ CORREÇÃO CRÍTICA: Usar método otimizado que calcula débito em tempo real
+        // Isso garante que após importação, o débito seja recalculado corretamente
+        viewModel.forcarRecarregamentoClientesOtimizado(rotaId)
+        Timber.d("ClientListFragment", "✅ onStart - Dados forçados recarregados (com débito calculado) para rotaId=$rotaId")
     }
 
     private fun configurarRecyclerView() {
@@ -350,7 +354,8 @@ class ClientListFragment : Fragment() {
         ) { acertoSalvo ->
             if (acertoSalvo == true) {
                 Timber.d("ClientListFragment", "[DEBUG] Evento acerto_salvo recebido, recarregando clientes para rotaId=${args.rotaId}")
-                // ✅ CORREÇÃO: Usar carregarClientesOtimizado para garantir que os dados sejam atualizados
+                // ✅ CORREÇÃO CRÍTICA: Usar método otimizado que calcula débito em tempo real
+                // Isso garante que após salvar acerto, o débito seja recalculado corretamente
                 viewModel.carregarClientesOtimizado(args.rotaId)
                 findNavController().currentBackStackEntry?.savedStateHandle?.set("acerto_salvo", false)
             }

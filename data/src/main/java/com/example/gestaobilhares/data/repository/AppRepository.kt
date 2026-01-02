@@ -376,15 +376,23 @@ class AppRepository @Inject constructor(
     private fun calcularPendenciasReaisPorRota(rotaId: Long): Int {
         return try {
             kotlinx.coroutines.runBlocking {
-                val clientes = clienteDao.obterClientesPorRota(rotaId).first()
+                // ✅ CORREÇÃO CRÍTICA: Usar clientes com débito calculado em tempo real
+                // Isso garante que após importação, o débito seja recalculado corretamente
+                val clientes = clienteDao.obterClientesPorRotaComDebitoCalculado(rotaId).first()
                 if (clientes.isEmpty()) return@runBlocking 0
+                
+                Timber.d("AppRepository", "🔍 Calculando pendências para rota $rotaId com ${clientes.size} clientes")
+                
                 val clienteIds = clientes.map { it.id }
                 val ultimos = buscarUltimosAcertosPorClientes(clienteIds)
                 val ultimoPorCliente = ultimos.associateBy({ it.clienteId }, { it.dataAcerto })
                 val agora = java.util.Calendar.getInstance()
+                
                 val pendencias = clientes.count { cliente ->
-                    // ✅ CORRIGIDO: Usar >= 300 para incluir débitos de 300 reais ou mais
-                    val debitoAlto = cliente.debitoAtual >= 300.0
+                    // ✅ CORREÇÃO: Usar débito calculado em tempo real (já vem do JOIN com acertos)
+                    val debitoAtual = cliente.debitoAtual
+                    val debitoAlto = debitoAtual >= 300.0
+                    
                     val dataUltimo = ultimoPorCliente[cliente.id]
                     val semAcerto4Meses = if (dataUltimo == null) {
                         true
@@ -394,9 +402,10 @@ class AppRepository @Inject constructor(
                         val meses = anos * 12 + (agora.get(java.util.Calendar.MONTH) - cal.get(java.util.Calendar.MONTH))
                         meses >= 4
                     }
+                    
                     val temPendencia = debitoAlto || semAcerto4Meses
                     if (temPendencia) {
-                        Timber.d("AppRepository", "📋 Cliente ${cliente.nome} (ID: ${cliente.id}) tem pendência: débito=${cliente.debitoAtual}, semAcerto4Meses=$semAcerto4Meses")
+                        Timber.d("AppRepository", "📋 Cliente ${cliente.nome} (ID: ${cliente.id}) tem pendência: débito=R$ $debitoAtual, semAcerto4Meses=$semAcerto4Meses")
                     }
                     temPendencia
                 }
@@ -404,7 +413,7 @@ class AppRepository @Inject constructor(
                 pendencias
             }
         } catch (e: Exception) {
-            Timber.e("AppRepository", "Erro ao calcular pendências reais da rota $rotaId: ${e.message}")
+            Timber.e("AppRepository", "Erro ao calcular pendências reais da rota $rotaId: ${e.message}", e)
             0
         }
     }
