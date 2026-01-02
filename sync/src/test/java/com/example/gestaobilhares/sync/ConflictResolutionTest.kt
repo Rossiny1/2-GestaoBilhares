@@ -88,7 +88,7 @@ class ConflictResolutionTest {
         whenever(userSessionManager.isAdmin()).thenReturn(false)
         whenever(userSessionManager.getUserAccessibleRoutes(any())).thenReturn(listOf(1L))
         
-        // Mock pagination query chain - admin uses orderBy directly, non-admin uses whereEqualTo first
+        // Mock pagination query chain - fetchAllDocumentsWithRouteFilter uses whereEqualTo -> orderBy -> limit
         val mockWhereQuery = mock<Query>()
         val mockOrderQuery = mock<Query>()
         val mockLimitQuery = mock<Query>()
@@ -101,6 +101,9 @@ class ConflictResolutionTest {
         whenever(querySnapshot.documents).thenReturn(listOf(documentSnapshot))
         whenever(querySnapshot.isEmpty).thenReturn(false)
         whenever(documentSnapshot.id).thenReturn("1")
+        
+        // Mock para garantir que o cliente será processado corretamente
+        whenever(appRepository.buscarClientePorNomeERota(any(), any())).thenReturn(null)
         
         val serverData = mutableMapOf<String, Any>(
             "nome" to "Server Name",
@@ -186,6 +189,11 @@ class ConflictResolutionTest {
         whenever(querySnapshot.documents).thenReturn(listOf(documentSnapshot))
         whenever(querySnapshot.isEmpty).thenReturn(false)
         whenever(documentSnapshot.id).thenReturn("555")
+        
+        // Mock para garantir que a reconciliação será executada
+        whenever(appRepository.migrarDadosDeCliente(any(), any())).thenReturn(Unit)
+        whenever(appRepository.deletarCliente(any())).thenReturn(Unit)
+        whenever(appRepository.inserirCliente(any())).thenReturn(Unit)
         
         val serverData = mutableMapOf<String, Any>(
             "nome" to "Duplicate Name",
