@@ -89,13 +89,11 @@ data class Colaborador(
     val nivelAcesso: NivelAcesso = NivelAcesso.USER,
     
     @get:PropertyName("ativo")
-    @set:PropertyName("ativo")
     @ColumnInfo(name = "ativo")
     @SerializedName("ativo")
     val ativo: Boolean = true,
     
     @get:PropertyName("aprovado")
-    @set:PropertyName("aprovado")
     @ColumnInfo(name = "aprovado")
     @SerializedName("aprovado")
     val aprovado: Boolean = false,
@@ -122,7 +120,6 @@ data class Colaborador(
     val senhaHash: String? = null, // Hash da senha pessoal (para login offline)
     
     @get:PropertyName("primeiro_acesso")
-    @set:PropertyName("primeiro_acesso")
     @ColumnInfo(name = "primeiro_acesso")
     @SerializedName("primeiro_acesso")
     val primeiroAcesso: Boolean = true,
