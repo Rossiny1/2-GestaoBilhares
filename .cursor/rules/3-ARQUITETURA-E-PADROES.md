@@ -1,8 +1,8 @@
 # 3️⃣ ARQUITETURA E PADRÕES
 
 > **Propósito**: Definição da estrutura técnica, padrões de código e modularização.  
-> **Última Atualização**: 29 de Dezembro 2025  
-> **Versão**: 5.2 (Estratégia de Testes Ampliada)
+> **Última Atualização**: 02 de Janeiro de 2026  
+> **Versão**: 6.0 (Correções Crashlytics + Testes + Deploy Release)
 
 ---
 
@@ -19,13 +19,14 @@ O projeto é dividido em 5 módulos Gradle para eficiência e isolamento:
 ## 🔄 PADRÕES DE SINCRONIZAÇÃO (Sync Engine)
 ### Padrão Orchestrator
 Para evitar arquivos massivos, o módulo `:sync` utiliza o padrão **Orchestrator + Handlers**:
-*   `SyncRepository`: Orquestra o fluxo global (Pull/Push).
-*   `SyncHandlers`: Cada entidade (Mesa, Cliente, Acerto) possui seu próprio handler especializado.
-*   `BaseSyncHandler`: Classe base com utilitários como `entityToMap` e filtros de multi-tenancy.
+*   `SyncRepository`: Orquestra o fluxo global (Pull/Push). ⚠️ **Ainda com 3644 linhas** - refatoração pendente.
+*   `SyncHandlers`: Cada entidade (Mesa, Cliente, Acerto, Ciclo, Despesa, Rota, Colaborador, Contrato) possui seu próprio handler especializado.
+*   `BaseSyncHandler`: Classe base com utilitários como `entityToMap`, filtros de multi-tenancy e paginação.
 
 ### Sincronização Incremental
 *   Uso de `last_modified` do servidor para busca diferencial.
 *   Economia de ~98% de dados em sincronizações subsequentes.
+*   ✅ **CancellationException**: Tratamento correto implementado em todos os handlers para propagar cancelamento de corrotinas.
 
 
 ---
@@ -33,21 +34,24 @@ Para evitar arquivos massivos, o módulo `:sync` utiliza o padrão **Orchestrato
 ## 🛡️ QUALIDADE E TESTES
 ### Estratégia Unitária
 *   **Financeiro**: Lógica centralizada em `FinancialCalculator` com 100% de cobertura.
-*   **Sincronização**: Cada `SyncHandler` possui testes unitários (`ComprehensiveSyncTest`) validando pull, push e integridade relational.
+*   **Sincronização**: Cada `SyncHandler` possui testes unitários (`ComprehensiveSyncTest`, `ConflictResolutionTest`) validando pull, push, integridade relational e resolução de conflitos.
 *   **Repositórios**: `SyncRepositoryTest` valida a orquestração e filtros de rota.
+*   ✅ **Status**: Todos os testes unitários passando (corrigidos 3 testes recentemente).
 
 ### Cobertura e Regressão
 *   **JaCoCo**: Configurado para medir cobertura em módulos críticos.
-*   **Cenários de Borda**: Testes incluem simulação de falhas de rede, conflitos de ID e cenários de "Bootstrap" (primeiro login).
+*   **Cenários de Borda**: Testes incluem simulação de falhas de rede, conflitos de ID, cenários de "Bootstrap" (primeiro login) e paginação Firestore.
+*   **Mocks**: Cadeia completa de queries Firestore mockada corretamente (`whereEqualTo` → `limit` → `startAfter`).
 
 ---
 
 ## 🛠️ STACK TÉCNICO
 *   **DI**: Hilt (100% migrado).
-*   **UI**: Transição Compose (Híbrida Fragments/Composables).
+*   **UI**: ViewBinding (51 Fragments + 27 Dialogs). Compose: 0% (meta: 60% Q2/2026).
 *   **Data**: Room com Flow support para reatividade real-time local.
 *   **Logging**: **Timber** é obrigatório. `android.util.Log` é desencorajado.
-*   **Threads**: Kotlin Coroutines & Flow (Suspensão sobre Bloqueio).
+*   **Threads**: Kotlin Coroutines & Flow (Suspensão sobre Bloqueio). ✅ CancellationException tratado corretamente.
+*   **Build**: ProGuard/R8 ativado em release. Mapping.txt gerado automaticamente.
 
 ---
 

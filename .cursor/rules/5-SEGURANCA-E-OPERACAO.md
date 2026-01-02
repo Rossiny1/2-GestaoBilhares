@@ -1,8 +1,8 @@
 # 5️⃣ SEGURANÇA E OPERAÇÃO
 
 > **Propósito**: Regras de proteção de dados, segurança de nuvem e processo de release.  
-> **Última Atualização**: Dezembro 2025  
-> **Versão**: 3.0 (Segurança Crítica Resolvida)
+> **Última Atualização**: 02 de Janeiro de 2026  
+> **Versão**: 4.0 (Release 1.0.1 Deployado)
 
 ---
 
@@ -32,9 +32,20 @@ Todas as coleções seguem o princípio de privilégio mínimo e isolamento mult
 
 ## 📦 PROCESSO DE RELEASE (Firebase App Distribution)
 O app é de uso interno e não é publicado na Play Store.
-1.  **Build**: `./gradlew assembleRelease`.
-2.  **Distribuição**: `firebase appdistribution:distribute [APK_PATH] --groups testers`.
-3.  **Logs de Produção**: `CrashlyticsTree` de Timber envia apenas erros críticos e stack traces para o console.
+
+### Build e Deploy
+1.  **Build**: `./gradlew clean :app:assembleRelease`
+2.  **Deploy**: `./gradlew :app:appDistributionUploadRelease` (usa token `FIREBASE_TOKEN`)
+3.  **Mapping.txt**: Gerado automaticamente em `app/build/outputs/mapping/release/mapping.txt` e enviado ao Crashlytics via task `uploadCrashlyticsMappingFileRelease`
+
+### Release Atual
+*   **Versão**: 1.0.1 (3) - Deployado em 02/01/2026
+*   **Testadores**: `rossinys@gmail.com` (configurado via Gradle)
+*   **Release Notes**: "Release 1.0.1 (3) - Correções Crashlytics e Testes Unitários"
+
+### Logs de Produção
+*   `CrashlyticsTree` de Timber envia apenas erros críticos e stack traces para o console.
+*   ✅ Mapping.txt disponível para desofuscação de erros em produção.
 
 ---
 
@@ -42,3 +53,8 @@ O app é de uso interno e não é publicado na Play Store.
 O assistente de IA possui permissões de leitura no Crashlytics e Firestore via MCP, permitindo:
 *   Análise de bugs em tempo real.
 *   Correção proativa baseada em logs de erro reais.
+
+### Status Crashlytics (02/01/2026)
+*   ✅ **4 erros corrigidos**: DialogAditivoEquipamentosBinding, AditivoDialog, SyncRepository.mapType, JobCancellationException
+*   🟡 **1 erro pendente**: s6.f0 (ofuscado) - será resolvido quando mapping.txt for processado pelo Crashlytics
+*   📊 **Monitoramento**: Após deploy da release 1.0.1, verificar se erros corrigidos pararam de ocorrer
