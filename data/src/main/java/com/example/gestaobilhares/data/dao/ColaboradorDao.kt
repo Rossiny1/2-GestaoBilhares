@@ -28,7 +28,7 @@ interface ColaboradorDao {
     @Query("SELECT * FROM colaboradores WHERE id = :id")
     suspend fun obterPorId(id: Long): Colaborador?
     
-    @Query("SELECT * FROM colaboradores WHERE email = :email")
+    @Query("SELECT * FROM colaboradores WHERE LOWER(email) = LOWER(:email)")
     suspend fun obterPorEmail(email: String): Colaborador?
     
     @Query("SELECT * FROM colaboradores WHERE firebase_uid = :firebaseUid")
