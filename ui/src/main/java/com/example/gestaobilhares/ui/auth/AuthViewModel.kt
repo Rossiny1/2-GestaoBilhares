@@ -1800,6 +1800,8 @@ class AuthViewModel @Inject constructor(
     
     /**
      * ✅ NOVO: Cria colaborador automaticamente com dados mínimos
+     * 
+     * ✅ SUPERADMIN: rossinys@gmail.com sempre é criado como ADMIN, aprovado, sem primeiro acesso
      */
     private suspend fun criarColaboradorAutomatico(
         uid: String,
@@ -1811,18 +1813,39 @@ class AuthViewModel @Inject constructor(
             Timber.d("AuthViewModel", "🔧 Criando colaborador automático: $nome ($email)")
             
             val agora = System.currentTimeMillis()
-            val colaborador = Colaborador(
-                id = 0L, // Será gerado pelo Room
-                nome = nome,
-                email = email,
-                firebaseUid = uid,
-                nivelAcesso = NivelAcesso.USER,
-                aprovado = false, // Precisa ser aprovado pelo admin
-                ativo = true,
-                primeiroAcesso = true,
-                dataCadastro = agora,
-                dataUltimaAtualizacao = agora
-            )
+            val isSuperAdmin = email == "rossinys@gmail.com"
+            
+            val colaborador = if (isSuperAdmin) {
+                // ✅ SUPERADMIN: rossinys@gmail.com sempre é ADMIN, aprovado, sem primeiro acesso
+                Timber.d("AuthViewModel", "🔧 Criando como SUPERADMIN (rossinys@gmail.com)")
+                Colaborador(
+                    id = 0L, // Será gerado pelo Room
+                    nome = nome,
+                    email = email,
+                    firebaseUid = uid,
+                    nivelAcesso = NivelAcesso.ADMIN,
+                    aprovado = true, // Superadmin sempre aprovado
+                    ativo = true,
+                    primeiroAcesso = false, // Superadmin nunca precisa alterar senha
+                    dataCadastro = agora,
+                    dataUltimaAtualizacao = agora,
+                    dataAprovacao = agora,
+                    aprovadoPor = "Sistema (Superadmin)"
+                )
+            } else {
+                Colaborador(
+                    id = 0L, // Será gerado pelo Room
+                    nome = nome,
+                    email = email,
+                    firebaseUid = uid,
+                    nivelAcesso = NivelAcesso.USER,
+                    aprovado = false, // Precisa ser aprovado pelo admin
+                    ativo = true,
+                    primeiroAcesso = true,
+                    dataCadastro = agora,
+                    dataUltimaAtualizacao = agora
+                )
+            }
             
             // Salvar localmente primeiro
             val idLocal = appRepository.inserirColaborador(colaborador)
