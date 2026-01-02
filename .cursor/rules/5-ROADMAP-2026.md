@@ -1,5 +1,6 @@
-# 4️⃣ ROADMAP 2026
+# 📖 5️⃣ ROADMAP 2026
 
+> **LEIA QUINTO** - Entenda o planejamento futuro e pendências após dominar o projeto.  
 > **Propósito**: Planejamento estratégico e fases pendentes de evolução.  
 > **Última Atualização**: 02 de Janeiro de 2026  
 > **Versão**: 4.0 (Release 1.0.1 Deployado)

@@ -1,5 +1,6 @@
-# 3️⃣ ARQUITETURA E PADRÕES
+# 📖 3️⃣ ARQUITETURA E PADRÕES
 
+> **LEIA TERCEIRO** - Entenda a estrutura técnica e padrões antes de implementar.  
 > **Propósito**: Definição da estrutura técnica, padrões de código e modularização.  
 > **Última Atualização**: 02 de Janeiro de 2026  
 > **Versão**: 6.0 (Correções Crashlytics + Testes + Deploy Release)

@@ -1,5 +1,6 @@
-# 5️⃣ SEGURANÇA E OPERAÇÃO
+# 📖 4️⃣ SEGURANÇA E OPERAÇÃO
 
+> **LEIA QUARTO** - Entenda segurança e processos de release antes de fazer deploy.  
 > **Propósito**: Regras de proteção de dados, segurança de nuvem e processo de release.  
 > **Última Atualização**: 02 de Janeiro de 2026  
 > **Versão**: 4.0 (Release 1.0.1 Deployado)
