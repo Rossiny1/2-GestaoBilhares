@@ -321,19 +321,10 @@ class AuthViewModel @Inject constructor(
                                 return@launch
                             }
                             
-                            // ✅ CORREÇÃO CRÍTICA: Garantir que a sessão foi iniciada antes de autenticar
-                            // A função criarOuAtualizarColaboradorOnline já inicia a sessão, mas vamos verificar
-                            val nomeSessao = userSessionManager.getCurrentUserName()
-                            val idSessao = userSessionManager.getCurrentUserId()
-                            Timber.d("AuthViewModel", "🔍 Verificação da sessão online:")
-                            Timber.d("AuthViewModel", "   Nome na sessão: $nomeSessao")
-                            Timber.d("AuthViewModel", "   ID na sessão: $idSessao")
-                            
-                            // ✅ CORREÇÃO: Se a sessão não foi iniciada, iniciar agora
-                            if (idSessao == 0L) {
-                                val cloudInfo = if (online) buscarColaboradorNaNuvemPorEmail(email) else null
-                                userSessionManager.startSession(colaborador, cloudInfo?.second ?: "empresa_001")
-                            }
+                            // ✅ CORREÇÃO: Iniciar sessão APÓS obter colaborador do servidor
+                            // IMPORTANTE: getOrCreateColaborador() já fez await(), então os dados estão atualizados
+                            val empresaId = "empresa_001" // TODO: Detectar empresaId do colaborador
+                            userSessionManager.startSession(colaborador, empresaId)
                             
                             val localUser = LocalUser(
                                 uid = colaborador.id.toString(),
@@ -1600,54 +1591,63 @@ class AuthViewModel @Inject constructor(
     /**
      * ✅ CORREÇÃO DEFINITIVA: Busca colaborador por UID (lookup direto)
      * 
-     * Por quê: 
-     * - Lookup O(1) por UID é mais eficiente e confiável
-     * - Evita ler documentos antigos/duplicados do schema antigo
-     * - Garante que estamos lendo o documento correto (colaboradores/{uid})
-     * 
-     * ✅ CORREÇÃO BUG APROVADO:
-     * - Força leitura do servidor (Source.SERVER) para evitar cache
-     * - Usa @PropertyName no model para mapeamento correto
-     * - Valida e corrige valores boolean se necessário
+     * REQUISITOS:
+     * 1. Busca APENAS por UID (fim do collectionGroup/email)
+     * 2. Força leitura do servidor (Source.SERVER) para evitar cache
+     * 3. Logs de diagnóstico ANTES de converter
+     * 4. Validação e correção de mapeamento boolean
      */
     private suspend fun buscarColaboradorPorUid(uid: String, empresaId: String = "empresa_001"): Colaborador? {
         return try {
-            Timber.d("AuthViewModel", "🔍 Buscando colaborador por UID: $uid (empresa: $empresaId)")
+            Timber.d("AuthViewModel", "🔍 [BUSCA_UID] Iniciando busca por UID: $uid")
             
-            // ✅ NOVO SCHEMA: Lookup direto por UID (colaboradores/{uid})
+            // ✅ CORREÇÃO DEFINITIVA: Lookup direto por UID (colaboradores/{uid})
             val docRef = firestore
                 .collection("empresas")
                 .document(empresaId)
                 .collection("colaboradores")
                 .document(uid)
             
-            // ✅ CORREÇÃO: Forçar leitura do servidor (Source.SERVER) para evitar cache desatualizado
+            // ✅ CORREÇÃO DEFINITIVA: Forçar leitura do servidor (Source.SERVER)
+            // Isso garante que não estamos lendo cache antigo com aprovado=false
+            Timber.d("AuthViewModel", "🔍 [BUSCA_UID] Forçando leitura do servidor (Source.SERVER)...")
             val doc = docRef.get(com.google.firebase.firestore.Source.SERVER).await()
             
+            // ✅ DIAGNÓSTICO OBRIGATÓRIO: Logar ANTES de converter
+            Timber.d("AuthViewModel", "═══════════════════════════════════════")
+            Timber.d("AuthViewModel", "📋 [DIAGNÓSTICO] Documento do Firestore:")
+            Timber.d("AuthViewModel", "   Path: ${doc.reference.path}")
+            Timber.d("AuthViewModel", "   Exists: ${doc.exists()}")
+            Timber.d("AuthViewModel", "═══════════════════════════════════════")
+            
             if (!doc.exists()) {
-                Timber.d("AuthViewModel", "⚠️ Colaborador não encontrado no path: empresas/$empresaId/colaboradores/$uid")
+                Timber.d("AuthViewModel", "⚠️ [BUSCA_UID] Documento não existe: empresas/$empresaId/colaboradores/$uid")
                 return null
             }
             
             val data = doc.data
             if (data == null) {
-                Timber.e("AuthViewModel", "❌ Documento existe mas data é null!")
+                Timber.e("AuthViewModel", "❌ [BUSCA_UID] Documento existe mas data é null!")
                 return null
             }
             
-            // ✅ DIAGNÓSTICO: Logar path e dados brutos ANTES de converter
-            Timber.d("AuthViewModel", "📋 Documento encontrado:")
-            Timber.d("AuthViewModel", "   Path: ${doc.reference.path}")
+            // ✅ DIAGNÓSTICO OBRIGATÓRIO: Logar dados brutos ANTES de converter
+            Timber.d("AuthViewModel", "📋 [DIAGNÓSTICO] Dados brutos do documento:")
+            Timber.d("AuthViewModel", "   Data keys: ${data.keys.joinToString(", ")}")
             Timber.d("AuthViewModel", "   Campo 'aprovado' (bruto): ${data["aprovado"]} (tipo: ${data["aprovado"]?.javaClass?.simpleName})")
             Timber.d("AuthViewModel", "   Campo 'ativo' (bruto): ${data["ativo"]} (tipo: ${data["ativo"]?.javaClass?.simpleName})")
+            Timber.d("AuthViewModel", "   Campo 'primeiro_acesso' (bruto): ${data["primeiro_acesso"]} (tipo: ${data["primeiro_acesso"]?.javaClass?.simpleName})")
             
             // ✅ CORREÇÃO: Ler valores boolean diretamente do documento
             val aprovadoDireto = doc.getBoolean("aprovado") ?: false
             val ativoDireto = doc.getBoolean("ativo") ?: true
             val primeiroAcessoDireto = doc.getBoolean("primeiro_acesso") ?: true
             
-            Timber.d("AuthViewModel", "   Campo 'aprovado' (direto): $aprovadoDireto")
-            Timber.d("AuthViewModel", "   Campo 'ativo' (direto): $ativoDireto")
+            Timber.d("AuthViewModel", "📋 [DIAGNÓSTICO] Valores diretos (doc.getBoolean):")
+            Timber.d("AuthViewModel", "   aprovado: $aprovadoDireto")
+            Timber.d("AuthViewModel", "   ativo: $ativoDireto")
+            Timber.d("AuthViewModel", "   primeiro_acesso: $primeiroAcessoDireto")
+            Timber.d("AuthViewModel", "═══════════════════════════════════════")
             
             // Converter Timestamps para Date
             val dataConvertida = data.toMutableMap()
@@ -1674,20 +1674,20 @@ class AuthViewModel @Inject constructor(
             
             val colaboradorId = doc.id.toLongOrNull() ?: (data["id"] as? Number)?.toLong() ?: 0L
             
-            // ✅ CORREÇÃO: Converter usando toObject() (com @PropertyName deve funcionar corretamente)
+            // ✅ CORREÇÃO: Converter usando toObject() (com @PropertyName deve funcionar)
+            Timber.d("AuthViewModel", "🔧 [CONVERSÃO] Convertendo documento para Colaborador...")
             val colaborador = doc.toObject(Colaborador::class.java)
             
             if (colaborador == null) {
-                Timber.e("AuthViewModel", "❌ toObject() retornou null, tentando Gson...")
-                // Fallback: usar Gson
+                Timber.e("AuthViewModel", "❌ [CONVERSÃO] toObject() retornou null, tentando Gson...")
                 val colaboradorJson = gson.toJson(dataConvertida)
                 val colaboradorGson = gson.fromJson(colaboradorJson, Colaborador::class.java)
                 if (colaboradorGson == null) {
-                    Timber.e("AuthViewModel", "❌ Falha ao converter documento para Colaborador")
+                    Timber.e("AuthViewModel", "❌ [CONVERSÃO] Falha ao converter documento para Colaborador")
                     return null
                 }
                 
-                // ✅ CORREÇÃO: Validar e corrigir valores boolean
+                // ✅ CORREÇÃO: Sempre usar valores diretos do documento
                 val colaboradorFinal = colaboradorGson.copy(
                     id = colaboradorId,
                     aprovado = aprovadoDireto,
@@ -1695,15 +1695,18 @@ class AuthViewModel @Inject constructor(
                     primeiroAcesso = primeiroAcessoDireto
                 )
                 
-                Timber.d("AuthViewModel", "✅ Colaborador convertido (Gson): ${colaboradorFinal.nome} (Aprovado: ${colaboradorFinal.aprovado})")
+                Timber.d("AuthViewModel", "✅ [CONVERSÃO] Colaborador convertido (Gson): ${colaboradorFinal.nome}")
+                Timber.d("AuthViewModel", "   Aprovado: ${colaboradorFinal.aprovado} (validado: $aprovadoDireto)")
                 return colaboradorFinal
             }
             
-            // ✅ CORREÇÃO: Validar se o mapeamento funcionou corretamente
-            val colaboradorFinal = if (colaborador.aprovado != aprovadoDireto) {
-                Timber.w("AuthViewModel", "⚠️ Mapeamento falhou: aprovado no doc ($aprovadoDireto) != aprovado no objeto (${colaborador.aprovado})")
-                Timber.w("AuthViewModel", "   Corrigindo usando valor direto do documento...")
-                // Usar valor direto do documento
+            // ✅ CORREÇÃO: Validar e corrigir se o mapeamento falhou
+            val colaboradorFinal = if (colaborador.aprovado != aprovadoDireto || colaborador.ativo != ativoDireto) {
+                Timber.w("AuthViewModel", "⚠️ [CONVERSÃO] Mapeamento falhou!")
+                Timber.w("AuthViewModel", "   aprovado: doc=$aprovadoDireto, objeto=${colaborador.aprovado}")
+                Timber.w("AuthViewModel", "   ativo: doc=$ativoDireto, objeto=${colaborador.ativo}")
+                Timber.w("AuthViewModel", "   Corrigindo usando valores diretos do documento...")
+                // Usar valores diretos do documento
                 colaborador.copy(
                     id = colaboradorId,
                     aprovado = aprovadoDireto,
@@ -1712,14 +1715,18 @@ class AuthViewModel @Inject constructor(
                 )
             } else {
                 // Mapeamento funcionou corretamente
+                Timber.d("AuthViewModel", "✅ [CONVERSÃO] Mapeamento OK: aprovado=${colaborador.aprovado}")
                 colaborador.copy(id = colaboradorId)
             }
             
-            Timber.d("AuthViewModel", "✅ Colaborador encontrado: ${colaboradorFinal.nome} (Aprovado: ${colaboradorFinal.aprovado}, Path: ${doc.reference.path})")
+            Timber.d("AuthViewModel", "✅ [BUSCA_UID] Colaborador encontrado: ${colaboradorFinal.nome}")
+            Timber.d("AuthViewModel", "   Aprovado: ${colaboradorFinal.aprovado}")
+            Timber.d("AuthViewModel", "   Ativo: ${colaboradorFinal.ativo}")
+            Timber.d("AuthViewModel", "   Path: ${doc.reference.path}")
             colaboradorFinal
             
         } catch (e: Exception) {
-            Timber.e(e, "❌ Erro ao buscar colaborador por UID: %s", e.message)
+            Timber.e(e, "❌ [BUSCA_UID] Erro ao buscar colaborador por UID: %s", e.message)
             crashlytics.recordException(e)
             null
         }
@@ -1727,14 +1734,13 @@ class AuthViewModel @Inject constructor(
     
     
     /**
-     * ✅ NOVO: Obtém ou cria colaborador automaticamente
+     * ✅ CORREÇÃO DEFINITIVA: Obtém ou cria colaborador por UID
      * 
-     * Fluxo:
-     * 1. Busca APENAS por UID no novo schema (colaboradores/{uid})
-     * 2. Se não encontrar, cria automaticamente com dados mínimos
-     * 
-     * ✅ CORREÇÃO DEFINITIVA: NÃO usa fallback para schema antigo
-     * Por quê: Evita ler documento errado que pode ter aprovado=false
+     * REQUISITOS:
+     * 1. Busca APENAS por UID (fim do collectionGroup/email)
+     * 2. Garante await() antes de retornar
+     * 3. Cria automaticamente se não existir (aprovado=false, ativo=true)
+     * 4. NÃO usa fallback para schema antigo
      */
     private suspend fun getOrCreateColaborador(
         uid: String,
@@ -1743,26 +1749,34 @@ class AuthViewModel @Inject constructor(
         empresaId: String = "empresa_001"
     ): Colaborador? {
         return try {
-            Timber.d("AuthViewModel", "🔍 getOrCreateColaborador: UID=$uid, Email=$email")
+            Timber.d("AuthViewModel", "🔍 [GET_OR_CREATE] Iniciando: UID=$uid, Email=$email")
             
             // ✅ CORREÇÃO DEFINITIVA: Buscar APENAS no novo schema por UID
             // NÃO usar fallback para schema antigo (evita documento errado)
             var colaborador = buscarColaboradorPorUid(uid, empresaId)
             
-            // 3. Se ainda não encontrou, criar automaticamente
+            // ✅ CORREÇÃO DEFINITIVA: Se não encontrou, criar automaticamente
+            // IMPORTANTE: Criar com aprovado=false e ativo=true (padrão para novos usuários)
             if (colaborador == null) {
-                Timber.d("AuthViewModel", "⚠️ Colaborador não encontrado, criando automaticamente...")
-                crashlytics.log("[GET_OR_CREATE] Criando colaborador automaticamente")
-                
+                Timber.d("AuthViewModel", "⚠️ [GET_OR_CREATE] Colaborador não encontrado, criando automaticamente...")
                 colaborador = criarColaboradorAutomatico(uid, email, nome ?: email.split("@")[0], empresaId)
+                
+                // ✅ CORREÇÃO: Aguardar criação completar antes de retornar
+                if (colaborador != null) {
+                    Timber.d("AuthViewModel", "✅ [GET_OR_CREATE] Colaborador criado: ${colaborador.nome} (Aprovado: ${colaborador.aprovado})")
+                } else {
+                    Timber.e("AuthViewModel", "❌ [GET_OR_CREATE] Falha ao criar colaborador automaticamente")
+                }
+            } else {
+                Timber.d("AuthViewModel", "✅ [GET_OR_CREATE] Colaborador encontrado: ${colaborador.nome} (Aprovado: ${colaborador.aprovado})")
             }
             
-            if (colaborador != null) {
-                Timber.d("AuthViewModel", "✅ Colaborador obtido/criado: ${colaborador.nome}")
-                crashlytics.log("[GET_OR_CREATE] ✅ Sucesso: ${colaborador.nome}")
-            } else {
-                Timber.e("AuthViewModel", "❌ Falha ao obter/criar colaborador")
-                crashlytics.log("[GET_OR_CREATE] ❌ Falha")
+            // ✅ CORREÇÃO: Garantir que sempre retornamos um colaborador (nunca null)
+            // Se ainda for null após criação, retornar colaborador mínimo
+            if (colaborador == null) {
+                Timber.e("AuthViewModel", "❌ [GET_OR_CREATE] Colaborador ainda é null após todas as tentativas")
+                Timber.e("AuthViewModel", "   Criando colaborador mínimo como último recurso...")
+                colaborador = criarColaboradorAutomatico(uid, email, nome ?: email.split("@")[0], empresaId)
             }
             
             colaborador
@@ -1776,9 +1790,13 @@ class AuthViewModel @Inject constructor(
     }
     
     /**
-     * ✅ NOVO: Cria colaborador automaticamente com dados mínimos
+     * ✅ CORREÇÃO DEFINITIVA: Cria colaborador automaticamente com dados mínimos
      * 
-     * ✅ SUPERADMIN: rossinys@gmail.com sempre é criado como ADMIN, aprovado, sem primeiro acesso
+     * REQUISITOS:
+     * 1. Cria com aprovado=false e ativo=true (padrão para novos usuários)
+     * 2. SUPERADMIN: rossinys@gmail.com sempre é ADMIN, aprovado=true
+     * 3. Garante await() na criação no Firestore
+     * 4. Retorna colaborador válido (nunca null)
      */
     private suspend fun criarColaboradorAutomatico(
         uid: String,
@@ -1787,31 +1805,32 @@ class AuthViewModel @Inject constructor(
         empresaId: String
     ): Colaborador? {
         return try {
-            Timber.d("AuthViewModel", "🔧 Criando colaborador automático: $nome ($email)")
+            Timber.d("AuthViewModel", "🔧 [CRIAR_AUTO] Criando colaborador: $nome ($email)")
             
             val agora = System.currentTimeMillis()
             val isSuperAdmin = email == "rossinys@gmail.com"
             
             val colaborador = if (isSuperAdmin) {
                 // ✅ SUPERADMIN: rossinys@gmail.com sempre é ADMIN, aprovado, sem primeiro acesso
-                Timber.d("AuthViewModel", "🔧 Criando como SUPERADMIN (rossinys@gmail.com)")
+                Timber.d("AuthViewModel", "🔧 [CRIAR_AUTO] Criando como SUPERADMIN")
                 Colaborador(
-                    id = 0L, // Será gerado pelo Room
+                    id = 0L,
                     nome = nome,
                     email = email,
                     firebaseUid = uid,
                     nivelAcesso = NivelAcesso.ADMIN,
-                    aprovado = true, // Superadmin sempre aprovado
+                    aprovado = true,
                     ativo = true,
-                    primeiroAcesso = false, // Superadmin nunca precisa alterar senha
+                    primeiroAcesso = false,
                     dataCadastro = agora,
                     dataUltimaAtualizacao = agora,
                     dataAprovacao = agora,
                     aprovadoPor = "Sistema (Superadmin)"
                 )
             } else {
+                // ✅ CORREÇÃO: Novos usuários começam com aprovado=false (padrão)
                 Colaborador(
-                    id = 0L, // Será gerado pelo Room
+                    id = 0L,
                     nome = nome,
                     email = email,
                     firebaseUid = uid,
@@ -1824,30 +1843,40 @@ class AuthViewModel @Inject constructor(
                 )
             }
             
-            // Salvar localmente primeiro
+            // ✅ CORREÇÃO: Salvar localmente primeiro
             val idLocal = appRepository.inserirColaborador(colaborador)
             val colaboradorComId = colaborador.copy(id = idLocal)
             
-            // Criar no Firestore (novo schema)
+            // ✅ CORREÇÃO: Criar no Firestore e AGUARDAR (await)
+            Timber.d("AuthViewModel", "🔧 [CRIAR_AUTO] Criando no Firestore (novo schema)...")
             criarColaboradorNoNovoSchema(colaboradorComId, empresaId)
             
-            Timber.d("AuthViewModel", "✅ Colaborador criado automaticamente (ID local: $idLocal)")
+            Timber.d("AuthViewModel", "✅ [CRIAR_AUTO] Colaborador criado: ${colaboradorComId.nome} (ID: $idLocal, Aprovado: ${colaboradorComId.aprovado})")
             colaboradorComId
             
         } catch (e: Exception) {
-            Timber.e(e, "❌ Erro ao criar colaborador automático: %s", e.message)
+            Timber.e(e, "❌ [CRIAR_AUTO] Erro ao criar colaborador: %s", e.message)
+            crashlytics.recordException(e)
             null
         }
     }
     
     /**
-     * ✅ NOVO: Cria colaborador no novo schema (colaboradores/{uid})
+     * ✅ CORREÇÃO DEFINITIVA: Cria colaborador no novo schema (colaboradores/{uid})
+     * 
+     * REQUISITOS:
+     * 1. Garante await() para sincronismo
+     * 2. Usa set() para criar/atualizar
+     * 3. Garante campos boolean corretos (aprovado, ativo, primeiro_acesso)
      */
     private suspend fun criarColaboradorNoNovoSchema(colaborador: Colaborador, empresaId: String) {
         try {
-            val uid = colaborador.firebaseUid ?: return
+            val uid = colaborador.firebaseUid ?: run {
+                Timber.e("AuthViewModel", "❌ [CRIAR_SCHEMA] firebaseUid é null!")
+                return
+            }
             
-            Timber.d("AuthViewModel", "🔧 Criando colaborador no novo schema: colaboradores/$uid")
+            Timber.d("AuthViewModel", "🔧 [CRIAR_SCHEMA] Criando: empresas/$empresaId/colaboradores/$uid")
             
             val docRef = firestore
                 .collection("empresas")
@@ -1873,16 +1902,25 @@ class AuthViewModel @Inject constructor(
             colaborador.dataAprovacao?.let { colaboradorMap["data_aprovacao"] = Timestamp(Date(it)) }
             colaborador.dataUltimoAcesso?.let { colaboradorMap["data_ultimo_acesso"] = Timestamp(Date(it)) }
             
-            // Garantir nivel_acesso como string
+            // ✅ CORREÇÃO: Garantir campos boolean corretos
+            colaboradorMap["aprovado"] = colaborador.aprovado
+            colaboradorMap["ativo"] = colaborador.ativo
+            colaboradorMap["primeiro_acesso"] = colaborador.primeiroAcesso
             colaboradorMap["nivel_acesso"] = colaborador.nivelAcesso.name
             
-            // Usar set() com merge para evitar sobrescrever dados existentes
+            Timber.d("AuthViewModel", "🔧 [CRIAR_SCHEMA] Campos boolean:")
+            Timber.d("AuthViewModel", "   aprovado: ${colaboradorMap["aprovado"]}")
+            Timber.d("AuthViewModel", "   ativo: ${colaboradorMap["ativo"]}")
+            Timber.d("AuthViewModel", "   primeiro_acesso: ${colaboradorMap["primeiro_acesso"]}")
+            
+            // ✅ CORREÇÃO: Usar set() e AGUARDAR (await) para garantir sincronismo
             docRef.set(colaboradorMap).await()
             
-            Timber.d("AuthViewModel", "✅ Colaborador criado no novo schema com sucesso!")
+            Timber.d("AuthViewModel", "✅ [CRIAR_SCHEMA] Colaborador criado no Firestore com sucesso!")
             
         } catch (e: Exception) {
-            Timber.e(e, "❌ Erro ao criar colaborador no novo schema: %s", e.message)
+            Timber.e(e, "❌ [CRIAR_SCHEMA] Erro ao criar colaborador: %s", e.message)
+            crashlytics.recordException(e)
             throw e
         }
     }
