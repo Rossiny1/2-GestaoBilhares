@@ -155,12 +155,18 @@ class AuthViewModel @Inject constructor(
                     // Tentar login online primeiro
                     crashlytics.log("[LOGIN_FLOW] Tentando login online...")
                     Timber.d("AuthViewModel", "Tentando login online...")
+                    Timber.d("AuthViewModel", "═══════════════════════════════════════")
+                    Timber.d("AuthViewModel", "🔵 INÍCIO DO BLOCO TRY - LOGIN ONLINE")
+                    Timber.d("AuthViewModel", "═══════════════════════════════════════")
                     try {
                         Timber.d("AuthViewModel", "🔍 ANTES de signInWithEmailAndPassword...")
                         crashlytics.log("[LOGIN_FLOW] Chamando signInWithEmailAndPassword...")
                         val result = firebaseAuth.signInWithEmailAndPassword(email, senha).await()
                         Timber.d("AuthViewModel", "🔍 DEPOIS de signInWithEmailAndPassword - result.user: ${result.user != null}")
                         crashlytics.log("[LOGIN_FLOW] signInWithEmailAndPassword concluído - user: ${result.user != null}")
+                        Timber.d("AuthViewModel", "═══════════════════════════════════════")
+                        Timber.d("AuthViewModel", "✅ AWAIT CONCLUÍDO - VERIFICANDO RESULTADO")
+                        Timber.d("AuthViewModel", "═══════════════════════════════════════")
                         
                         if (result.user != null) {
                             crashlytics.setCustomKey("login_online_success", true)
@@ -308,6 +314,14 @@ class AuthViewModel @Inject constructor(
                         }
                     } catch (e: Exception) {
                         // ✅ LOGS ESTRUTURADOS PARA CRASHLYTICS: Erro no login online
+                        Timber.e("AuthViewModel", "═══════════════════════════════════════")
+                        Timber.e("AuthViewModel", "❌ EXCEÇÃO CAPTURADA NO BLOCO TRY")
+                        Timber.e("AuthViewModel", "═══════════════════════════════════════")
+                        Timber.e("AuthViewModel", "Tipo: ${e.javaClass.simpleName}")
+                        Timber.e("AuthViewModel", "Mensagem: ${e.message}")
+                        Timber.e("AuthViewModel", "Stack: ${e.stackTraceToString()}")
+                        Timber.e("AuthViewModel", "═══════════════════════════════════════")
+                        
                         val errorCode = (e as? com.google.firebase.auth.FirebaseAuthException)?.errorCode
                         crashlytics.setCustomKey("login_online_error", errorCode ?: "unknown")
                         crashlytics.setCustomKey("login_online_error_type", e.javaClass.simpleName)
