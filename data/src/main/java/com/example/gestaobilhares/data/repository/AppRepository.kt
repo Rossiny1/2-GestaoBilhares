@@ -763,8 +763,36 @@ class AppRepository @Inject constructor(
     // ==================== FIRESTORE - NOVO SCHEMA (empresas/{empresaId}/colaboradores/{uid}) ====================
     
     /**
-     * ✅ NOVO: Busca colaborador pelo UID no caminho canônico
+     * ✅ REFATORAÇÃO: Obtém DocumentSnapshot do colaborador pelo UID
+     * Usa Source.SERVER para forçar leitura do servidor (ignora cache)
+     * 
+     * @param empresaId ID da empresa (padrão: "empresa_001")
+     * @param uid Firebase UID do usuário
+     * @return DocumentSnapshot do colaborador
+     */
+    suspend fun getColaboradorDoc(empresaId: String, uid: String): com.google.firebase.firestore.DocumentSnapshot {
+        val docRef = firestore
+            .collection("empresas")
+            .document(empresaId)
+            .collection("colaboradores")
+            .document(uid)
+        
+        // ✅ FORÇAR LEITURA DO SERVIDOR para ignorar cache durante debug
+        return docRef.get(Source.SERVER).await()
+    }
+    
+    
+    
+    /**
+     * ✅ REFATORAÇÃO: Busca colaborador pelo UID no caminho canônico
      * Caminho: empresas/{empresaId}/colaboradores/{uid}
+     * 
+     * LOGS OBRIGATÓRIOS:
+     * - UID buscado
+     * - doc.reference.path
+     * - doc.exists()
+     * - doc.data (Map bruto)
+     * - doc.getBoolean("aprovado")
      * 
      * @param empresaId ID da empresa (padrão: "empresa_001")
      * @param uid Firebase UID do usuário
@@ -772,18 +800,24 @@ class AppRepository @Inject constructor(
      */
     suspend fun getColaboradorByUid(empresaId: String, uid: String): Colaborador? {
         return try {
+            android.util.Log.d("AppRepository", "═══════════════════════════════════════")
+            android.util.Log.d("AppRepository", "🔍 [FIRESTORE] Buscando colaborador por UID")
+            android.util.Log.d("AppRepository", "   UID buscado: $uid")
+            android.util.Log.d("AppRepository", "   Empresa: $empresaId")
+            android.util.Log.d("AppRepository", "═══════════════════════════════════════")
+            
             Timber.d("AppRepository", "🔍 [FIRESTORE] Buscando colaborador por UID: empresas/$empresaId/colaboradores/$uid")
             
-            val docRef = firestore
-                .collection("empresas")
-                .document(empresaId)
-                .collection("colaboradores")
-                .document(uid)
+            // ✅ Usar getColaboradorDoc() que já força Source.SERVER
+            val doc = getColaboradorDoc(empresaId, uid)
             
-            // ✅ FORÇAR LEITURA DO SERVIDOR para evitar cache desatualizado
-            val doc = docRef.get(Source.SERVER).await()
+            // ✅ LOGS OBRIGATÓRIOS: Path, exists, data, aprovado
+            android.util.Log.d("AppRepository", "═══════════════════════════════════════")
+            android.util.Log.d("AppRepository", "📋 [DIAGNÓSTICO] Documento do Firestore:")
+            android.util.Log.d("AppRepository", "   doc.reference.path: ${doc.reference.path}")
+            android.util.Log.d("AppRepository", "   doc.exists(): ${doc.exists()}")
+            android.util.Log.d("AppRepository", "═══════════════════════════════════════")
             
-            // ✅ LOGS DE DIAGNÓSTICO
             Timber.d("AppRepository", "═══════════════════════════════════════")
             Timber.d("AppRepository", "📋 [DIAGNÓSTICO] Documento do Firestore:")
             Timber.d("AppRepository", "   Path: ${doc.reference.path}")
@@ -801,18 +835,29 @@ class AppRepository @Inject constructor(
                 return null
             }
             
-            // ✅ LOGS DE DIAGNÓSTICO: Dados brutos ANTES de converter
+            // ✅ LOGS OBRIGATÓRIOS: Dados brutos ANTES de converter
+            android.util.Log.d("AppRepository", "📋 [DIAGNÓSTICO] doc.data (Map bruto):")
+            android.util.Log.d("AppRepository", "   Data keys: ${data.keys.joinToString(", ")}")
+            android.util.Log.d("AppRepository", "   Campo 'aprovado' (bruto): ${data["aprovado"]} (tipo: ${data["aprovado"]?.javaClass?.simpleName})")
+            android.util.Log.d("AppRepository", "   Campo 'ativo' (bruto): ${data["ativo"]} (tipo: ${data["ativo"]?.javaClass?.simpleName})")
+            android.util.Log.d("AppRepository", "   Campo 'primeiro_acesso' (bruto): ${data["primeiro_acesso"]} (tipo: ${data["primeiro_acesso"]?.javaClass?.simpleName})")
+            
+            // ✅ LOGS OBRIGATÓRIOS: doc.getBoolean("aprovado")
+            val aprovadoDireto = doc.getBoolean("aprovado") ?: false
+            val ativoDireto = doc.getBoolean("ativo") ?: true
+            val primeiroAcessoDireto = doc.getBoolean("primeiro_acesso") ?: true
+            
+            android.util.Log.d("AppRepository", "📋 [DIAGNÓSTICO] Valores diretos (doc.getBoolean):")
+            android.util.Log.d("AppRepository", "   doc.getBoolean(\"aprovado\"): $aprovadoDireto")
+            android.util.Log.d("AppRepository", "   doc.getBoolean(\"ativo\"): $ativoDireto")
+            android.util.Log.d("AppRepository", "   doc.getBoolean(\"primeiro_acesso\"): $primeiroAcessoDireto")
+            android.util.Log.d("AppRepository", "═══════════════════════════════════════")
+            
             Timber.d("AppRepository", "📋 [DIAGNÓSTICO] Dados brutos do documento:")
             Timber.d("AppRepository", "   Data keys: ${data.keys.joinToString(", ")}")
             Timber.d("AppRepository", "   Campo 'aprovado' (bruto): ${data["aprovado"]} (tipo: ${data["aprovado"]?.javaClass?.simpleName})")
             Timber.d("AppRepository", "   Campo 'ativo' (bruto): ${data["ativo"]} (tipo: ${data["ativo"]?.javaClass?.simpleName})")
             Timber.d("AppRepository", "   Campo 'primeiro_acesso' (bruto): ${data["primeiro_acesso"]} (tipo: ${data["primeiro_acesso"]?.javaClass?.simpleName})")
-            
-            // ✅ CORREÇÃO: Ler valores boolean diretamente do documento
-            val aprovadoDireto = doc.getBoolean("aprovado") ?: false
-            val ativoDireto = doc.getBoolean("ativo") ?: true
-            val primeiroAcessoDireto = doc.getBoolean("primeiro_acesso") ?: true
-            
             Timber.d("AppRepository", "📋 [DIAGNÓSTICO] Valores diretos (doc.getBoolean):")
             Timber.d("AppRepository", "   aprovado: $aprovadoDireto")
             Timber.d("AppRepository", "   ativo: $ativoDireto")
@@ -903,6 +948,34 @@ class AppRepository @Inject constructor(
     }
     
     /**
+     * ✅ REFATORAÇÃO: Cria colaborador pendente SE não existir
+     * Caminho: empresas/{empresaId}/colaboradores/{uid}
+     * 
+     * IMPORTANTE: NÃO cria em entidades/colaboradores/items/*
+     * 
+     * @param empresaId ID da empresa (padrão: "empresa_001")
+     * @param uid Firebase UID do usuário
+     * @param email Email do usuário
+     * @return Colaborador (criado ou existente)
+     */
+    suspend fun createPendingColaboradorIfMissing(
+        empresaId: String,
+        uid: String,
+        email: String
+    ): Colaborador {
+        // ✅ Verificar se já existe
+        val doc = getColaboradorDoc(empresaId, uid)
+        if (doc.exists()) {
+            android.util.Log.d("AppRepository", "✅ [CRIAR_PENDENTE] Colaborador já existe, retornando existente")
+            Timber.d("AppRepository", "✅ [CRIAR_PENDENTE] Colaborador já existe: ${doc.reference.path}")
+            return getColaboradorByUid(empresaId, uid) ?: throw IllegalStateException("Colaborador existe mas não foi possível converter")
+        }
+        
+        // ✅ Criar novo colaborador pendente
+        return createPendingColaborador(empresaId, uid, email, null)
+    }
+    
+    /**
      * ✅ NOVO: Cria colaborador pendente no caminho canônico
      * Caminho: empresas/{empresaId}/colaboradores/{uid}
      * 
@@ -912,7 +985,7 @@ class AppRepository @Inject constructor(
      * @param nome Nome do usuário (opcional, usa email se não fornecido)
      * @return Colaborador criado
      */
-    suspend fun createPendingColaborador(
+    private suspend fun createPendingColaborador(
         empresaId: String,
         uid: String,
         email: String,

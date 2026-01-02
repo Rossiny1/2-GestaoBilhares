@@ -119,27 +119,62 @@ class LoginFragment : Fragment() {
     }
     
     /**
-     * Observa mudanças no estado de autenticação
+     * Observa mudanças no estado de autenticação e UI do login
      */
     private fun observeAuthState() {
-        // ✅ MODERNIZADO: Observa o estado de autenticação com StateFlow
+        // ✅ REFATORAÇÃO: Observar apenas loginUiState para decisão de acesso
+        // A UI não decide aprovação com base em AuthStateListener
+        viewLifecycleOwner.lifecycleScope.launch {
+            viewLifecycleOwner.repeatOnLifecycle(Lifecycle.State.STARTED) {
+                authViewModel.loginUiState.collect { uiState ->
+                    when (uiState) {
+                        is LoginUiState.Loading -> {
+                            // Estado de loading já é gerenciado pelo ViewModel
+                            Timber.d("LoginFragment", "🔄 [UI] Estado: Loading")
+                        }
+                        is LoginUiState.Aprovado -> {
+                            // ✅ Aprovado - navegar para home
+                            Timber.d("LoginFragment", "✅ [UI] Colaborador APROVADO - navegando para home")
+                            findNavController().navigate(com.example.gestaobilhares.ui.R.id.action_loginFragment_to_routesFragment)
+                        }
+                        is LoginUiState.Pendente -> {
+                            // ✅ Pendente - mostrar mensagem (UI não decide, apenas exibe)
+                            Timber.d("LoginFragment", "⏳ [UI] Colaborador PENDENTE - mostrando mensagem")
+                            Toast.makeText(
+                                requireContext(),
+                                "Sua conta está aguardando aprovação do administrador.",
+                                Toast.LENGTH_LONG
+                            ).show()
+                        }
+                        is LoginUiState.Erro -> {
+                            // ✅ Erro - mostrar mensagem
+                            Timber.e("LoginFragment", "❌ [UI] Erro: ${uiState.mensagem}")
+                            Toast.makeText(
+                                requireContext(),
+                                uiState.mensagem,
+                                Toast.LENGTH_LONG
+                            ).show()
+                            uiState.exception?.printStackTrace()
+                        }
+                    }
+                }
+            }
+        }
+        
+        // ✅ Observar AuthState apenas para navegação (FirstAccessRequired)
         viewLifecycleOwner.lifecycleScope.launch {
             viewLifecycleOwner.repeatOnLifecycle(Lifecycle.State.STARTED) {
                 authViewModel.authState.collect { authState ->
                     when (authState) {
-                        is AuthState.Authenticated -> {
-                            // Navegar para a tela de rotas em caso de sucesso
-                            findNavController().navigate(com.example.gestaobilhares.ui.R.id.action_loginFragment_to_routesFragment)
-                        }
                         is AuthState.FirstAccessRequired -> {
-                            // ✅ NOVO: Redirecionar para tela de alteração de senha obrigatória
-                            Timber.d("LoginFragment", "Primeiro acesso detectado. Navegando para ChangePasswordFragment...")
+                            // ✅ Redirecionar para tela de alteração de senha obrigatória
+                            Timber.d("LoginFragment", "🔐 [UI] Primeiro acesso detectado. Navegando para ChangePasswordFragment...")
                             findNavController().navigate(
                                 com.example.gestaobilhares.ui.R.id.action_loginFragment_to_changePasswordFragment
                             )
                         }
-                        AuthState.Unauthenticated -> {
-                            // Manter na tela de login
+                        else -> {
+                            // Outros estados são gerenciados por loginUiState
                         }
                     }
                 }
