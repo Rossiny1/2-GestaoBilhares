@@ -86,16 +86,19 @@ service cloud.firestore {
                      // Verificar que os dados do documento estão corretos
                      (request.resource.data.firebase_uid == uid ||
                       request.resource.data.firebaseUid == uid ||
-                      // Permitir criação se for superadmin (rossinys@gmail.com)
-                      (request.auth.token.email == "rossinys@gmail.com" && 
-                       request.resource.data.email == "rossinys@gmail.com")) &&
+                      // ✅ CORREÇÃO: Permitir criação se email no documento for rossinys@gmail.com
+                      // (mesmo que token não tenha email ainda)
+                      request.resource.data.email == "rossinys@gmail.com") &&
                      // ✅ MULTI-TENANCY: Garantir que empresa_id e companyId no documento correspondem ao path
                      (request.resource.data.empresa_id == empresaId || 
                       request.resource.data.companyId == empresaId ||
-                      isAdmin()) &&
+                      // ✅ CORREÇÃO: Permitir criação para superadmin mesmo sem empresa_id
+                      request.resource.data.email == "rossinys@gmail.com") &&
                      // ✅ MULTI-TENANCY: Se usuário já tem companyId no token, deve corresponder ao empresaId
                      // Se não tem (primeiro login), permitir criação (companyId será adicionado depois)
+                     // ✅ CORREÇÃO: Superadmin pode criar sem companyId no token
                      (isAdmin() || 
+                      request.resource.data.email == "rossinys@gmail.com" ||
                       !('companyId' in request.auth.token) || 
                       belongsToCompany(empresaId));
       

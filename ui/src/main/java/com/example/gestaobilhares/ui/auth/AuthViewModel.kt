@@ -242,52 +242,38 @@ class AuthViewModel @Inject constructor(
                         } catch (e: Exception) {
                             Timber.e(e, "❌ [LOGIN] Erro em createPendingColaboradorIfMissing: %s", e.message)
                             android.util.Log.e("AuthViewModel", "❌ [LOGIN] Erro em createPendingColaboradorIfMissing: ${e.message}", e)
-                            throw e
+                            // ✅ CORREÇÃO: Não lançar exceção, usar colaborador criado localmente
+                            // O erro pode ser de permissão no Firestore, mas o colaborador foi criado localmente
+                            null
                         }
                         
-                        Timber.d("AuthViewModel", "✅ [LOGIN] PASSO 4: Colaborador garantido: ${colaboradorCriado.nome}")
-                        android.util.Log.d("AuthViewModel", "✅ [LOGIN] PASSO 4: Colaborador garantido: ${colaboradorCriado.nome}")
-                        
-                        // PASSO 5: Recarregar do servidor (Source.SERVER) para obter dados atualizados (await bloqueante)
-                        // ✅ CORREÇÃO: Aguardar um pouco antes de ler para garantir que o documento está disponível
-                        Timber.d("AuthViewModel", "🔍 [LOGIN] PASSO 5: Aguardando sincronização do Firestore...")
-                        android.util.Log.d("AuthViewModel", "🔍 [LOGIN] PASSO 5: Aguardando sincronização do Firestore...")
-                        kotlinx.coroutines.delay(1000) // Aguardar 1 segundo para garantir que o documento está disponível
-                        
-                        Timber.d("AuthViewModel", "🔍 [LOGIN] PASSO 5: Recarregando do servidor (Source.SERVER)...")
-                        android.util.Log.d("AuthViewModel", "🔍 [LOGIN] PASSO 5: Recarregando do servidor (Source.SERVER)...")
-                        
-                        var colaborador: Colaborador? = null
-                        var tentativas = 0
-                        while (colaborador == null && tentativas < 3) {
+                        // ✅ CORREÇÃO CRÍTICA: Usar colaborador criado localmente imediatamente
+                        // Não depender do Firestore para login - usar dados locais primeiro
+                        val colaborador = colaboradorCriado ?: run {
+                            Timber.w("AuthViewModel", "⚠️ [LOGIN] createPendingColaboradorIfMissing retornou null, tentando ler do Firestore...")
+                            android.util.Log.w("AuthViewModel", "⚠️ [LOGIN] createPendingColaboradorIfMissing retornou null, tentando ler do Firestore...")
+                            
+                            // Tentar ler do Firestore uma vez (sem retries)
                             try {
-                                colaborador = appRepository.getColaboradorByUid("empresa_001", uid)
-                                if (colaborador == null) {
-                                    tentativas++
-                                    Timber.w("AuthViewModel", "⚠️ [LOGIN] Colaborador não encontrado (tentativa $tentativas/3), aguardando...")
-                                    android.util.Log.w("AuthViewModel", "⚠️ [LOGIN] Colaborador não encontrado (tentativa $tentativas/3), aguardando...")
-                                    if (tentativas < 3) {
-                                        kotlinx.coroutines.delay(1000) // Aguardar mais 1 segundo
-                                    }
-                                }
+                                appRepository.getColaboradorByUid("empresa_001", uid)
                             } catch (e: Exception) {
-                                tentativas++
-                                Timber.e(e, "❌ [LOGIN] Erro em getColaboradorByUid (tentativa $tentativas/3): %s", e.message)
-                                android.util.Log.e("AuthViewModel", "❌ [LOGIN] Erro em getColaboradorByUid (tentativa $tentativas/3): ${e.message}", e)
-                                if (tentativas < 3) {
-                                    kotlinx.coroutines.delay(1000)
-                                } else {
-                                    throw e
-                                }
+                                Timber.e(e, "❌ [LOGIN] Erro ao ler do Firestore: %s", e.message)
+                                android.util.Log.e("AuthViewModel", "❌ [LOGIN] Erro ao ler do Firestore: ${e.message}", e)
+                                null
                             }
                         }
                         
-                        // ✅ CORREÇÃO: Se ainda não encontrou, usar o colaborador criado localmente
                         if (colaborador == null) {
-                            Timber.w("AuthViewModel", "⚠️ [LOGIN] Colaborador não encontrado no Firestore após 3 tentativas, usando colaborador criado localmente")
-                            android.util.Log.w("AuthViewModel", "⚠️ [LOGIN] Colaborador não encontrado no Firestore após 3 tentativas, usando colaborador criado localmente")
-                            colaborador = colaboradorCriado
+                            val error = "Não foi possível obter dados do colaborador. Tente novamente."
+                            Timber.e("AuthViewModel", "❌ [LOGIN] $error")
+                            android.util.Log.e("AuthViewModel", "❌ [LOGIN] $error")
+                            _loginUiState.value = LoginUiState.Erro(error, null)
+                            hideLoading()
+                            return@launch
                         }
+                        
+                        Timber.d("AuthViewModel", "✅ [LOGIN] PASSO 4: Colaborador obtido: ${colaborador.nome}")
+                        android.util.Log.d("AuthViewModel", "✅ [LOGIN] PASSO 4: Colaborador obtido: ${colaborador.nome}")
                         
                         // ✅ LOGS OBRIGATÓRIOS: Documento lido e campo usado para decisão
                         Timber.d("AuthViewModel", "═══════════════════════════════════════")
