@@ -199,16 +199,46 @@ class AuthViewModel @Inject constructor(
                     Timber.d("AuthViewModel", "═══════════════════════════════════════")
                     Timber.d("AuthViewModel", "Tentando login online...")
                     try {
+                        android.util.Log.d("AuthViewModel", "🔍 ANTES de signInWithEmailAndPassword...")
                         Timber.d("AuthViewModel", "🔍 ANTES de signInWithEmailAndPassword...")
                         crashlytics.log("[LOGIN_FLOW] Chamando signInWithEmailAndPassword...")
+                        
                         val result = firebaseAuth.signInWithEmailAndPassword(email, senha).await()
+                        
+                        android.util.Log.d("AuthViewModel", "═══════════════════════════════════════")
+                        android.util.Log.d("AuthViewModel", "✅ AWAIT CONCLUÍDO")
+                        android.util.Log.d("AuthViewModel", "result: ${result != null}")
+                        android.util.Log.d("AuthViewModel", "result.user: ${result.user != null}")
+                        android.util.Log.d("AuthViewModel", "result.user?.uid: ${result.user?.uid}")
+                        android.util.Log.d("AuthViewModel", "═══════════════════════════════════════")
                         Timber.d("AuthViewModel", "🔍 DEPOIS de signInWithEmailAndPassword - result.user: ${result.user != null}")
                         crashlytics.log("[LOGIN_FLOW] signInWithEmailAndPassword concluído - user: ${result.user != null}")
+                        
+                        if (result.user == null) {
+                            android.util.Log.e("AuthViewModel", "❌ ERRO CRÍTICO: result.user é NULL!")
+                            Timber.e("AuthViewModel", "❌ ERRO CRÍTICO: result.user é NULL após await()")
+                            crashlytics.log("[LOGIN_FLOW] ❌ ERRO: result.user é NULL")
+                            _errorMessage.value = "Erro ao autenticar. Tente novamente."
+                            hideLoading()
+                            return@launch
+                        }
+                        
+                        android.util.Log.d("AuthViewModel", "═══════════════════════════════════════")
+                        android.util.Log.d("AuthViewModel", "✅ ENTRANDO NO IF (result.user != null)")
+                        android.util.Log.d("AuthViewModel", "═══════════════════════════════════════")
                         Timber.d("AuthViewModel", "═══════════════════════════════════════")
                         Timber.d("AuthViewModel", "✅ AWAIT CONCLUÍDO - VERIFICANDO RESULTADO")
                         Timber.d("AuthViewModel", "═══════════════════════════════════════")
                         
+                        // ✅ CORREÇÃO: Verificar se result.user não é null (já verificado acima, mas garantir)
+                        android.util.Log.d("AuthViewModel", "🔍 Verificando result.user != null...")
                         if (result.user != null) {
+                            android.util.Log.d("AuthViewModel", "═══════════════════════════════════════")
+                            android.util.Log.d("AuthViewModel", "✅ LOGIN ONLINE SUCESSO!")
+                            android.util.Log.d("AuthViewModel", "Firebase UID: ${result.user!!.uid}")
+                            android.util.Log.d("AuthViewModel", "Email: ${result.user!!.email}")
+                            android.util.Log.d("AuthViewModel", "═══════════════════════════════════════")
+                            
                             crashlytics.setCustomKey("login_online_success", true)
                             crashlytics.setCustomKey("login_firebase_uid", result.user!!.uid)
                             crashlytics.log("[LOGIN_FLOW] ✅ Login online bem-sucedido - Firebase UID: ${result.user!!.uid}")
