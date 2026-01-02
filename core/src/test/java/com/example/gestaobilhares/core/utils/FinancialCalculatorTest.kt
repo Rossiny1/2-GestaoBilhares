@@ -139,7 +139,7 @@ class FinancialCalculatorTest {
         // Acertos: Total 1000.0 (PIX=200, Cartão=100, Dinheiro=700)
         // Despesas: Total 200.0 (Viagem=50, Outras=150)
         
-        val now = java.util.Date()
+        val now = System.currentTimeMillis()
         val acertos = listOf(
             Acerto(
                 id = 1,

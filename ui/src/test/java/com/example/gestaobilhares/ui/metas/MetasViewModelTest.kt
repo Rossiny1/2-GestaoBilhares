@@ -57,7 +57,7 @@ class MetasViewModelTest {
         val ciclo = CicloAcertoEntity(
             id = 1L, rotaId = 1L, numeroCiclo = 1, ano = 2025,
             status = StatusCicloAcerto.EM_ANDAMENTO,
-            dataInicio = Date(), dataFim = Date(),
+            dataInicio = System.currentTimeMillis(), dataFim = System.currentTimeMillis(),
             criadoPor = "Tester"
         )
         val meta = MetaColaborador(
