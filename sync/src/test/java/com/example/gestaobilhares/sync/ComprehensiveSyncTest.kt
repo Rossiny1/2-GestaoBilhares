@@ -339,19 +339,25 @@ class ComprehensiveSyncTest {
         whenever(userSessionManager.isAdmin()).thenReturn(false)
         whenever(userSessionManager.getUserAccessibleRoutes(any())).thenReturn(listOf(10L))
         
-        // Mock the query chain for pagination
-        val mockQuery = mock<Query>()
+        // Mock the query chain for pagination - fetchAllDocumentsWithRouteFilter uses whereEqualTo then orderBy then limit
+        val mockWhereQuery = mock<Query>()
+        val mockOrderQuery = mock<Query>()
         val mockLimitQuery = mock<Query>()
-        whenever(collectionReference.whereEqualTo(any<String>(), any())).thenReturn(mockQuery)
-        whenever(mockQuery.orderBy(any<String>())).thenReturn(mockQuery)
-        whenever(mockQuery.limit(any())).thenReturn(mockLimitQuery)
+        val mockStartAfterQuery = mock<Query>()
+        
+        whenever(collectionReference.whereEqualTo(any<String>(), any())).thenReturn(mockWhereQuery)
+        whenever(mockWhereQuery.orderBy(any<String>())).thenReturn(mockOrderQuery)
+        whenever(mockOrderQuery.limit(any())).thenReturn(mockLimitQuery)
         whenever(mockLimitQuery.get()).thenReturn(com.google.android.gms.tasks.Tasks.forResult(querySnapshot))
+        whenever(mockLimitQuery.startAfter(any())).thenReturn(mockStartAfterQuery)
+        whenever(mockStartAfterQuery.limit(any())).thenReturn(mockLimitQuery)
+        
         whenever(querySnapshot.isEmpty).thenReturn(true)
         whenever(querySnapshot.documents).thenReturn(emptyList())
         
         testCicloHandler.pull()
         
-        // Should use route filter with snake_case field name
+        // Should use route filter with snake_case field name (FIELD_ROTA_ID = "rota_id")
         verify(collectionReference).whereEqualTo(eq("rota_id"), eq(10L))
     }
 

@@ -14,6 +14,7 @@ import com.google.firebase.firestore.FieldValue
 import com.google.firebase.firestore.FirebaseFirestore
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.tasks.await
+import kotlinx.coroutines.CancellationException
 import timber.log.Timber
 import java.io.File
 import java.util.Date
@@ -61,6 +62,9 @@ class AcertoSyncHandler(
             }
             
             pullComplete(startTime, timestampOverride)
+        } catch (e: CancellationException) {
+            Timber.tag(TAG).d("⏹️ Pull de acertos cancelado")
+            throw e
         } catch (e: Exception) {
             Timber.tag(TAG).e(e, "Erro no pull de acertos")
             Result.failure(e)
@@ -114,6 +118,9 @@ class AcertoSyncHandler(
             saveSyncMetadata(entityType, syncCount, durationMs, timestampOverride = timestampOverride)
             
             Result.success(syncCount)
+        } catch (e: CancellationException) {
+            Timber.tag(TAG).d("⏹️ Pull completo de acertos cancelado")
+            throw e
         } catch (e: Exception) {
             Timber.tag(TAG).e(e, "Erro no pull completo de acertos")
             Result.failure(e)
@@ -270,6 +277,9 @@ class AcertoSyncHandler(
             
             savePushMetadata(entityType, syncCount, System.currentTimeMillis() - startTime)
             Result.success(syncCount)
+        } catch (e: CancellationException) {
+            Timber.tag(TAG).d("⏹️ Push de acertos cancelado")
+            throw e
         } catch (e: Exception) {
             Timber.tag(TAG).e(e, "Erro no push de acertos")
             Result.failure(e)

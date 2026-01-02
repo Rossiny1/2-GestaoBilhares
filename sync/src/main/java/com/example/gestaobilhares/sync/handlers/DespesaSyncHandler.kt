@@ -17,6 +17,7 @@ import com.google.firebase.firestore.FieldValue
 import com.google.firebase.firestore.FirebaseFirestore
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.tasks.await
+import kotlinx.coroutines.CancellationException
 import timber.log.Timber
 import java.time.LocalDateTime
 import java.time.ZoneId

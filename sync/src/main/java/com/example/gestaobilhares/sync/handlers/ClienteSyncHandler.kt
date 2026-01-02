@@ -124,6 +124,9 @@ class ClienteSyncHandler(
             )
             
             Result.success(syncCount)
+        } catch (e: CancellationException) {
+            Timber.tag(TAG).d("⏹️ Pull completo de clientes cancelado")
+            throw e
         } catch (e: Exception) {
             Timber.tag(TAG).e("Erro no pull completo de clientes: ${e.message}", e)
             Result.failure(e)
