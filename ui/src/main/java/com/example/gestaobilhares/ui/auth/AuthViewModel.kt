@@ -253,14 +253,28 @@ class AuthViewModel @Inject constructor(
                             )
     
                             // ✅ NOVO: Criar/atualizar colaborador para usuário online
+                            android.util.Log.d("AuthViewModel", "═══════════════════════════════════════")
+                            android.util.Log.d("AuthViewModel", "🔍 CHAMANDO criarOuAtualizarColaboradorOnline")
+                            android.util.Log.d("AuthViewModel", "═══════════════════════════════════════")
                             Timber.d("AuthViewModel", "🔍 Chamando criarOuAtualizarColaboradorOnline...")
                             crashlytics.log("[LOGIN_FLOW] Chamando criarOuAtualizarColaboradorOnline...")
                             var colaborador: Colaborador? = null
                             try {
+                                android.util.Log.d("AuthViewModel", "🔵 DENTRO DO TRY - criarOuAtualizarColaboradorOnline")
                                 colaborador = criarOuAtualizarColaboradorOnline(result.user!!, senha)
+                                android.util.Log.d("AuthViewModel", "═══════════════════════════════════════")
+                                android.util.Log.d("AuthViewModel", "✅ criarOuAtualizarColaboradorOnline RETORNOU")
+                                android.util.Log.d("AuthViewModel", "Colaborador: ${if (colaborador != null) "ENCONTRADO - ${colaborador.nome}" else "NULL"}")
+                                android.util.Log.d("AuthViewModel", "═══════════════════════════════════════")
                                 Timber.d("AuthViewModel", "   Resultado: ${if (colaborador != null) "SUCESSO - ${colaborador.nome}" else "NULL - não encontrado"}")
                                 crashlytics.log("[LOGIN_FLOW] criarOuAtualizarColaboradorOnline concluído: ${if (colaborador != null) "SUCESSO" else "NULL"}")
                             } catch (e: Exception) {
+                                android.util.Log.e("AuthViewModel", "═══════════════════════════════════════")
+                                android.util.Log.e("AuthViewModel", "❌ EXCEÇÃO em criarOuAtualizarColaboradorOnline")
+                                android.util.Log.e("AuthViewModel", "Tipo: ${e.javaClass.simpleName}")
+                                android.util.Log.e("AuthViewModel", "Mensagem: ${e.message}")
+                                android.util.Log.e("AuthViewModel", "Stack: ${e.stackTraceToString()}")
+                                android.util.Log.e("AuthViewModel", "═══════════════════════════════════════")
                                 Timber.e(e, "❌ ERRO em criarOuAtualizarColaboradorOnline: %s", e.message)
                                 crashlytics.log("[LOGIN_FLOW] ❌ ERRO em criarOuAtualizarColaboradorOnline: ${e.message}")
                                 crashlytics.recordException(e)
@@ -274,10 +288,16 @@ class AuthViewModel @Inject constructor(
                             }
                             
                             if (colaborador == null) {
+                                android.util.Log.w("AuthViewModel", "═══════════════════════════════════════")
+                                android.util.Log.w("AuthViewModel", "⚠️ Colaborador NULL após criarOuAtualizarColaboradorOnline")
+                                android.util.Log.w("AuthViewModel", "Tentando FALLBACK (busca na nuvem)...")
+                                android.util.Log.w("AuthViewModel", "═══════════════════════════════════════")
                                 Timber.w("AuthViewModel", "⚠️ Colaborador não encontrado após criarOuAtualizarColaboradorOnline")
                                 Timber.w("AuthViewModel", "   Tentando busca direta na nuvem como fallback...")
                                 try {
+                                    android.util.Log.d("AuthViewModel", "🔍 CHAMANDO buscarColaboradorNaNuvemPorEmail...")
                                     val fallbackResult = buscarColaboradorNaNuvemPorEmail(email)
+                                    android.util.Log.d("AuthViewModel", "✅ buscarColaboradorNaNuvemPorEmail RETORNOU: ${if (fallbackResult != null) "ENCONTRADO" else "NULL"}")
                                     if (fallbackResult != null) {
                                         val (colaboradorFallback, fallbackCompanyId) = fallbackResult
                                         Timber.d("AuthViewModel", "✅ Colaborador encontrado no fallback: ${colaboradorFallback.nome}")
@@ -1087,11 +1107,22 @@ class AuthViewModel @Inject constructor(
      * Retorna o colaborador atualizado ou null se não encontrado
      */
     private suspend fun criarOuAtualizarColaboradorOnline(firebaseUser: FirebaseUser, senha: String = ""): Colaborador? {
+        android.util.Log.d("AuthViewModel", "═══════════════════════════════════════")
+        android.util.Log.d("AuthViewModel", "🔍 criarOuAtualizarColaboradorOnline INICIADO")
+        android.util.Log.d("AuthViewModel", "Firebase User Email: ${firebaseUser.email}")
+        android.util.Log.d("AuthViewModel", "Firebase User UID: ${firebaseUser.uid}")
+        android.util.Log.d("AuthViewModel", "═══════════════════════════════════════")
+        
         try {
-            val email = firebaseUser.email ?: return null
+            val email = firebaseUser.email ?: run {
+                android.util.Log.e("AuthViewModel", "❌ Email do Firebase User é NULL!")
+                return null
+            }
             
+            android.util.Log.d("AuthViewModel", "🔍 Buscando colaborador local por email: $email")
             // Verificar se já existe colaborador com este email
             val colaboradorExistente = appRepository.obterColaboradorPorEmail(email)
+            android.util.Log.d("AuthViewModel", "Colaborador local: ${if (colaboradorExistente != null) "ENCONTRADO - ${colaboradorExistente.nome}" else "NÃO ENCONTRADO"}")
             
             if (colaboradorExistente != null) {
                 Timber.d("AuthViewModel", "Colaborador existente encontrado: ${colaboradorExistente.nome}")
@@ -1145,6 +1176,13 @@ class AuthViewModel @Inject constructor(
                 userSessionManager.startSession(colaboradorAtualizado, userSessionManager.getCurrentCompanyId()) // Assuming companyId is already set or default
                 return colaboradorAtualizado
             } else {
+                android.util.Log.d("AuthViewModel", "═══════════════════════════════════════")
+                android.util.Log.d("AuthViewModel", "⚠️ Colaborador NÃO encontrado LOCALMENTE")
+                android.util.Log.d("AuthViewModel", "Buscando na NUVEM...")
+                android.util.Log.d("AuthViewModel", "Email: $email")
+                android.util.Log.d("AuthViewModel", "Firebase UID: ${firebaseUser.uid}")
+                android.util.Log.d("AuthViewModel", "═══════════════════════════════════════")
+                
                 Timber.d("AuthViewModel", "🔍 Colaborador não encontrado localmente. Buscando na nuvem...")
                 Timber.d("AuthViewModel", "   Email para busca: $email")
                 Timber.d("AuthViewModel", "   Firebase UID: ${firebaseUser.uid}")
@@ -1152,9 +1190,20 @@ class AuthViewModel @Inject constructor(
                 // ✅ CORREÇÃO CRÍTICA: Buscar colaborador na nuvem quando não encontrar localmente
                 var colaboradorNuvemResult: Pair<Colaborador, String>? = null
                 try {
+                    android.util.Log.d("AuthViewModel", "🔍 CHAMANDO buscarColaboradorNaNuvemPorEmail...")
                     colaboradorNuvemResult = buscarColaboradorNaNuvemPorEmail(email)
+                    android.util.Log.d("AuthViewModel", "═══════════════════════════════════════")
+                    android.util.Log.d("AuthViewModel", "✅ buscarColaboradorNaNuvemPorEmail RETORNOU")
+                    android.util.Log.d("AuthViewModel", "Resultado: ${if (colaboradorNuvemResult != null) "ENCONTRADO" else "NÃO ENCONTRADO"}")
+                    android.util.Log.d("AuthViewModel", "═══════════════════════════════════════")
                     Timber.d("AuthViewModel", "   Resultado da busca na nuvem: ${if (colaboradorNuvemResult != null) "ENCONTRADO" else "NÃO ENCONTRADO"}")
                 } catch (e: Exception) {
+                    android.util.Log.e("AuthViewModel", "═══════════════════════════════════════")
+                    android.util.Log.e("AuthViewModel", "❌ EXCEÇÃO ao buscar colaborador na nuvem")
+                    android.util.Log.e("AuthViewModel", "Tipo: ${e.javaClass.simpleName}")
+                    android.util.Log.e("AuthViewModel", "Mensagem: ${e.message}")
+                    android.util.Log.e("AuthViewModel", "Stack: ${e.stackTraceToString()}")
+                    android.util.Log.e("AuthViewModel", "═══════════════════════════════════════")
                     Timber.e(e, "❌ ERRO ao buscar colaborador na nuvem: %s", e.message)
                 }
                 
@@ -1614,6 +1663,11 @@ class AuthViewModel @Inject constructor(
      * Retorna o colaborador e o ID da empresa se encontrado, null caso contrário
      */
     private suspend fun buscarColaboradorNaNuvemPorEmail(email: String): Pair<Colaborador, String>? {
+        android.util.Log.d("AuthViewModel", "═══════════════════════════════════════")
+        android.util.Log.d("AuthViewModel", "🔍 buscarColaboradorNaNuvemPorEmail INICIADO")
+        android.util.Log.d("AuthViewModel", "Email: $email")
+        android.util.Log.d("AuthViewModel", "═══════════════════════════════════════")
+        
         return try {
             crashlytics.log("[BUSCA_NUVEM] 🔍 Iniciando busca global na nuvem para: $email")
             crashlytics.setCustomKey("busca_nuvem_email", email)
