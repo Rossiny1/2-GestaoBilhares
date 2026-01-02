@@ -66,7 +66,26 @@ service cloud.firestore {
     // 🏢 MULTI-TENANCY (DADOS POR EMPRESA)
     // =================================================================
     
-    // 1️⃣ COLABORADORES DA EMPRESA (Perfil de Acesso)
+    // ✅ NOVO SCHEMA: Colaboradores por UID (lookup direto)
+    // Estrutura: empresas/{empresaId}/colaboradores/{firebaseUid}
+    match /empresas/{empresaId}/colaboradores/{uid} {
+      // Usuário autenticado pode ler/escrever seu próprio documento
+      allow read: if request.auth != null && request.auth.uid == uid;
+      allow write: if request.auth != null && request.auth.uid == uid;
+      
+      // Admin pode ler/escrever qualquer colaborador
+      allow read, write: if isAdmin();
+      
+      // Permitir criação para onboarding (usuário autenticado pode criar seu próprio perfil)
+      allow create: if request.auth != null && 
+                     request.auth.uid == uid &&
+                     request.resource.data.firebase_uid == uid;
+      
+      // Colegas da mesma empresa podem ler (para listar equipe)
+      allow read: if belongsToCompany(empresaId);
+    }
+    
+    // 1️⃣ COLABORADORES DA EMPRESA (Schema Antigo - Mantido para compatibilidade)
     match /empresas/{empresaId}/entidades/colaboradores/items/{itemId} {
       // LEITURA:
       // 1. Admin Global
