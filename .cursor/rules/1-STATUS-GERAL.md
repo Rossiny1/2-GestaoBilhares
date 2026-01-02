@@ -1,6 +1,7 @@
-# 1️⃣ STATUS GERAL & SETUP
+# 📖 1️⃣ STATUS GERAL & SETUP
 
-> **Propósito**: Visão imediata do projeto, saúde técnica e primeiros passos.  
+> **LEIA PRIMEIRO** - Este é o ponto de partida para entender o projeto.  
+> **Propósito**: Visão imediata do projeto, saúde técnica, setup e workflow de desenvolvimento.  
 > **Última Atualização**: 02 de Janeiro de 2026  
 > **Versão**: 1.0.1 (3) - Release em Produção  
 > **Status**: ✅ **EM PRODUÇÃO**
@@ -60,6 +61,39 @@ export FIREBASE_TOKEN="seu_token_aqui"
 *   [Firebase Console](https://console.firebase.google.com/project/gestaobilhares)
 *   **MCP Crashlytics**: Ativo e configurado para análise via assistente.
 *   **GitHub**: https://github.com/Rossiny1/2-GestaoBilhares
+
+## 📚 ORDEM DE LEITURA DA DOCUMENTAÇÃO
+
+**Para novos desenvolvedores, leia nesta ordem:**
+
+1. **📖 1️⃣ STATUS GERAL & SETUP** (este documento) ⭐ **COMEÇE AQUI**
+   - Visão geral do projeto
+   - Setup e workflow de desenvolvimento
+   - Cursor Cloud, Firebase CLI, GitHub
+
+2. **📖 2️⃣ REGRAS DE NEGÓCIO** (`.cursor/rules/2-REGRAS-NEGOCIO.md`)
+   - Princípios fundamentais (Offline-First, Multi-Tenancy)
+   - Fluxo operacional (Rotas, Ciclos, Acertos)
+   - Regras de negócio financeiro
+
+3. **📖 3️⃣ ARQUITETURA E PADRÕES** (`.cursor/rules/3-ARQUITETURA-E-PADROES.md`)
+   - Estrutura modular (5 módulos Gradle)
+   - Padrões de sincronização
+   - Stack técnico e boas práticas
+
+4. **📖 4️⃣ SEGURANÇA E OPERAÇÃO** (`.cursor/rules/4-SEGURANCA-E-OPERACAO.md`)
+   - Firestore Rules e Custom Claims
+   - Processo de release e deploy
+   - Monitoramento Crashlytics
+
+5. **📖 5️⃣ ROADMAP 2026** (`.cursor/rules/5-ROADMAP-2026.md`)
+   - Fases pendentes
+   - Marcos concluídos
+   - Planejamento futuro
+
+> 💡 **Dica**: Veja também o [README.md](./README.md) para um índice completo da documentação.
+
+---
 
 ## 📖 GUIA PARA NOVOS DESENVOLVEDORES
 
