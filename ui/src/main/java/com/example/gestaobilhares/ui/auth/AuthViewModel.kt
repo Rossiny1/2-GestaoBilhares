@@ -105,6 +105,15 @@ class AuthViewModel @Inject constructor(
      * Função para realizar login híbrido (online/offline)
      */
     fun login(email: String, senha: String) {
+        // ✅ LOGS CRÍTICOS: Usar Log.d() direto do Android para garantir captura
+        android.util.Log.d("AuthViewModel", "═══════════════════════════════════════")
+        android.util.Log.d("AuthViewModel", "🚀🚀🚀 MÉTODO login() FOI CHAMADO 🚀🚀🚀")
+        android.util.Log.d("AuthViewModel", "═══════════════════════════════════════")
+        android.util.Log.d("AuthViewModel", "Email: $email")
+        android.util.Log.d("AuthViewModel", "Senha: ${senha.length} caracteres")
+        android.util.Log.d("AuthViewModel", "Thread: ${Thread.currentThread().name}")
+        android.util.Log.d("AuthViewModel", "═══════════════════════════════════════")
+        
         // ✅ LOGS CRÍTICOS: Logar ANTES de qualquer coisa para garantir que o método foi chamado
         Timber.d("AuthViewModel", "═══════════════════════════════════════")
         Timber.d("AuthViewModel", "🚀🚀🚀 MÉTODO login() FOI CHAMADO 🚀🚀🚀")
@@ -150,28 +159,41 @@ class AuthViewModel @Inject constructor(
         }
         
         viewModelScope.launch {
+            android.util.Log.d("AuthViewModel", "═══════════════════════════════════════")
+            android.util.Log.d("AuthViewModel", "🟢 DENTRO DO viewModelScope.launch")
+            android.util.Log.d("AuthViewModel", "Thread: ${Thread.currentThread().name}")
+            android.util.Log.d("AuthViewModel", "═══════════════════════════════════════")
+            
             Timber.d("AuthViewModel", "═══════════════════════════════════════")
             Timber.d("AuthViewModel", "🟢 DENTRO DO viewModelScope.launch")
             Timber.d("AuthViewModel", "Thread: ${Thread.currentThread().name}")
             Timber.d("AuthViewModel", "═══════════════════════════════════════")
             
             try {
+                android.util.Log.d("AuthViewModel", "🔵 DENTRO DO TRY - Iniciando processo de login")
                 Timber.d("AuthViewModel", "🔵 DENTRO DO TRY - Iniciando processo de login")
                 showLoading()
                 _errorMessage.value = ""
+                android.util.Log.d("AuthViewModel", "   Loading mostrado, erro limpo")
                 Timber.d("AuthViewModel", "   Loading mostrado, erro limpo")
                 
                 // Verificar conectividade
+                android.util.Log.d("AuthViewModel", "🔍 Verificando conectividade...")
                 Timber.d("AuthViewModel", "🔍 Verificando conectividade...")
                 val online = isNetworkAvailable()
                 _isOnline.value = online
                 crashlytics.setCustomKey("login_online", online)
                 crashlytics.log("[LOGIN_FLOW] Status de conexão: ${if (online) "ONLINE" else "OFFLINE"}")
+                android.util.Log.d("AuthViewModel", "   Status: ${if (online) "ONLINE" else "OFFLINE"}")
                 Timber.d("AuthViewModel", "   Status: ${if (online) "ONLINE" else "OFFLINE"}")
                 
                 if (online) {
                     // Tentar login online primeiro
                     crashlytics.log("[LOGIN_FLOW] Tentando login online...")
+                    android.util.Log.d("AuthViewModel", "═══════════════════════════════════════")
+                    android.util.Log.d("AuthViewModel", "🌐 MODO ONLINE - INICIANDO LOGIN")
+                    android.util.Log.d("AuthViewModel", "═══════════════════════════════════════")
+                    android.util.Log.d("AuthViewModel", "Tentando login online...")
                     Timber.d("AuthViewModel", "═══════════════════════════════════════")
                     Timber.d("AuthViewModel", "🌐 MODO ONLINE - INICIANDO LOGIN")
                     Timber.d("AuthViewModel", "═══════════════════════════════════════")
