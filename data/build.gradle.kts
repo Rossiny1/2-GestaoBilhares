@@ -37,12 +37,24 @@ android {
             "-opt-in=kotlin.ExperimentalStdlibApi"
         )
     }
+    
 }
 
 ksp {
     arg("room.schemaLocation", "$projectDir/schemas")
-    arg("room.incremental", "false") // Temporariamente desabilitado para forçar recompilação completa
+    arg("room.incremental", "true")
     arg("room.exportSchema", "true")
+}
+
+// Limpar diretório byRounds que causa classes duplicadas após KSP
+tasks.matching { it.name.startsWith("ksp") && it.name.endsWith("Kotlin") }.configureEach {
+    doLast {
+        val buildType = if (name.contains("Release")) "release" else "debug"
+        val byRoundsDir = file("$buildDir/generated/ksp/$buildType/java/byRounds")
+        if (byRoundsDir.exists()) {
+            delete(byRoundsDir)
+        }
+    }
 }
 
 dependencies {
