@@ -260,14 +260,8 @@ class AuthViewModel @Inject constructor(
                             val nomeUsuario = result.user!!.displayName ?: email.split("@")[0]
                             
                             // ✅ CORREÇÃO DEFINITIVA: Usar APENAS busca por UID (não usar fallback por email)
-                            // Isso garante que estamos lendo o documento correto do novo schema
+                            // Isso garante que estamos lendo o documento correto do novo schema (colaboradores/{uid})
                             var colaborador = getOrCreateColaborador(uid, email, nomeUsuario, "empresa_001")
-                            
-                            // Se ainda não encontrou, tentar método antigo APENAS para superadmin
-                            if (colaborador == null && email == "rossinys@gmail.com") {
-                                Timber.w("AuthViewModel", "⚠️ getOrCreateColaborador retornou null para superadmin, tentando método antigo...")
-                                colaborador = criarOuAtualizarColaboradorOnline(result.user!!, senha)
-                            }
                             
                             // ✅ SUPERADMIN: Se for rossinys@gmail.com e ainda não encontrou, criar automaticamente
                             if (colaborador == null && email == "rossinys@gmail.com") {
@@ -1604,29 +1598,34 @@ class AuthViewModel @Inject constructor(
     }
     
     /**
-     * ✅ NOVO: Busca colaborador na nuvem (Firestore) por UID (lookup direto)
-     * Retorna o colaborador se encontrado, null caso contrário
+     * ✅ CORREÇÃO DEFINITIVA: Busca colaborador por UID (lookup direto)
      * 
-     * Por quê: Lookup por UID é O(1) e mais confiável que queries por email
+     * Por quê: 
+     * - Lookup O(1) por UID é mais eficiente e confiável
+     * - Evita ler documentos antigos/duplicados do schema antigo
+     * - Garante que estamos lendo o documento correto (colaboradores/{uid})
      * 
-     * ✅ CORREÇÃO BUG APROVADO: Força leitura do servidor e corrige mapeamento boolean
+     * ✅ CORREÇÃO BUG APROVADO:
+     * - Força leitura do servidor (Source.SERVER) para evitar cache
+     * - Usa @PropertyName no model para mapeamento correto
+     * - Valida e corrige valores boolean se necessário
      */
     private suspend fun buscarColaboradorPorUid(uid: String, empresaId: String = "empresa_001"): Colaborador? {
         return try {
             Timber.d("AuthViewModel", "🔍 Buscando colaborador por UID: $uid (empresa: $empresaId)")
             
-            // ✅ NOVO SCHEMA: Lookup direto por UID
+            // ✅ NOVO SCHEMA: Lookup direto por UID (colaboradores/{uid})
             val docRef = firestore
                 .collection("empresas")
                 .document(empresaId)
                 .collection("colaboradores")
                 .document(uid)
             
-            // ✅ CORREÇÃO: Forçar leitura do servidor para evitar cache desatualizado
+            // ✅ CORREÇÃO: Forçar leitura do servidor (Source.SERVER) para evitar cache desatualizado
             val doc = docRef.get(com.google.firebase.firestore.Source.SERVER).await()
             
             if (!doc.exists()) {
-                Timber.d("AuthViewModel", "⚠️ Colaborador não encontrado no novo schema (colaboradores/{uid})")
+                Timber.d("AuthViewModel", "⚠️ Colaborador não encontrado no path: empresas/$empresaId/colaboradores/$uid")
                 return null
             }
             
@@ -1636,9 +1635,19 @@ class AuthViewModel @Inject constructor(
                 return null
             }
             
-            // ✅ CORREÇÃO: Ler valor direto do boolean antes de converter
+            // ✅ DIAGNÓSTICO: Logar path e dados brutos ANTES de converter
+            Timber.d("AuthViewModel", "📋 Documento encontrado:")
+            Timber.d("AuthViewModel", "   Path: ${doc.reference.path}")
+            Timber.d("AuthViewModel", "   Campo 'aprovado' (bruto): ${data["aprovado"]} (tipo: ${data["aprovado"]?.javaClass?.simpleName})")
+            Timber.d("AuthViewModel", "   Campo 'ativo' (bruto): ${data["ativo"]} (tipo: ${data["ativo"]?.javaClass?.simpleName})")
+            
+            // ✅ CORREÇÃO: Ler valores boolean diretamente do documento
             val aprovadoDireto = doc.getBoolean("aprovado") ?: false
             val ativoDireto = doc.getBoolean("ativo") ?: true
+            val primeiroAcessoDireto = doc.getBoolean("primeiro_acesso") ?: true
+            
+            Timber.d("AuthViewModel", "   Campo 'aprovado' (direto): $aprovadoDireto")
+            Timber.d("AuthViewModel", "   Campo 'ativo' (direto): $ativoDireto")
             
             // Converter Timestamps para Date
             val dataConvertida = data.toMutableMap()
@@ -1665,23 +1674,49 @@ class AuthViewModel @Inject constructor(
             
             val colaboradorId = doc.id.toLongOrNull() ?: (data["id"] as? Number)?.toLong() ?: 0L
             
-            // Converter para Colaborador
-            val colaborador = converterDocumentoParaColaborador(doc, dataConvertida, colaboradorId)
+            // ✅ CORREÇÃO: Converter usando toObject() (com @PropertyName deve funcionar corretamente)
+            val colaborador = doc.toObject(Colaborador::class.java)
             
             if (colaborador == null) {
-                Timber.e("AuthViewModel", "❌ Falha ao converter documento para Colaborador")
-                return null
+                Timber.e("AuthViewModel", "❌ toObject() retornou null, tentando Gson...")
+                // Fallback: usar Gson
+                val colaboradorJson = gson.toJson(dataConvertida)
+                val colaboradorGson = gson.fromJson(colaboradorJson, Colaborador::class.java)
+                if (colaboradorGson == null) {
+                    Timber.e("AuthViewModel", "❌ Falha ao converter documento para Colaborador")
+                    return null
+                }
+                
+                // ✅ CORREÇÃO: Validar e corrigir valores boolean
+                val colaboradorFinal = colaboradorGson.copy(
+                    id = colaboradorId,
+                    aprovado = aprovadoDireto,
+                    ativo = ativoDireto,
+                    primeiroAcesso = primeiroAcessoDireto
+                )
+                
+                Timber.d("AuthViewModel", "✅ Colaborador convertido (Gson): ${colaboradorFinal.nome} (Aprovado: ${colaboradorFinal.aprovado})")
+                return colaboradorFinal
             }
             
-            // ✅ CORREÇÃO CRÍTICA: Se o valor direto do doc é diferente do convertido, usar o valor direto
-            // Isso corrige problemas de mapeamento boolean (prefixo 'is', etc)
-            val colaboradorCorrigido = colaborador.copy(
-                aprovado = aprovadoDireto,
-                ativo = ativoDireto
-            )
+            // ✅ CORREÇÃO: Validar se o mapeamento funcionou corretamente
+            val colaboradorFinal = if (colaborador.aprovado != aprovadoDireto) {
+                Timber.w("AuthViewModel", "⚠️ Mapeamento falhou: aprovado no doc ($aprovadoDireto) != aprovado no objeto (${colaborador.aprovado})")
+                Timber.w("AuthViewModel", "   Corrigindo usando valor direto do documento...")
+                // Usar valor direto do documento
+                colaborador.copy(
+                    id = colaboradorId,
+                    aprovado = aprovadoDireto,
+                    ativo = ativoDireto,
+                    primeiroAcesso = primeiroAcessoDireto
+                )
+            } else {
+                // Mapeamento funcionou corretamente
+                colaborador.copy(id = colaboradorId)
+            }
             
-            Timber.d("AuthViewModel", "✅ Colaborador encontrado: ${colaboradorCorrigido.nome} (Aprovado: ${colaboradorCorrigido.aprovado})")
-            colaboradorCorrigido
+            Timber.d("AuthViewModel", "✅ Colaborador encontrado: ${colaboradorFinal.nome} (Aprovado: ${colaboradorFinal.aprovado}, Path: ${doc.reference.path})")
+            colaboradorFinal
             
         } catch (e: Exception) {
             Timber.e(e, "❌ Erro ao buscar colaborador por UID: %s", e.message)
@@ -1690,68 +1725,6 @@ class AuthViewModel @Inject constructor(
         }
     }
     
-    /**
-     * ✅ NOVO: Converte DocumentSnapshot do Firestore para Colaborador
-     * 
-     * ✅ CORREÇÃO DEFINITIVA: Com @PropertyName no model, toObject() deve mapear corretamente
-     * Mas ainda usamos valores diretos como fallback de segurança
-     */
-    private fun converterDocumentoParaColaborador(
-        doc: DocumentSnapshot,
-        data: Map<String, Any?>,
-        colaboradorId: Long = 0L
-    ): Colaborador? {
-        return try {
-            // ✅ CORREÇÃO: Ler valores boolean diretamente do documento como fallback
-            val aprovadoDireto = doc.getBoolean("aprovado") ?: false
-            val ativoDireto = doc.getBoolean("ativo") ?: true
-            val primeiroAcessoDireto = doc.getBoolean("primeiro_acesso") ?: true
-            
-            // Tentar usar toObject primeiro (com @PropertyName deve funcionar corretamente agora)
-            val colaboradorToObject = doc.toObject(Colaborador::class.java)
-            if (colaboradorToObject != null) {
-                // ✅ CORREÇÃO: Validar se o mapeamento funcionou, senão usar valor direto
-                val colaboradorFinal = if (colaboradorToObject.aprovado != aprovadoDireto) {
-                    // Mapeamento falhou, usar valor direto
-                    colaboradorToObject.copy(
-                        id = colaboradorId,
-                        aprovado = aprovadoDireto,
-                        ativo = ativoDireto,
-                        primeiroAcesso = primeiroAcessoDireto
-                    )
-                } else {
-                    // Mapeamento funcionou, usar objeto convertido
-                    colaboradorToObject.copy(id = colaboradorId)
-                }
-                return colaboradorFinal
-            }
-            
-            // Fallback: usar Gson se toObject falhar
-            val colaboradorJson = gson.toJson(data)
-            val colaboradorGson = gson.fromJson(colaboradorJson, Colaborador::class.java)
-            
-            if (colaboradorGson != null) {
-                // ✅ CORREÇÃO: Validar e corrigir se necessário
-                val colaboradorFinal = if (colaboradorGson.aprovado != aprovadoDireto) {
-                    colaboradorGson.copy(
-                        id = colaboradorId,
-                        aprovado = aprovadoDireto,
-                        ativo = ativoDireto,
-                        primeiroAcesso = primeiroAcessoDireto
-                    )
-                } else {
-                    colaboradorGson.copy(id = colaboradorId)
-                }
-                return colaboradorFinal
-            }
-            
-            null
-            
-        } catch (e: Exception) {
-            Timber.e(e, "❌ Erro ao converter documento: %s", e.message)
-            null
-        }
-    }
     
     /**
      * ✅ NOVO: Obtém ou cria colaborador automaticamente
@@ -2104,28 +2077,59 @@ class AuthViewModel @Inject constructor(
 
             val colaboradorId = doc.id.toLongOrNull() ?: (data["id"] as? Number)?.toLong() ?: 0L
             
-            // ✅ CORREÇÃO: Ler valores boolean diretamente do documento ANTES de converter
+            // ✅ DIAGNÓSTICO: Logar path e dados brutos ANTES de converter (schema antigo)
+            Timber.d("AuthViewModel", "📋 Documento encontrado (SCHEMA ANTIGO):")
+            Timber.d("AuthViewModel", "   Path: ${doc.reference.path}")
+            Timber.d("AuthViewModel", "   ⚠️ ATENÇÃO: Este é o schema antigo (items/...)")
+            Timber.d("AuthViewModel", "   Campo 'aprovado' (bruto): ${data["aprovado"]} (tipo: ${data["aprovado"]?.javaClass?.simpleName})")
+            
+            // ✅ CORREÇÃO: Ler valores boolean diretamente do documento
             val aprovadoDireto = doc.getBoolean("aprovado") ?: false
             val ativoDireto = doc.getBoolean("ativo") ?: true
             val primeiroAcessoDireto = doc.getBoolean("primeiro_acesso") ?: true
             
-            // Converter para Colaborador
-            val colaborador = converterDocumentoParaColaborador(doc, dataConvertida, colaboradorId)
+            Timber.d("AuthViewModel", "   Campo 'aprovado' (direto): $aprovadoDireto")
+            
+            // ✅ CORREÇÃO: Converter usando toObject() (com @PropertyName deve funcionar)
+            val colaborador = doc.toObject(Colaborador::class.java)
             
             if (colaborador == null) {
-                Timber.e("AuthViewModel", "❌ Falha ao converter documento para Colaborador")
-                return null
+                Timber.e("AuthViewModel", "❌ toObject() retornou null, tentando Gson...")
+                val colaboradorJson = gson.toJson(dataConvertida)
+                val colaboradorGson = gson.fromJson(colaboradorJson, Colaborador::class.java)
+                if (colaboradorGson == null) {
+                    Timber.e("AuthViewModel", "❌ Falha ao converter documento para Colaborador")
+                    return null
+                }
+                
+                // ✅ CORREÇÃO: Validar e corrigir valores boolean
+                val colaboradorFinal = colaboradorGson.copy(
+                    id = colaboradorId,
+                    aprovado = aprovadoDireto,
+                    ativo = ativoDireto,
+                    primeiroAcesso = primeiroAcessoDireto
+                )
+                
+                Timber.d("AuthViewModel", "✅ Colaborador processado (Gson): ${colaboradorFinal.nome} (Aprovado: ${colaboradorFinal.aprovado})")
+                return Pair(colaboradorFinal, companyId)
             }
             
-            // ✅ CORREÇÃO: Sempre usar valores diretos do documento para campos boolean
-            val colaboradorCorrigido = colaborador.copy(
-                aprovado = aprovadoDireto,
-                ativo = ativoDireto,
-                primeiroAcesso = primeiroAcessoDireto
-            )
+            // ✅ CORREÇÃO: Validar se o mapeamento funcionou corretamente
+            val colaboradorFinal = if (colaborador.aprovado != aprovadoDireto) {
+                Timber.w("AuthViewModel", "⚠️ Mapeamento falhou (schema antigo): aprovado no doc ($aprovadoDireto) != aprovado no objeto (${colaborador.aprovado})")
+                Timber.w("AuthViewModel", "   Corrigindo usando valor direto do documento...")
+                colaborador.copy(
+                    id = colaboradorId,
+                    aprovado = aprovadoDireto,
+                    ativo = ativoDireto,
+                    primeiroAcesso = primeiroAcessoDireto
+                )
+            } else {
+                colaborador.copy(id = colaboradorId)
+            }
             
-            Timber.d("AuthViewModel", "✅ Colaborador processado: ${colaboradorCorrigido.nome} (Aprovado: ${colaboradorCorrigido.aprovado})")
-            Pair(colaboradorCorrigido, companyId)
+            Timber.d("AuthViewModel", "✅ Colaborador processado: ${colaboradorFinal.nome} (Aprovado: ${colaboradorFinal.aprovado}, Path: ${doc.reference.path})")
+            Pair(colaboradorFinal, companyId)
             
         } catch (e: Exception) {
             crashlytics.setCustomKey("busca_nuvem_erro_geral", true)
