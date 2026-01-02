@@ -252,96 +252,38 @@ class AuthViewModel @Inject constructor(
                                 "🚨 LOGIN ONLINE CONCLUÍDO - DISPARANDO CARREGAMENTO INICIAL DE DADOS"
                             )
     
-                            // ✅ NOVO: Criar/atualizar colaborador para usuário online
-                            android.util.Log.d("AuthViewModel", "═══════════════════════════════════════")
-                            android.util.Log.d("AuthViewModel", "🔍 CHAMANDO criarOuAtualizarColaboradorOnline")
-                            android.util.Log.d("AuthViewModel", "═══════════════════════════════════════")
-                            Timber.d("AuthViewModel", "🔍 Chamando criarOuAtualizarColaboradorOnline...")
-                            crashlytics.log("[LOGIN_FLOW] Chamando criarOuAtualizarColaboradorOnline...")
-                            var colaborador: Colaborador? = null
-                            try {
-                                android.util.Log.d("AuthViewModel", "🔵 DENTRO DO TRY - criarOuAtualizarColaboradorOnline")
+                            // ✅ NOVO FLUXO: Usar getOrCreateColaborador (lookup por UID + criação automática)
+                            Timber.d("AuthViewModel", "🔍 Obtendo ou criando colaborador por UID...")
+                            crashlytics.log("[LOGIN_FLOW] Chamando getOrCreateColaborador...")
+                            
+                            val uid = result.user!!.uid
+                            val nomeUsuario = result.user!!.displayName ?: email.split("@")[0]
+                            
+                            // ✅ CORREÇÃO: Usar getOrCreateColaborador ao invés de criarOuAtualizarColaboradorOnline
+                            // Isso garante que o colaborador seja criado automaticamente se não existir
+                            var colaborador = getOrCreateColaborador(uid, email, nomeUsuario, "empresa_001")
+                            
+                            // Se ainda não encontrou (erro na criação), tentar método antigo como último recurso
+                            if (colaborador == null) {
+                                Timber.w("AuthViewModel", "⚠️ getOrCreateColaborador retornou null, tentando método antigo...")
                                 colaborador = criarOuAtualizarColaboradorOnline(result.user!!, senha)
-                                android.util.Log.d("AuthViewModel", "═══════════════════════════════════════")
-                                android.util.Log.d("AuthViewModel", "✅ criarOuAtualizarColaboradorOnline RETORNOU")
-                                android.util.Log.d("AuthViewModel", "Colaborador: ${if (colaborador != null) "ENCONTRADO - ${colaborador.nome}" else "NULL"}")
-                                android.util.Log.d("AuthViewModel", "═══════════════════════════════════════")
-                                Timber.d("AuthViewModel", "   Resultado: ${if (colaborador != null) "SUCESSO - ${colaborador.nome}" else "NULL - não encontrado"}")
-                                crashlytics.log("[LOGIN_FLOW] criarOuAtualizarColaboradorOnline concluído: ${if (colaborador != null) "SUCESSO" else "NULL"}")
-                            } catch (e: Exception) {
-                                android.util.Log.e("AuthViewModel", "═══════════════════════════════════════")
-                                android.util.Log.e("AuthViewModel", "❌ EXCEÇÃO em criarOuAtualizarColaboradorOnline")
-                                android.util.Log.e("AuthViewModel", "Tipo: ${e.javaClass.simpleName}")
-                                android.util.Log.e("AuthViewModel", "Mensagem: ${e.message}")
-                                android.util.Log.e("AuthViewModel", "Stack: ${e.stackTraceToString()}")
-                                android.util.Log.e("AuthViewModel", "═══════════════════════════════════════")
-                                Timber.e(e, "❌ ERRO em criarOuAtualizarColaboradorOnline: %s", e.message)
-                                crashlytics.log("[LOGIN_FLOW] ❌ ERRO em criarOuAtualizarColaboradorOnline: ${e.message}")
-                                crashlytics.recordException(e)
-                                // Não lançar exceção, continuar para fallback
                             }
                             
-                            // ✅ SUPERADMIN: Se for rossinys@gmail.com e não encontrou, criar automaticamente
+                            // ✅ SUPERADMIN: Se for rossinys@gmail.com e ainda não encontrou, criar automaticamente
                             if (colaborador == null && email == "rossinys@gmail.com") {
                                 Timber.d("AuthViewModel", "🔧 Criando SUPERADMIN automaticamente para: $email")
-                                colaborador = criarSuperAdminAutomatico(email, result.user!!.uid, senha)
+                                colaborador = criarSuperAdminAutomatico(email, uid, senha)
                             }
                             
+                            // ✅ CORREÇÃO CRÍTICA: NÃO fazer signOut() se colaborador não existir
+                            // Em vez disso, criar automaticamente ou mostrar mensagem apropriada
                             if (colaborador == null) {
-                                android.util.Log.w("AuthViewModel", "═══════════════════════════════════════")
-                                android.util.Log.w("AuthViewModel", "⚠️ Colaborador NULL após criarOuAtualizarColaboradorOnline")
-                                android.util.Log.w("AuthViewModel", "Tentando FALLBACK (busca na nuvem)...")
-                                android.util.Log.w("AuthViewModel", "═══════════════════════════════════════")
-                                Timber.w("AuthViewModel", "⚠️ Colaborador não encontrado após criarOuAtualizarColaboradorOnline")
-                                Timber.w("AuthViewModel", "   Tentando busca direta na nuvem como fallback...")
-                                try {
-                                    android.util.Log.d("AuthViewModel", "🔍 CHAMANDO buscarColaboradorNaNuvemPorEmail...")
-                                    val fallbackResult = buscarColaboradorNaNuvemPorEmail(email)
-                                    android.util.Log.d("AuthViewModel", "✅ buscarColaboradorNaNuvemPorEmail RETORNOU: ${if (fallbackResult != null) "ENCONTRADO" else "NULL"}")
-                                    if (fallbackResult != null) {
-                                        val (colaboradorFallback, fallbackCompanyId) = fallbackResult
-                                        Timber.d("AuthViewModel", "✅ Colaborador encontrado no fallback: ${colaboradorFallback.nome}")
-                                        // Atualizar firebaseUid e salvar localmente
-                                        val colaboradorComUid = colaboradorFallback.copy(
-                                            firebaseUid = result.user!!.uid,
-                                            dataUltimoAcesso = System.currentTimeMillis()
-                                        )
-                                        try {
-                                            val colaboradorExistente = appRepository.obterColaboradorPorEmail(email)
-                                            if (colaboradorExistente != null) {
-                                                appRepository.atualizarColaborador(colaboradorComUid.copy(id = colaboradorExistente.id))
-                                                colaborador = colaboradorComUid.copy(id = colaboradorExistente.id)
-                                            } else {
-                                                appRepository.inserirColaborador(colaboradorComUid)
-                                                colaborador = colaboradorComUid
-                                            }
-                                            userSessionManager.startSession(colaborador!!, fallbackCompanyId)
-                                            Timber.d("AuthViewModel", "✅ Colaborador salvo e sessão iniciada no fallback")
-                                        } catch (e: Exception) {
-                                            Timber.e(e, "❌ Erro ao salvar colaborador no fallback: %s", e.message)
-                                            // Mesmo com erro, tentar usar o colaborador da nuvem
-                                            userSessionManager.startSession(colaboradorComUid, fallbackCompanyId)
-                                            colaborador = colaboradorComUid
-                                        }
-                                    } else {
-                                        Timber.e("AuthViewModel", "❌ Colaborador também não encontrado no fallback")
-                                    }
-                                } catch (e: Exception) {
-                                    Timber.e(e, "❌ Erro no fallback: %s", e.message)
-                                }
-                            }
-                            
-                            if (colaborador == null) {
-                                android.util.Log.e("AuthViewModel", "═══════════════════════════════════════")
-                                android.util.Log.e("AuthViewModel", "❌ ERRO FINAL: Colaborador não encontrado")
-                                android.util.Log.e("AuthViewModel", "Email: $email")
-                                android.util.Log.e("AuthViewModel", "Firebase UID: ${result.user!!.uid}")
-                                android.util.Log.e("AuthViewModel", "═══════════════════════════════════════")
-                                Timber.e("AuthViewModel", "❌ ERRO FINAL: Colaborador não encontrado após todas as tentativas")
+                                Timber.e("AuthViewModel", "❌ ERRO: Não foi possível obter/criar colaborador após todas as tentativas")
                                 Timber.e("AuthViewModel", "   Email: $email")
-                                Timber.e("AuthViewModel", "   Firebase UID: ${result.user!!.uid}")
-                                firebaseAuth.signOut() // Fazer logout do Firebase
-                                _errorMessage.value = "Usuário não encontrado. Contate o administrador."
+                                Timber.e("AuthViewModel", "   Firebase UID: $uid")
+                                crashlytics.log("[LOGIN_FLOW] ❌ ERRO: Não foi possível obter/criar colaborador")
+                                // NÃO fazer signOut() - manter autenticação e mostrar erro
+                                _errorMessage.value = "Erro ao carregar perfil. Tente novamente ou contate o suporte."
                                 hideLoading()
                                 return@launch
                             }
@@ -352,33 +294,25 @@ class AuthViewModel @Inject constructor(
                             android.util.Log.d("AuthViewModel", "   Ativo: ${colaborador.ativo}")
                             Timber.d("AuthViewModel", "🔍 Verificando status do colaborador: aprovado=${colaborador.aprovado}, ativo=${colaborador.ativo}")
                             
+                            // ✅ CORREÇÃO: Verificar aprovação e status, mas NÃO fazer signOut()
+                            // Apenas mostrar mensagem apropriada e bloquear acesso
                             if (!colaborador.aprovado) {
-                                android.util.Log.w("AuthViewModel", "═══════════════════════════════════════")
-                                android.util.Log.w("AuthViewModel", "❌ Colaborador NÃO APROVADO")
-                                android.util.Log.w("AuthViewModel", "Email: $email")
-                                android.util.Log.w("AuthViewModel", "Nome: ${colaborador.nome}")
-                                android.util.Log.w("AuthViewModel", "═══════════════════════════════════════")
-                                Timber.w("AuthViewModel", "❌ Colaborador não está aprovado - bloqueando login")
+                                Timber.w("AuthViewModel", "⚠️ Colaborador não está aprovado - bloqueando acesso")
                                 Timber.w("AuthViewModel", "   Email: $email")
                                 Timber.w("AuthViewModel", "   Nome: ${colaborador.nome}")
                                 Timber.w("AuthViewModel", "   Aprovado: ${colaborador.aprovado}")
-                                firebaseAuth.signOut() // Fazer logout do Firebase
+                                // NÃO fazer signOut() - manter autenticação para permitir retry
                                 _errorMessage.value = "Sua conta está aguardando aprovação do administrador."
                                 hideLoading()
                                 return@launch
                             }
                             
                             if (!colaborador.ativo) {
-                                android.util.Log.w("AuthViewModel", "═══════════════════════════════════════")
-                                android.util.Log.w("AuthViewModel", "❌ Colaborador INATIVO")
-                                android.util.Log.w("AuthViewModel", "Email: $email")
-                                android.util.Log.w("AuthViewModel", "Nome: ${colaborador.nome}")
-                                android.util.Log.w("AuthViewModel", "═══════════════════════════════════════")
-                                Timber.w("AuthViewModel", "❌ Colaborador está inativo - bloqueando login")
+                                Timber.w("AuthViewModel", "⚠️ Colaborador está inativo - bloqueando acesso")
                                 Timber.w("AuthViewModel", "   Email: $email")
                                 Timber.w("AuthViewModel", "   Nome: ${colaborador.nome}")
                                 Timber.w("AuthViewModel", "   Ativo: ${colaborador.ativo}")
-                                firebaseAuth.signOut() // Fazer logout do Firebase
+                                // NÃO fazer signOut() - manter autenticação para permitir retry
                                 _errorMessage.value = "Sua conta está inativa. Contate o administrador."
                                 hideLoading()
                                 return@launch
@@ -1559,6 +1493,9 @@ class AuthViewModel @Inject constructor(
     /**
      * Sincroniza um colaborador específico para a nuvem (Firestore)
      * Usado para sincronizar colaboradores criados ou atualizados localmente
+     * 
+     * ✅ ATUALIZADO: Usa novo schema (colaboradores/{uid}) como primário
+     * Mantém sincronização no schema antigo para compatibilidade durante migração
      */
     private suspend fun sincronizarColaboradorParaNuvem(colaborador: Colaborador, companyId: String) {
         try {
@@ -1566,12 +1503,23 @@ class AuthViewModel @Inject constructor(
             Timber.d("AuthViewModel", "   ID: ${colaborador.id}")
             Timber.d("AuthViewModel", "   Nome: ${colaborador.nome}")
             Timber.d("AuthViewModel", "   Email: ${colaborador.email}")
+            Timber.d("AuthViewModel", "   Firebase UID: ${colaborador.firebaseUid}")
             Timber.d("AuthViewModel", "   Empresa: $companyId")
             Timber.d("AuthViewModel", "   Aprovado: ${colaborador.aprovado}")
-            Timber.d("AuthViewModel", "   Usuário atual: ${firebaseAuth.currentUser?.uid}")
-            Timber.d("AuthViewModel", "   Email do token: ${firebaseAuth.currentUser?.email}")
             
-            // Estrutura: empresas/empresa_001/entidades/colaboradores/items
+            val uid = colaborador.firebaseUid
+            
+            // ✅ NOVO: Sincronizar no novo schema primeiro (colaboradores/{uid})
+            if (uid != null && uid.isNotBlank()) {
+                try {
+                    criarColaboradorNoNovoSchema(colaborador, companyId)
+                    Timber.d("AuthViewModel", "✅ Colaborador sincronizado no novo schema")
+                } catch (e: Exception) {
+                    Timber.w(e, "⚠️ Erro ao sincronizar no novo schema: %s", e.message)
+                }
+            }
+            
+            // ✅ COMPATIBILIDADE: Também sincronizar no schema antigo durante migração
             val collectionRef = firestore
                 .collection("empresas")
                 .document(companyId)
@@ -1579,7 +1527,7 @@ class AuthViewModel @Inject constructor(
                 .document("colaboradores")
                 .collection("items")
             
-            Timber.d("AuthViewModel", "   Caminho: empresas/$companyId/entidades/colaboradores/items")
+            Timber.d("AuthViewModel", "   Caminho (schema antigo): empresas/$companyId/entidades/colaboradores/items")
             
             // ✅ CORREÇÃO CRÍTICA: Usar Gson para converter colaborador para Map (snake_case automático)
             // Isso garante consistência com o ColaboradorSyncHandler e as regras do Firestore
@@ -1659,8 +1607,291 @@ class AuthViewModel @Inject constructor(
     }
     
     /**
-     * ✅ NOVO: Busca colaborador na nuvem (Firestore) por email usando busca global
+     * ✅ NOVO: Busca colaborador na nuvem (Firestore) por UID (lookup direto)
+     * Retorna o colaborador se encontrado, null caso contrário
+     * 
+     * Por quê: Lookup por UID é O(1) e mais confiável que queries por email
+     */
+    private suspend fun buscarColaboradorPorUid(uid: String, empresaId: String = "empresa_001"): Colaborador? {
+        return try {
+            Timber.d("AuthViewModel", "🔍 Buscando colaborador por UID: $uid (empresa: $empresaId)")
+            crashlytics.log("[BUSCA_UID] Buscando colaborador por UID: $uid")
+            
+            // ✅ NOVO SCHEMA: Lookup direto por UID
+            val docRef = firestore
+                .collection("empresas")
+                .document(empresaId)
+                .collection("colaboradores")
+                .document(uid)
+            
+            val doc = docRef.get().await()
+            
+            if (!doc.exists()) {
+                Timber.d("AuthViewModel", "⚠️ Colaborador não encontrado no novo schema (colaboradores/{uid})")
+                crashlytics.log("[BUSCA_UID] Colaborador não encontrado no novo schema")
+                return null
+            }
+            
+            Timber.d("AuthViewModel", "✅ Colaborador encontrado no novo schema!")
+            Timber.d("AuthViewModel", "   Path: ${doc.reference.path}")
+            Timber.d("AuthViewModel", "   Data keys: ${doc.data?.keys?.joinToString()}")
+            
+            // Log detalhado antes de converter
+            val data = doc.data
+            if (data == null) {
+                Timber.e("AuthViewModel", "❌ Documento existe mas data é null!")
+                crashlytics.log("[BUSCA_UID] ERRO: Documento existe mas data é null")
+                return null
+            }
+            
+            // Converter Timestamps para Date
+            val dataConvertida = data.toMutableMap()
+            fun toDate(v: Any?): Date? = when(v) {
+                is com.google.firebase.Timestamp -> v.toDate()
+                is Date -> v
+                is Long -> Date(v)
+                else -> null
+            }
+            
+            val dateFields = listOf(
+                "data_cadastro", "data_ultima_atualizacao", "data_aprovacao", 
+                "data_ultimo_acesso", "data_nascimento"
+            )
+            
+            dateFields.forEach { field ->
+                if (data.containsKey(field)) {
+                    dataConvertida[field] = toDate(data[field])
+                }
+            }
+            
+            if (dataConvertida["data_cadastro"] == null) dataConvertida["data_cadastro"] = Date()
+            if (dataConvertida["data_ultima_atualizacao"] == null) dataConvertida["data_ultima_atualizacao"] = Date()
+            
+            val colaboradorId = doc.id.toLongOrNull() ?: (data["id"] as? Number)?.toLong() ?: 0L
+            
+            // Converter para Colaborador
+            val colaborador = converterDocumentoParaColaborador(doc, dataConvertida, colaboradorId)
+            
+            if (colaborador == null) {
+                Timber.e("AuthViewModel", "❌ Falha ao converter documento para Colaborador")
+                crashlytics.log("[BUSCA_UID] ERRO: Falha na conversão")
+            } else {
+                Timber.d("AuthViewModel", "✅ Colaborador convertido: ${colaborador.nome} (ID: ${colaborador.id})")
+                crashlytics.log("[BUSCA_UID] ✅ Colaborador encontrado: ${colaborador.nome}")
+            }
+            
+            colaborador
+            
+        } catch (e: Exception) {
+            Timber.e(e, "❌ Erro ao buscar colaborador por UID: %s", e.message)
+            crashlytics.log("[BUSCA_UID] ERRO: ${e.message}")
+            crashlytics.recordException(e)
+            null
+        }
+    }
+    
+    /**
+     * ✅ NOVO: Converte DocumentSnapshot do Firestore para Colaborador
+     * Com logs detalhados para diagnóstico de problemas de mapeamento
+     */
+    private fun converterDocumentoParaColaborador(
+        doc: DocumentSnapshot,
+        data: Map<String, Any?>,
+        colaboradorId: Long = 0L
+    ): Colaborador? {
+        return try {
+            Timber.d("AuthViewModel", "🔧 Convertendo documento para Colaborador...")
+            Timber.d("AuthViewModel", "   Path: ${doc.reference.path}")
+            Timber.d("AuthViewModel", "   ID: $colaboradorId")
+            Timber.d("AuthViewModel", "   Data size: ${data.size}")
+            
+            // Tentar usar toObject primeiro (mais eficiente)
+            val colaboradorToObject = doc.toObject(Colaborador::class.java)
+            if (colaboradorToObject != null) {
+                Timber.d("AuthViewModel", "✅ Conversão via toObject() bem-sucedida")
+                return colaboradorToObject.copy(id = colaboradorId)
+            }
+            
+            // Fallback: usar Gson se toObject falhar
+            Timber.d("AuthViewModel", "⚠️ toObject() retornou null, tentando Gson...")
+            val colaboradorJson = gson.toJson(data)
+            val colaboradorGson = gson.fromJson(colaboradorJson, Colaborador::class.java)
+            
+            if (colaboradorGson != null) {
+                Timber.d("AuthViewModel", "✅ Conversão via Gson bem-sucedida")
+                return colaboradorGson.copy(id = colaboradorId)
+            }
+            
+            Timber.e("AuthViewModel", "❌ Ambas as conversões falharam (toObject e Gson)")
+            null
+            
+        } catch (e: Exception) {
+            Timber.e(e, "❌ Erro ao converter documento: %s", e.message)
+            Timber.e("AuthViewModel", "   Stack: ${e.stackTraceToString()}")
+            null
+        }
+    }
+    
+    /**
+     * ✅ NOVO: Obtém ou cria colaborador automaticamente
+     * 
+     * Fluxo:
+     * 1. Tenta buscar por UID no novo schema (colaboradores/{uid})
+     * 2. Se não encontrar, tenta buscar no schema antigo (fallback)
+     * 3. Se ainda não encontrar, cria automaticamente com dados mínimos
+     * 
+     * Por quê: Evita signOut automático e permite onboarding suave
+     */
+    private suspend fun getOrCreateColaborador(
+        uid: String,
+        email: String,
+        nome: String? = null,
+        empresaId: String = "empresa_001"
+    ): Colaborador? {
+        return try {
+            Timber.d("AuthViewModel", "🔍 getOrCreateColaborador: UID=$uid, Email=$email")
+            crashlytics.log("[GET_OR_CREATE] Iniciando: UID=$uid")
+            
+            // 1. Tentar buscar no novo schema primeiro (mais eficiente)
+            var colaborador = buscarColaboradorPorUid(uid, empresaId)
+            
+            // 2. Se não encontrou, tentar schema antigo (fallback durante migração)
+            if (colaborador == null) {
+                Timber.d("AuthViewModel", "⚠️ Não encontrado no novo schema, tentando schema antigo...")
+                val fallbackResult = buscarColaboradorNaNuvemPorEmail(email)
+                if (fallbackResult != null) {
+                    colaborador = fallbackResult.first
+                    Timber.d("AuthViewModel", "✅ Encontrado no schema antigo, migrando para novo schema...")
+                    
+                    // Migrar para novo schema automaticamente
+                    try {
+                        criarColaboradorNoNovoSchema(colaborador, empresaId)
+                    } catch (e: Exception) {
+                        Timber.w(e, "⚠️ Erro ao migrar para novo schema: %s", e.message)
+                    }
+                }
+            }
+            
+            // 3. Se ainda não encontrou, criar automaticamente
+            if (colaborador == null) {
+                Timber.d("AuthViewModel", "⚠️ Colaborador não encontrado, criando automaticamente...")
+                crashlytics.log("[GET_OR_CREATE] Criando colaborador automaticamente")
+                
+                colaborador = criarColaboradorAutomatico(uid, email, nome ?: email.split("@")[0], empresaId)
+            }
+            
+            if (colaborador != null) {
+                Timber.d("AuthViewModel", "✅ Colaborador obtido/criado: ${colaborador.nome}")
+                crashlytics.log("[GET_OR_CREATE] ✅ Sucesso: ${colaborador.nome}")
+            } else {
+                Timber.e("AuthViewModel", "❌ Falha ao obter/criar colaborador")
+                crashlytics.log("[GET_OR_CREATE] ❌ Falha")
+            }
+            
+            colaborador
+            
+        } catch (e: Exception) {
+            Timber.e(e, "❌ Erro em getOrCreateColaborador: %s", e.message)
+            crashlytics.log("[GET_OR_CREATE] ERRO: ${e.message}")
+            crashlytics.recordException(e)
+            null
+        }
+    }
+    
+    /**
+     * ✅ NOVO: Cria colaborador automaticamente com dados mínimos
+     */
+    private suspend fun criarColaboradorAutomatico(
+        uid: String,
+        email: String,
+        nome: String,
+        empresaId: String
+    ): Colaborador? {
+        return try {
+            Timber.d("AuthViewModel", "🔧 Criando colaborador automático: $nome ($email)")
+            
+            val agora = System.currentTimeMillis()
+            val colaborador = Colaborador(
+                id = 0L, // Será gerado pelo Room
+                nome = nome,
+                email = email,
+                firebaseUid = uid,
+                nivelAcesso = NivelAcesso.USER,
+                aprovado = false, // Precisa ser aprovado pelo admin
+                ativo = true,
+                primeiroAcesso = true,
+                dataCadastro = agora,
+                dataUltimaAtualizacao = agora
+            )
+            
+            // Salvar localmente primeiro
+            val idLocal = appRepository.inserirColaborador(colaborador)
+            val colaboradorComId = colaborador.copy(id = idLocal)
+            
+            // Criar no Firestore (novo schema)
+            criarColaboradorNoNovoSchema(colaboradorComId, empresaId)
+            
+            Timber.d("AuthViewModel", "✅ Colaborador criado automaticamente (ID local: $idLocal)")
+            colaboradorComId
+            
+        } catch (e: Exception) {
+            Timber.e(e, "❌ Erro ao criar colaborador automático: %s", e.message)
+            null
+        }
+    }
+    
+    /**
+     * ✅ NOVO: Cria colaborador no novo schema (colaboradores/{uid})
+     */
+    private suspend fun criarColaboradorNoNovoSchema(colaborador: Colaborador, empresaId: String) {
+        try {
+            val uid = colaborador.firebaseUid ?: return
+            
+            Timber.d("AuthViewModel", "🔧 Criando colaborador no novo schema: colaboradores/$uid")
+            
+            val docRef = firestore
+                .collection("empresas")
+                .document(empresaId)
+                .collection("colaboradores")
+                .document(uid)
+            
+            // Converter para Map usando Gson (snake_case)
+            val colaboradorJson = gson.toJson(colaborador)
+            @Suppress("UNCHECKED_CAST")
+            val colaboradorMap = gson.fromJson(colaboradorJson, Map::class.java) as? MutableMap<String, Any?> 
+                ?: mutableMapOf()
+            
+            // Adicionar campos adicionais
+            colaboradorMap["room_id"] = colaborador.id
+            colaboradorMap["id"] = colaborador.id
+            colaboradorMap["last_modified"] = FieldValue.serverTimestamp()
+            colaboradorMap["sync_timestamp"] = FieldValue.serverTimestamp()
+            
+            // Converter datas para Timestamp
+            colaboradorMap["data_cadastro"] = Timestamp(Date(colaborador.dataCadastro))
+            colaboradorMap["data_ultima_atualizacao"] = Timestamp(Date(colaborador.dataUltimaAtualizacao))
+            colaborador.dataAprovacao?.let { colaboradorMap["data_aprovacao"] = Timestamp(Date(it)) }
+            colaborador.dataUltimoAcesso?.let { colaboradorMap["data_ultimo_acesso"] = Timestamp(Date(it)) }
+            
+            // Garantir nivel_acesso como string
+            colaboradorMap["nivel_acesso"] = colaborador.nivelAcesso.name
+            
+            // Usar set() com merge para evitar sobrescrever dados existentes
+            docRef.set(colaboradorMap).await()
+            
+            Timber.d("AuthViewModel", "✅ Colaborador criado no novo schema com sucesso!")
+            
+        } catch (e: Exception) {
+            Timber.e(e, "❌ Erro ao criar colaborador no novo schema: %s", e.message)
+            throw e
+        }
+    }
+    
+    /**
+     * ✅ FALLBACK: Busca colaborador na nuvem (Firestore) por email usando busca global
      * Retorna o colaborador e o ID da empresa se encontrado, null caso contrário
+     * 
+     * NOTA: Este método é mantido apenas para compatibilidade durante migração
      */
     private suspend fun buscarColaboradorNaNuvemPorEmail(email: String): Pair<Colaborador, String>? {
         android.util.Log.d("AuthViewModel", "═══════════════════════════════════════")
@@ -1848,7 +2079,12 @@ class AuthViewModel @Inject constructor(
             
             // Com a nova política de GSON (LOWER_CASE_WITH_UNDERSCORES) e @SerializedName na entidade,
             // o mapeamento deve ser automático e robusto.
-            val colaborador = gson.fromJson(gson.toJson(dataConvertida), Colaborador::class.java).copy(id = colaboradorId)
+            val colaborador = converterDocumentoParaColaborador(doc, dataConvertida, colaboradorId)
+            
+            if (colaborador == null) {
+                Timber.e("AuthViewModel", "❌ Falha ao converter documento para Colaborador")
+                return null
+            }
             
             Timber.d("AuthViewModel", "✅ Colaborador processado: ${colaborador.nome} (ID: ${colaborador.id}, Acesso: ${colaborador.nivelAcesso})")
             Pair(colaborador, companyId)
