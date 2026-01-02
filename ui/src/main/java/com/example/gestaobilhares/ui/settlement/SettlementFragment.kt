@@ -1,4 +1,4 @@
-﻿package com.example.gestaobilhares.ui.settlement
+package com.example.gestaobilhares.ui.settlement
 
 import android.Manifest
 import android.app.Activity
@@ -123,14 +123,14 @@ class SettlementFragment : Fragment() {
     private val cameraLauncher = registerForActivityResult(
         ActivityResultContracts.TakePicture()
     ) { success ->
-        if (success) {
-            // ✅ CORREÇÃO: Proteção contra crash após captura de foto
+        // ✅ CORREÇÃO: Adicionar delay para permitir que a câmera libere buffers corretamente
+        // Isso evita erros do HAL da câmera quando buffers são liberados prematuramente
+        binding.root.postDelayed({
             try {
-                currentPhotoUri?.let { uri ->
-                    Timber.d("Foto capturada com sucesso: $uri")
-                    
-                    // ✅ CORREÇÃO: Usar post para aguardar o layout ser concluído
-                    binding.root.post {
+                if (success) {
+                    currentPhotoUri?.let { uri ->
+                        Timber.d("SettlementFragment", "Foto capturada com sucesso: $uri")
+                        
                         try {
                             // ✅ CORREÇÃO MELHORADA: Verificar se o arquivo existe e obter caminho real
                             val caminhoReal = obterCaminhoRealFoto(uri)
@@ -173,15 +173,31 @@ class SettlementFragment : Fragment() {
                             Timber.e("SettlementFragment", "Erro ao processar foto: ${e.message}", e)
                             Toast.makeText(requireContext(), "Erro ao processar foto: ${e.message}", Toast.LENGTH_SHORT).show()
                         }
+                    } ?: run {
+                        Timber.w("SettlementFragment", "URI da foto é null após captura bem-sucedida")
                     }
+                } else {
+                    // ✅ CORREÇÃO: Limpar URI quando a captura é cancelada ou falha
+                    // Isso evita que buffers fiquem pendentes e cause erros do HAL
+                    Timber.d("SettlementFragment", "Captura de foto cancelada ou falhou")
+                    currentPhotoUri?.let { uri ->
+                        try {
+                            val file = File(uri.path ?: "")
+                            if (file.exists()) {
+                                file.delete()
+                            }
+                        } catch (e: Exception) {
+                            Timber.w("SettlementFragment", "Erro ao limpar arquivo temporário: ${e.message}")
+                        }
+                    }
+                    currentPhotoUri = null
                 }
             } catch (e: Exception) {
                 Timber.e("SettlementFragment", "Erro crítico após captura de foto: ${e.message}", e)
-                Toast.makeText(requireContext(), "Erro ao processar foto capturada", Toast.LENGTH_LONG).show()
+                // ✅ CORREÇÃO: Sempre limpar URI em caso de erro
+                currentPhotoUri = null
             }
-        } else {
-            Toast.makeText(requireContext(), "Erro ao capturar foto", Toast.LENGTH_SHORT).show()
-        }
+        }, 300) // Delay de 300ms para permitir que a câmera libere buffers
     }
     
     /**
@@ -1725,7 +1741,32 @@ class SettlementFragment : Fragment() {
 
     override fun onDestroyView() {
         super.onDestroyView()
+        // ✅ CORREÇÃO: Limpar recursos da câmera ao destruir a view
+        // Isso garante que buffers sejam liberados corretamente e evita erros do HAL
+        currentPhotoUri?.let { uri ->
+            try {
+                val file = File(uri.path ?: "")
+                // Verificar se a foto já foi processada antes de deletar
+                // (não deletar se já foi salva no adapter)
+                if (file.exists()) {
+                    // Verificar se a foto não está sendo usada
+                    val caminhoReal = obterCaminhoRealFoto(uri)
+                    if (caminhoReal == null || !File(caminhoReal).exists()) {
+                        file.delete()
+                    }
+                }
+            } catch (e: Exception) {
+                Timber.w("SettlementFragment", "Erro ao limpar arquivo ao destruir view: ${e.message}")
+            }
+        }
+        currentPhotoUri = null
         _binding = null
+    }
+    
+    override fun onPause() {
+        super.onPause()
+        // ✅ CORREÇÃO: Não limpar URI aqui para evitar perder foto se usuário voltar
+        // O cleanup será feito em onDestroyView se necessário
     }
 } 
 
