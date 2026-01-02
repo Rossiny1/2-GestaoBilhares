@@ -1533,24 +1533,35 @@ class AuthViewModel @Inject constructor(
             
             // 4. Fallback para empresa_001 se collectionGroup falhar ou não encontrar
             if (doc == null) {
+                crashlytics.log("[BUSCA_NUVEM] Tentando fallback direto na empresa_001...")
                 Timber.d("AuthViewModel", "   Não encontrado via collectionGroup. Tentando fallback direto na empresa_001...")
                 val collectionRef = firestore.collection("empresas").document("empresa_001")
                     .collection("entidades").document("colaboradores").collection("items")
                 
                 try {
+                    crashlytics.log("[BUSCA_NUVEM] Fallback: Buscando por email na empresa_001...")
                     querySnapshot = collectionRef.whereEqualTo("email", email).get().await()
+                    crashlytics.setCustomKey("busca_nuvem_fallback_resultado", querySnapshot.size())
                     doc = querySnapshot.documents.firstOrNull()
                     
                     if (doc == null) {
                         val firebaseUid = firebaseAuth.currentUser?.uid
                         if (firebaseUid != null) {
+                            crashlytics.log("[BUSCA_NUVEM] Fallback: Buscando por firebaseUid na empresa_001...")
                             querySnapshot = collectionRef.whereEqualTo("firebaseUid", firebaseUid).get().await()
+                            crashlytics.setCustomKey("busca_nuvem_fallback_resultado_uid", querySnapshot.size())
                             doc = querySnapshot.documents.firstOrNull()
                         }
                     }
+                    crashlytics.log("[BUSCA_NUVEM] Fallback empresa_001: ${if (doc != null) "ENCONTRADO" else "NÃO ENCONTRADO"}")
                     Timber.d("AuthViewModel", "   Fallback empresa_001: ${if (doc != null) "ENCONTRADO" else "NÃO ENCONTRADO"}")
                 } catch (e: Exception) {
-                    Timber.e("AuthViewModel", "   Erro no fallback empresa_001: ${e.message}")
+                    crashlytics.setCustomKey("busca_nuvem_erro_fallback", true)
+                    crashlytics.setCustomKey("busca_nuvem_erro_fallback_tipo", e.javaClass.simpleName)
+                    crashlytics.setCustomKey("busca_nuvem_erro_fallback_mensagem", e.message ?: "unknown")
+                    crashlytics.log("[BUSCA_NUVEM] ❌ Erro no fallback empresa_001: ${e.message}")
+                    crashlytics.recordException(e)
+                    Timber.e("AuthViewModel", "   Erro no fallback empresa_001: ${e.message}", e)
                 }
             }
             
@@ -1619,12 +1630,16 @@ class AuthViewModel @Inject constructor(
                 if (e.code == FirebaseFirestoreException.Code.PERMISSION_DENIED) {
                     crashlytics.setCustomKey("busca_nuvem_permission_denied", true)
                     crashlytics.log("[BUSCA_NUVEM] ❌ PERMISSION_DENIED: Usuário não autenticado ou sem permissão")
+                    crashlytics.log("[BUSCA_NUVEM] ❌ PERMISSION_DENIED: Verificar se as regras do Firestore permitem busca sem autenticação")
+                    crashlytics.log("[BUSCA_NUVEM] ❌ PERMISSION_DENIED: Path tentado: collectionGroup('items')")
                     crashlytics.setCustomKey("busca_nuvem_firebase_auth_uid", firebaseAuth.currentUser?.uid ?: "null")
+                    crashlytics.setCustomKey("busca_nuvem_firebase_auth_email", firebaseAuth.currentUser?.email ?: "null")
                 }
             }
             
             crashlytics.recordException(e)
-            Timber.e("AuthViewModel", "❌ Erro na busca na nuvem: ${e.message}")
+            Timber.e("AuthViewModel", "❌ Erro na busca na nuvem: ${e.message}", e)
+            Timber.e("AuthViewModel", "   Stack trace: ${e.stackTraceToString()}")
             null
         }
     }
