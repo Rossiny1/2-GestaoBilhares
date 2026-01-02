@@ -282,6 +282,11 @@ class AuthViewModel @Inject constructor(
                             }
                             
                             if (colaborador == null) {
+                                android.util.Log.e("AuthViewModel", "═══════════════════════════════════════")
+                                android.util.Log.e("AuthViewModel", "❌ ERRO FINAL: Colaborador não encontrado")
+                                android.util.Log.e("AuthViewModel", "Email: $email")
+                                android.util.Log.e("AuthViewModel", "Firebase UID: ${result.user!!.uid}")
+                                android.util.Log.e("AuthViewModel", "═══════════════════════════════════════")
                                 Timber.e("AuthViewModel", "❌ ERRO FINAL: Colaborador não encontrado após todas as tentativas")
                                 Timber.e("AuthViewModel", "   Email: $email")
                                 Timber.e("AuthViewModel", "   Firebase UID: ${result.user!!.uid}")
@@ -292,7 +297,17 @@ class AuthViewModel @Inject constructor(
                             }
                             
                             // ✅ CORREÇÃO CRÍTICA: Verificar se o colaborador está aprovado e ativo ANTES de permitir login
+                            android.util.Log.d("AuthViewModel", "🔍 Verificando status do colaborador...")
+                            android.util.Log.d("AuthViewModel", "   Aprovado: ${colaborador.aprovado}")
+                            android.util.Log.d("AuthViewModel", "   Ativo: ${colaborador.ativo}")
+                            Timber.d("AuthViewModel", "🔍 Verificando status do colaborador: aprovado=${colaborador.aprovado}, ativo=${colaborador.ativo}")
+                            
                             if (!colaborador.aprovado) {
+                                android.util.Log.w("AuthViewModel", "═══════════════════════════════════════")
+                                android.util.Log.w("AuthViewModel", "❌ Colaborador NÃO APROVADO")
+                                android.util.Log.w("AuthViewModel", "Email: $email")
+                                android.util.Log.w("AuthViewModel", "Nome: ${colaborador.nome}")
+                                android.util.Log.w("AuthViewModel", "═══════════════════════════════════════")
                                 Timber.w("AuthViewModel", "❌ Colaborador não está aprovado - bloqueando login")
                                 Timber.w("AuthViewModel", "   Email: $email")
                                 Timber.w("AuthViewModel", "   Nome: ${colaborador.nome}")
@@ -304,6 +319,11 @@ class AuthViewModel @Inject constructor(
                             }
                             
                             if (!colaborador.ativo) {
+                                android.util.Log.w("AuthViewModel", "═══════════════════════════════════════")
+                                android.util.Log.w("AuthViewModel", "❌ Colaborador INATIVO")
+                                android.util.Log.w("AuthViewModel", "Email: $email")
+                                android.util.Log.w("AuthViewModel", "Nome: ${colaborador.nome}")
+                                android.util.Log.w("AuthViewModel", "═══════════════════════════════════════")
                                 Timber.w("AuthViewModel", "❌ Colaborador está inativo - bloqueando login")
                                 Timber.w("AuthViewModel", "   Email: $email")
                                 Timber.w("AuthViewModel", "   Nome: ${colaborador.nome}")

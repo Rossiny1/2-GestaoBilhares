@@ -1,4 +1,4 @@
-﻿package com.example.gestaobilhares.ui.auth
+package com.example.gestaobilhares.ui.auth
 import com.example.gestaobilhares.ui.R
 
 import android.os.Bundle
@@ -86,9 +86,30 @@ class LoginFragment : Fragment() {
      */
     private fun setupClickListeners() {
         binding.loginButton.setOnClickListener {
+            android.util.Log.d("LoginFragment", "═══════════════════════════════════════")
+            android.util.Log.d("LoginFragment", "🔘 BOTÃO LOGIN CLICADO")
+            android.util.Log.d("LoginFragment", "═══════════════════════════════════════")
+            Timber.d("LoginFragment", "🔘 BOTÃO LOGIN CLICADO")
+            
             val email = binding.emailEditText.text.toString()
             val password = binding.passwordEditText.text.toString()
-            authViewModel.login(email, password)
+            
+            android.util.Log.d("LoginFragment", "Email: $email")
+            android.util.Log.d("LoginFragment", "Senha: ${password.length} caracteres")
+            Timber.d("LoginFragment", "Email: $email, Senha: ${password.length} caracteres")
+            
+            android.util.Log.d("LoginFragment", "Chamando authViewModel.login()...")
+            Timber.d("LoginFragment", "Chamando authViewModel.login()...")
+            
+            try {
+                authViewModel.login(email, password)
+                android.util.Log.d("LoginFragment", "✅ authViewModel.login() chamado com sucesso")
+                Timber.d("LoginFragment", "✅ authViewModel.login() chamado com sucesso")
+            } catch (e: Exception) {
+                android.util.Log.e("LoginFragment", "❌ ERRO ao chamar authViewModel.login(): ${e.message}")
+                android.util.Log.e("LoginFragment", "Stack: ${e.stackTraceToString()}")
+                Timber.e(e, "LoginFragment", "❌ ERRO ao chamar authViewModel.login(): ${e.message}")
+            }
         }
 
         binding.forgotPasswordTextView.setOnClickListener {
