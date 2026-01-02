@@ -849,11 +849,13 @@ class AppRepository @Inject constructor(
             
             // Converter Timestamps para Date
             val dataConvertida = data.toMutableMap()
-            fun toDate(v: Any?): Date? = when(v) {
-                is Timestamp -> v.toDate()
-                is Date -> v
-                is Long -> Date(v)
-                else -> null
+            val toDate: (Any?) -> Date? = { v ->
+                when(v) {
+                    is Timestamp -> v.toDate()
+                    is Date -> v
+                    is Long -> Date(v)
+                    else -> null
+                }
             }
             
             val dateFields = listOf(
@@ -863,7 +865,7 @@ class AppRepository @Inject constructor(
             
             dateFields.forEach { field ->
                 if (data.containsKey(field)) {
-                    val dateValue = toDate(data[field])
+                    val dateValue = toDate.invoke(data[field])
                     if (dateValue != null) {
                         dataConvertida[field] = dateValue.time // Converter para Long (millis)
                     }
