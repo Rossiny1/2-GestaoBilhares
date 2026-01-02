@@ -72,24 +72,21 @@ service cloud.firestore {
       // 1. Admin Global
       // 2. Colegas da mesma empresa (para listar equipe)
       // 3. O próprio usuário (bootstrapping via email match se claim falhar)
-      // 4. ✅ CORREÇÃO CRÍTICA: Permitir busca quando autenticado (para login após Firebase Auth)
-      // 5. ✅ NOVO: Busca por email sem autenticação (para login em app vazio)
-      //    - Apenas para colaboradores aprovados e ativos
+      // 4. ✅ CORREÇÃO: Usuários autenticados podem ler colaboradores aprovados e ativos
+      // 5. ✅ Busca sem autenticação para login em app vazio (apenas aprovados e ativos)
       allow read: if isAdmin() || 
                   belongsToCompany(empresaId) || 
-                  // ✅ CORREÇÃO CRÍTICA: Quando autenticado, permitir busca por email OU firebaseUid
-                  // Isso permite que após o Firebase Auth autenticar, a busca encontre o colaborador
+                  // ✅ CORREÇÃO: Quando autenticado, permitir leitura se:
+                  // - É o próprio usuário (email ou UID match), OU
+                  // - Colaborador está aprovado e ativo (permite busca após Firebase Auth)
                   (request.auth != null && (
                     request.auth.token.email == resource.data.email || 
                     request.auth.uid == resource.data.firebaseUid ||
                     request.auth.uid == resource.data.firebase_uid ||
                     request.auth.token.email == "rossinys@gmail.com" ||
-                    // ✅ NOVO: Permitir busca quando autenticado E colaborador aprovado/ativo
-                    // Isso resolve o problema de login após Firebase Auth autenticar
                     (resource.data.aprovado == true && resource.data.ativo == true)
                   )) ||
-                  // ✅ CORREÇÃO CRÍTICA: Permitir busca sem autenticação para login em app vazio
-                  // Apenas para colaboradores aprovados e ativos (segurança)
+                  // ✅ Busca sem autenticação para login em app vazio
                   (request.auth == null && 
                    resource.data.aprovado == true && 
                    resource.data.ativo == true);
@@ -124,40 +121,27 @@ service cloud.firestore {
 
     // Suporte para busca global via collectionGroup("items")
     // Essencial para login em fresh install onde o empresaId ainda é desconhecido
-    // ✅ CORREÇÃO CRÍTICA: Permitir leitura sem autenticação via collectionGroup
-    // Apenas para documentos que tenham campos ÚNICOS de colaborador E estejam aprovados e ativos
-    // Isso permite login em app vazio quando login online falha
+    // ✅ CORREÇÃO: Para collectionGroup queries, permitir usuários autenticados fazerem queries
+    // A validação de segurança é feita no documento individual (regra acima)
     match /{path=**}/items/{itemId} {
-      allow read: if (request.auth != null && (
-                      request.auth.token.email == resource.data.email || 
-                      // ✅ CORREÇÃO: Verificar ambos os formatos (camelCase e snake_case)
-                      request.auth.uid == resource.data.firebaseUid ||
-                      request.auth.uid == resource.data.firebase_uid ||
-                      request.auth.token.email == "rossinys@gmail.com" ||
-                      // ✅ CORREÇÃO CRÍTICA: Quando autenticado, permitir busca de colaboradores aprovados/ativos
-                      // Isso resolve o problema de login após Firebase Auth autenticar
-                      (('nivel_acesso' in resource.data || 'nivelAcesso' in resource.data) &&
-                       'email' in resource.data &&
-                       'aprovado' in resource.data &&
-                       'ativo' in resource.data &&
-                       resource.data.aprovado == true && 
-                       resource.data.ativo == true)
-                    )) ||
-                    // ✅ CORREÇÃO CRÍTICA: Permitir busca sem autenticação para colaboradores
-                    // Verifica se o documento tem campos ÚNICOS de colaborador (nivel_acesso, primeiro_acesso)
-                    // e se está aprovado e ativo. Isso permite login em app vazio.
-                    // Campos únicos de colaboradores: nivel_acesso, primeiro_acesso, senha_temporaria, senha_hash
-                    (request.auth == null && 
-                     // Verificar se tem campos ÚNICOS de colaborador (segurança: apenas colaboradores)
-                     // nivel_acesso é único de colaboradores (clientes não têm)
-                     // ✅ CORREÇÃO: Verificar ambos os formatos possíveis
-                     (('nivel_acesso' in resource.data || 'nivelAcesso' in resource.data) &&
-                      'email' in resource.data &&
-                      'aprovado' in resource.data &&
-                      'ativo' in resource.data &&
-                      // Apenas colaboradores aprovados e ativos podem ser buscados sem autenticação
-                      resource.data.aprovado == true && 
-                      resource.data.ativo == true));
+      allow read: if isAdmin() ||
+                  // ✅ CORREÇÃO CRÍTICA: Usuários autenticados podem fazer queries collectionGroup
+                  // Isso permite buscar colaborador após Firebase Auth autenticar
+                  (request.auth != null && (
+                    request.auth.token.email == resource.data.email || 
+                    request.auth.uid == resource.data.firebaseUid ||
+                    request.auth.uid == resource.data.firebase_uid ||
+                    request.auth.token.email == "rossinys@gmail.com" ||
+                    // Permitir leitura de colaboradores aprovados e ativos quando autenticado
+                    (('nivel_acesso' in resource.data || 'nivelAcesso' in resource.data) &&
+                     resource.data.aprovado == true && 
+                     resource.data.ativo == true)
+                  )) ||
+                  // ✅ Permitir busca sem autenticação para colaboradores aprovados e ativos
+                  (request.auth == null && 
+                   ('nivel_acesso' in resource.data || 'nivelAcesso' in resource.data) &&
+                   resource.data.aprovado == true && 
+                   resource.data.ativo == true);
     }
 
     // 2️⃣ DADOS DA EMPRESA (Clientes, Acertos, Mesas, Rotas, etc.)
