@@ -1682,23 +1682,49 @@ class AuthViewModel @Inject constructor(
             val emailNormalizado = email.trim().lowercase()
             
             // 1. Tentar busca exata via collectionGroup
+            android.util.Log.d("AuthViewModel", "🔍 Busca 1: collectionGroup('items').whereEqualTo('email', '$email')")
+            android.util.Log.d("AuthViewModel", "   Firebase Auth autenticado: ${firebaseAuth.currentUser != null}")
+            android.util.Log.d("AuthViewModel", "   Firebase UID: ${firebaseAuth.currentUser?.uid}")
             crashlytics.log("[BUSCA_NUVEM] Tentando busca 1 (email exato via collectionGroup)...")
             var querySnapshot = try {
-                firestore.collectionGroup("items")
-                    .whereEqualTo("email", email)
-                    .get()
-                    .await()
+                val query = firestore.collectionGroup("items").whereEqualTo("email", email)
+                android.util.Log.d("AuthViewModel", "   Executando query...")
+                val result = query.get().await()
+                android.util.Log.d("AuthViewModel", "   Query executada: ${result.size()} documentos")
+                result
             } catch (e: Exception) {
+                android.util.Log.e("AuthViewModel", "═══════════════════════════════════════")
+                android.util.Log.e("AuthViewModel", "❌ ERRO na busca collectionGroup")
+                android.util.Log.e("AuthViewModel", "Tipo: ${e.javaClass.simpleName}")
+                android.util.Log.e("AuthViewModel", "Mensagem: ${e.message}")
+                if (e is com.google.firebase.firestore.FirebaseFirestoreException) {
+                    android.util.Log.e("AuthViewModel", "Código Firestore: ${e.code}")
+                    android.util.Log.e("AuthViewModel", "É PERMISSION_DENIED: ${e.code == com.google.firebase.firestore.FirebaseFirestoreException.Code.PERMISSION_DENIED}")
+                }
+                android.util.Log.e("AuthViewModel", "Stack: ${e.stackTraceToString()}")
+                android.util.Log.e("AuthViewModel", "═══════════════════════════════════════")
                 crashlytics.setCustomKey("busca_nuvem_erro_collection_group", true)
                 crashlytics.setCustomKey("busca_nuvem_erro_tipo", e.javaClass.simpleName)
+                if (e is com.google.firebase.firestore.FirebaseFirestoreException) {
+                    crashlytics.setCustomKey("busca_nuvem_erro_firestore_code", e.code.name)
+                }
                 crashlytics.log("[BUSCA_NUVEM] ❌ Erro na busca collectionGroup: ${e.message}")
                 crashlytics.recordException(e)
                 throw e
             }
             
             crashlytics.setCustomKey("busca_nuvem_resultado_1", querySnapshot.size())
+            android.util.Log.d("AuthViewModel", "   Busca 1 resultado: ${querySnapshot.size()} documentos")
             Timber.d("AuthViewModel", "   Busca 1 (email exato): ${querySnapshot.size()} documentos encontrados")
+            
+            // Log de todos os documentos encontrados
+            querySnapshot.documents.forEachIndexed { index, doc ->
+                android.util.Log.d("AuthViewModel", "   Doc $index: ${doc.reference.path}")
+                android.util.Log.d("AuthViewModel", "      É colaborador: ${doc.reference.path.contains("/colaboradores/items/")}")
+            }
+            
             var doc = querySnapshot.documents.find { it.reference.path.contains("/colaboradores/items/") }
+            android.util.Log.d("AuthViewModel", "   Colaborador encontrado na busca 1: ${doc != null}")
             
             // 2. Se não encontrou, tentar email normalizado
             if (doc == null && email != emailNormalizado) {
