@@ -27,6 +27,14 @@ import java.util.Date
 import kotlinx.coroutines.runBlocking
 import javax.inject.Inject
 import javax.inject.Singleton
+import com.google.firebase.firestore.FirebaseFirestore
+import com.google.firebase.firestore.Source
+import com.google.firebase.firestore.FieldValue
+import com.google.firebase.Timestamp
+import kotlinx.coroutines.tasks.await
+import com.google.gson.Gson
+import com.google.gson.GsonBuilder
+import com.google.gson.FieldNamingPolicy
 
 /**
  * ✅ REPOSITORY CONSOLIDADO E MODERNIZADO - AppRepository
@@ -64,9 +72,18 @@ class AppRepository @Inject constructor(
     private val panoMesaDao: com.example.gestaobilhares.data.dao.PanoMesaDao? = null,
     private val metaDao: MetaDao? = null,
     private val equipmentDao: com.example.gestaobilhares.data.dao.EquipmentDao? = null,
-    private val syncOperationDao: SyncOperationDao? = null,
+    private val syncOperationDao: SyncOperationDao? = null
     // private val  // ✅ TEMPORARIAMENTE REMOVIDO: PROBLEMA DE ENCODING
 ) {
+    
+    // Instância do Firestore (inicializada diretamente, não injetada)
+    private val firestore: FirebaseFirestore = FirebaseFirestore.getInstance()
+    
+    // Gson para serialização/deserialização - padrão LOWER_CASE_WITH_UNDERSCORES para Firestore
+    private val gson: Gson = GsonBuilder()
+        .setFieldNamingPolicy(FieldNamingPolicy.LOWER_CASE_WITH_UNDERSCORES)
+        .setDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSS'Z'")
+        .create()
     
     // ✅ NOVO: Repositories especializados (arquitetura modular)
     private val clienteRepository: ClienteRepository by lazy {
@@ -742,6 +759,256 @@ class AppRepository @Inject constructor(
     suspend fun obterColaboradorPorId(id: Long) = colaboradorDao.obterPorId(id)
     suspend fun obterColaboradorPorEmail(email: String) = colaboradorDao.obterPorEmail(email)
     suspend fun obterColaboradorPorFirebaseUid(firebaseUid: String) = colaboradorDao.obterPorFirebaseUid(firebaseUid)
+    
+    // ==================== FIRESTORE - NOVO SCHEMA (empresas/{empresaId}/colaboradores/{uid}) ====================
+    
+    /**
+     * ✅ NOVO: Busca colaborador pelo UID no caminho canônico
+     * Caminho: empresas/{empresaId}/colaboradores/{uid}
+     * 
+     * @param empresaId ID da empresa (padrão: "empresa_001")
+     * @param uid Firebase UID do usuário
+     * @return Colaborador se encontrado, null caso contrário
+     */
+    suspend fun getColaboradorByUid(empresaId: String, uid: String): Colaborador? {
+        return try {
+            Timber.d("AppRepository", "🔍 [FIRESTORE] Buscando colaborador por UID: empresas/$empresaId/colaboradores/$uid")
+            
+            val docRef = firestore
+                .collection("empresas")
+                .document(empresaId)
+                .collection("colaboradores")
+                .document(uid)
+            
+            // ✅ FORÇAR LEITURA DO SERVIDOR para evitar cache desatualizado
+            val doc = docRef.get(Source.SERVER).await()
+            
+            // ✅ LOGS DE DIAGNÓSTICO
+            Timber.d("AppRepository", "═══════════════════════════════════════")
+            Timber.d("AppRepository", "📋 [DIAGNÓSTICO] Documento do Firestore:")
+            Timber.d("AppRepository", "   Path: ${doc.reference.path}")
+            Timber.d("AppRepository", "   Exists: ${doc.exists()}")
+            Timber.d("AppRepository", "═══════════════════════════════════════")
+            
+            if (!doc.exists()) {
+                Timber.d("AppRepository", "⚠️ [FIRESTORE] Documento não existe: ${doc.reference.path}")
+                return null
+            }
+            
+            val data = doc.data
+            if (data == null) {
+                Timber.e("AppRepository", "❌ [FIRESTORE] Documento existe mas data é null!")
+                return null
+            }
+            
+            // ✅ LOGS DE DIAGNÓSTICO: Dados brutos ANTES de converter
+            Timber.d("AppRepository", "📋 [DIAGNÓSTICO] Dados brutos do documento:")
+            Timber.d("AppRepository", "   Data keys: ${data.keys.joinToString(", ")}")
+            Timber.d("AppRepository", "   Campo 'aprovado' (bruto): ${data["aprovado"]} (tipo: ${data["aprovado"]?.javaClass?.simpleName})")
+            Timber.d("AppRepository", "   Campo 'ativo' (bruto): ${data["ativo"]} (tipo: ${data["ativo"]?.javaClass?.simpleName})")
+            Timber.d("AppRepository", "   Campo 'primeiro_acesso' (bruto): ${data["primeiro_acesso"]} (tipo: ${data["primeiro_acesso"]?.javaClass?.simpleName})")
+            
+            // ✅ CORREÇÃO: Ler valores boolean diretamente do documento
+            val aprovadoDireto = doc.getBoolean("aprovado") ?: false
+            val ativoDireto = doc.getBoolean("ativo") ?: true
+            val primeiroAcessoDireto = doc.getBoolean("primeiro_acesso") ?: true
+            
+            Timber.d("AppRepository", "📋 [DIAGNÓSTICO] Valores diretos (doc.getBoolean):")
+            Timber.d("AppRepository", "   aprovado: $aprovadoDireto")
+            Timber.d("AppRepository", "   ativo: $ativoDireto")
+            Timber.d("AppRepository", "   primeiro_acesso: $primeiroAcessoDireto")
+            Timber.d("AppRepository", "═══════════════════════════════════════")
+            
+            // Converter Timestamps para Date
+            val dataConvertida = data.toMutableMap()
+            fun toDate(v: Any?): Date? = when(v) {
+                is Timestamp -> v.toDate()
+                is Date -> v
+                is Long -> Date(v)
+                else -> null
+            }
+            
+            val dateFields = listOf(
+                "data_cadastro", "data_ultima_atualizacao", "data_aprovacao", 
+                "data_ultimo_acesso", "data_nascimento"
+            )
+            
+            dateFields.forEach { field ->
+                if (data.containsKey(field)) {
+                    val dateValue = toDate(data[field])
+                    if (dateValue != null) {
+                        dataConvertida[field] = dateValue.time // Converter para Long (millis)
+                    }
+                }
+            }
+            
+            if (dataConvertida["data_cadastro"] == null) dataConvertida["data_cadastro"] = System.currentTimeMillis()
+            if (dataConvertida["data_ultima_atualizacao"] == null) dataConvertida["data_ultima_atualizacao"] = System.currentTimeMillis()
+            
+            val colaboradorId = doc.id.toLongOrNull() ?: (data["id"] as? Number)?.toLong() ?: (data["room_id"] as? Number)?.toLong() ?: 0L
+            
+            // ✅ Converter usando toObject() (com @PropertyName deve funcionar)
+            Timber.d("AppRepository", "🔧 [CONVERSÃO] Convertendo documento para Colaborador...")
+            val colaborador = doc.toObject(Colaborador::class.java)
+            
+            if (colaborador == null) {
+                Timber.e("AppRepository", "❌ [CONVERSÃO] toObject() retornou null, tentando Gson...")
+                val colaboradorJson = gson.toJson(dataConvertida)
+                val colaboradorGson = gson.fromJson(colaboradorJson, Colaborador::class.java)
+                if (colaboradorGson == null) {
+                    Timber.e("AppRepository", "❌ [CONVERSÃO] Falha ao converter documento para Colaborador")
+                    return null
+                }
+                
+                // ✅ CORREÇÃO: Sempre usar valores diretos do documento
+                val colaboradorFinal = colaboradorGson.copy(
+                    id = colaboradorId,
+                    aprovado = aprovadoDireto,
+                    ativo = ativoDireto,
+                    primeiroAcesso = primeiroAcessoDireto
+                )
+                
+                Timber.d("AppRepository", "✅ [CONVERSÃO] Colaborador convertido (Gson): ${colaboradorFinal.nome}")
+                Timber.d("AppRepository", "   Aprovado: ${colaboradorFinal.aprovado} (validado: $aprovadoDireto)")
+                return colaboradorFinal
+            }
+            
+            // ✅ CORREÇÃO: Validar e corrigir se o mapeamento falhou
+            val colaboradorFinal = if (colaborador.aprovado != aprovadoDireto || colaborador.ativo != ativoDireto) {
+                Timber.w("AppRepository", "⚠️ [CONVERSÃO] Mapeamento falhou!")
+                Timber.w("AppRepository", "   aprovado: doc=$aprovadoDireto, objeto=${colaborador.aprovado}")
+                Timber.w("AppRepository", "   ativo: doc=$ativoDireto, objeto=${colaborador.ativo}")
+                Timber.w("AppRepository", "   Corrigindo usando valores diretos do documento...")
+                colaborador.copy(
+                    id = colaboradorId,
+                    aprovado = aprovadoDireto,
+                    ativo = ativoDireto,
+                    primeiroAcesso = primeiroAcessoDireto
+                )
+            } else {
+                Timber.d("AppRepository", "✅ [CONVERSÃO] Mapeamento OK: aprovado=${colaborador.aprovado}")
+                colaborador.copy(id = colaboradorId)
+            }
+            
+            Timber.d("AppRepository", "✅ [FIRESTORE] Colaborador encontrado: ${colaboradorFinal.nome}")
+            Timber.d("AppRepository", "   Aprovado: ${colaboradorFinal.aprovado}")
+            Timber.d("AppRepository", "   Ativo: ${colaboradorFinal.ativo}")
+            Timber.d("AppRepository", "   Path: ${doc.reference.path}")
+            colaboradorFinal
+            
+        } catch (e: Exception) {
+            Timber.e(e, "❌ [FIRESTORE] Erro ao buscar colaborador por UID: %s", e.message)
+            null
+        }
+    }
+    
+    /**
+     * ✅ NOVO: Cria colaborador pendente no caminho canônico
+     * Caminho: empresas/{empresaId}/colaboradores/{uid}
+     * 
+     * @param empresaId ID da empresa (padrão: "empresa_001")
+     * @param uid Firebase UID do usuário
+     * @param email Email do usuário
+     * @param nome Nome do usuário (opcional, usa email se não fornecido)
+     * @return Colaborador criado
+     */
+    suspend fun createPendingColaborador(
+        empresaId: String,
+        uid: String,
+        email: String,
+        nome: String? = null
+    ): Colaborador {
+        Timber.d("AppRepository", "🔧 [FIRESTORE] Criando colaborador pendente: empresas/$empresaId/colaboradores/$uid")
+        
+        val agora = System.currentTimeMillis()
+        val nomeFinal = nome ?: email.split("@")[0]
+        val isSuperAdmin = email == "rossinys@gmail.com"
+        
+        val colaborador = if (isSuperAdmin) {
+            // ✅ SUPERADMIN: rossinys@gmail.com sempre é ADMIN, aprovado, sem primeiro acesso
+            Timber.d("AppRepository", "🔧 [CRIAR_PENDENTE] Criando como SUPERADMIN")
+            Colaborador(
+                id = 0L,
+                nome = nomeFinal,
+                email = email,
+                firebaseUid = uid,
+                nivelAcesso = NivelAcesso.ADMIN,
+                aprovado = true,
+                ativo = true,
+                primeiroAcesso = false,
+                dataCadastro = agora,
+                dataUltimaAtualizacao = agora,
+                dataAprovacao = agora,
+                aprovadoPor = "Sistema (Superadmin)"
+            )
+        } else {
+            // ✅ NOVOS USUÁRIOS: aprovado=false, ativo=true (padrão)
+            Colaborador(
+                id = 0L,
+                nome = nomeFinal,
+                email = email,
+                firebaseUid = uid,
+                nivelAcesso = NivelAcesso.USER,
+                aprovado = false, // Precisa ser aprovado pelo admin
+                ativo = true,
+                primeiroAcesso = true,
+                dataCadastro = agora,
+                dataUltimaAtualizacao = agora
+            )
+        }
+        
+        // Salvar localmente primeiro
+        val idLocal = inserirColaborador(colaborador)
+        val colaboradorComId = colaborador.copy(id = idLocal)
+        
+        // Criar no Firestore
+        try {
+            val docRef = firestore
+                .collection("empresas")
+                .document(empresaId)
+                .collection("colaboradores")
+                .document(uid)
+            
+            // Converter para Map usando Gson (snake_case)
+            val colaboradorJson = gson.toJson(colaboradorComId)
+            @Suppress("UNCHECKED_CAST")
+            val colaboradorMap = gson.fromJson(colaboradorJson, Map::class.java) as? MutableMap<String, Any?> 
+                ?: mutableMapOf()
+            
+            // Adicionar campos adicionais
+            colaboradorMap["room_id"] = colaboradorComId.id
+            colaboradorMap["id"] = colaboradorComId.id
+            colaboradorMap["last_modified"] = FieldValue.serverTimestamp()
+            colaboradorMap["sync_timestamp"] = FieldValue.serverTimestamp()
+            
+            // Converter datas para Timestamp
+            colaboradorMap["data_cadastro"] = Timestamp(Date(colaboradorComId.dataCadastro))
+            colaboradorMap["data_ultima_atualizacao"] = Timestamp(Date(colaboradorComId.dataUltimaAtualizacao))
+            colaboradorComId.dataAprovacao?.let { colaboradorMap["data_aprovacao"] = Timestamp(Date(it)) }
+            colaboradorComId.dataUltimoAcesso?.let { colaboradorMap["data_ultimo_acesso"] = Timestamp(Date(it)) }
+            
+            // ✅ CORREÇÃO: Garantir campos boolean corretos
+            colaboradorMap["aprovado"] = colaboradorComId.aprovado
+            colaboradorMap["ativo"] = colaboradorComId.ativo
+            colaboradorMap["primeiro_acesso"] = colaboradorComId.primeiroAcesso
+            colaboradorMap["nivel_acesso"] = colaboradorComId.nivelAcesso.name
+            
+            Timber.d("AppRepository", "🔧 [CRIAR_PENDENTE] Campos boolean:")
+            Timber.d("AppRepository", "   aprovado: ${colaboradorMap["aprovado"]}")
+            Timber.d("AppRepository", "   ativo: ${colaboradorMap["ativo"]}")
+            Timber.d("AppRepository", "   primeiro_acesso: ${colaboradorMap["primeiro_acesso"]}")
+            
+            // ✅ AGUARDAR criação no Firestore
+            docRef.set(colaboradorMap).await()
+            
+            Timber.d("AppRepository", "✅ [FIRESTORE] Colaborador criado no Firestore: ${colaboradorComId.nome} (Aprovado: ${colaboradorComId.aprovado})")
+        } catch (e: Exception) {
+            Timber.e(e, "❌ [FIRESTORE] Erro ao criar colaborador no Firestore: %s", e.message)
+            throw e
+        }
+        
+        return colaboradorComId
+    }
     
     suspend fun inserirColaborador(colaborador: Colaborador): Long {
         logDbInsertStart("COLABORADOR", "ID=${colaborador.id}, Nivel=${colaborador.nivelAcesso} [PII REDACTED]")
