@@ -21,7 +21,18 @@
 ---
 
 ## 🚀 SETUP RÁPIDO
-```powershell
+
+### Ambiente de Desenvolvimento
+Este projeto utiliza **Cursor Cloud** como ambiente principal de desenvolvimento, integrado com Firebase CLI e GitHub.
+
+### Pré-requisitos
+1. **Cursor Cloud**: Ambiente remoto configurado com acesso ao workspace
+2. **Firebase CLI**: Autenticado via `firebase login:ci` (token armazenado em `FIREBASE_TOKEN`)
+3. **GitHub**: Repositório `https://github.com/Rossiny1/2-GestaoBilhares`
+4. **Android SDK**: Configurado em `/workspace/android-sdk` (definido em `local.properties`)
+
+### Comandos Essenciais
+```bash
 # 🔨 Build e Instalação (Debug)
 ./gradlew installDebug
 
@@ -30,6 +41,13 @@
 
 # 🧪 Testes
 ./gradlew test
+
+# 📦 Build Release
+./gradlew clean :app:assembleRelease
+
+# 🚀 Deploy Firebase App Distribution
+export FIREBASE_TOKEN="seu_token_aqui"
+./gradlew :app:appDistributionUploadRelease
 ```
 
 ## 🛠️ STATUS DOS MÓDULOS
@@ -41,6 +59,76 @@
 ## 🔗 MONITORAMENTO
 *   [Firebase Console](https://console.firebase.google.com/project/gestaobilhares)
 *   **MCP Crashlytics**: Ativo e configurado para análise via assistente.
+*   **GitHub**: https://github.com/Rossiny1/2-GestaoBilhares
+
+## 📖 GUIA PARA NOVOS DESENVOLVEDORES
+
+### 🎯 Visão Geral do Ambiente
+Este projeto utiliza **Cursor Cloud** como ambiente principal de desenvolvimento, integrado com Firebase CLI e GitHub.
+
+### ✅ Checklist de Onboarding
+- [ ] Ler toda a documentação em `.cursor/rules/`
+- [ ] Entender estrutura modular (5 módulos Gradle)
+- [ ] Configurar ambiente local (opcional) ou usar Cursor Cloud
+- [ ] Executar testes: `./gradlew test`
+- [ ] Fazer build de debug: `./gradlew installDebug`
+- [ ] Entender fluxo GitHub ↔ VM ↔ Local (ver seção abaixo)
+- [ ] Configurar Firebase CLI: `firebase login:ci`
+- [ ] Ler regras de negócio (multi-tenancy, offline-first)
+
+### 🔄 Fluxo de Sincronização Detalhado
+
+#### Desenvolvimento na VM (Cursor Cloud) - RECOMENDADO
+```bash
+# 1. Acessar workspace
+cd /workspace
+
+# 2. Criar branch
+git checkout -b feature/sua-feature
+
+# 3. Desenvolver (Cursor AI tem acesso completo ao projeto)
+# 4. Testar
+./gradlew test
+
+# 5. Commit e push
+git add .
+git commit -m "feat: descrição"
+git push origin feature/sua-feature
+```
+
+#### Desenvolvimento Local + Sincronização
+```bash
+# LOCAL → GITHUB → VM
+# 1. Na sua máquina local
+git push origin feature/sua-feature
+
+# 2. Na VM (Cursor Cloud)
+cd /workspace
+git fetch origin
+git pull origin feature/sua-feature
+
+# VM → GITHUB → LOCAL
+# 1. Na VM
+git push origin feature/sua-feature
+
+# 2. Na sua máquina local
+git fetch origin
+git pull origin feature/sua-feature
+```
+
+### 🚀 Deploy (Sempre na VM)
+```bash
+# Na VM (Cursor Cloud)
+export FIREBASE_TOKEN="seu_token"
+./gradlew :app:assembleRelease
+./gradlew :app:appDistributionUploadRelease
+```
+
+### 🆘 Troubleshooting
+- **SDK não encontrado**: Verificar `local.properties` com `sdk.dir=/caminho/android-sdk`
+- **Firebase não autenticado**: `firebase login:ci` e exportar `FIREBASE_TOKEN`
+- **Testes falhando**: `./gradlew clean test`
+- **Sincronização**: Sempre `git fetch origin` antes de `git pull`
 
 ---
 ## 📦 PRÓXIMAS FASES (RESUMO)
@@ -48,6 +136,178 @@
 2. **Expansão de Testes**: ✅ Handlers críticos cobertos. Todos testes passando. 3 testes corrigidos recentemente (ConflictResolution, ComprehensiveSync).
 3. **Migração Compose**: 🎯 Prioridade Q2/2026. 0% atual (51 Fragments + 27 Dialogs). Meta: 60% até Q2.
 4. **Monitoramento Crashlytics**: ✅ 4 erros corrigidos. Mapping.txt gerado no build release. Monitorar se erros pararam após deploy.
+
+## 🔄 WORKFLOW DE DESENVOLVIMENTO
+
+### ⭐ Ambiente Principal: Cursor Cloud
+**ESTE É O AMBIENTE PRINCIPAL PARA DESENVOLVIMENTO E IMPLEMENTAÇÕES.**
+
+#### Por que Cursor Cloud?
+- ✅ **Integração nativa** com Firebase CLI e MCP (Model Context Protocol)
+- ✅ **Acesso direto ao Crashlytics** via MCP para análise de erros em tempo real
+- ✅ **Ambiente remoto consistente** (VM) eliminando problemas de setup local
+- ✅ **Assistente de IA** com contexto completo do projeto e acesso ao código
+- ✅ **Sincronização automática** com GitHub
+- ✅ **Builds de release** sempre na VM (ambiente configurado e consistente)
+
+### Fluxo de Trabalho
+
+#### 1. Desenvolvimento Local (Máquina do Desenvolvedor)
+```bash
+# Clone do repositório
+git clone https://github.com/Rossiny1/2-GestaoBilhares.git
+cd 2-GestaoBilhares
+
+# Configurar Android SDK
+echo "sdk.dir=/caminho/para/android-sdk" > local.properties
+
+# Configurar Firebase CLI
+firebase login:ci
+# Copiar o token gerado e exportar:
+export FIREBASE_TOKEN="token_gerado"
+
+# Criar branch para feature
+git checkout -b feature/nome-da-feature
+
+# Desenvolver e testar localmente
+./gradlew test
+./gradlew installDebug
+
+# Commit e push
+git add .
+git commit -m "feat: descrição da feature"
+git push origin feature/nome-da-feature
+```
+
+#### 2. Desenvolvimento na VM (Cursor Cloud)
+```bash
+# A VM já tem o projeto clonado e configurado
+cd /workspace
+
+# Verificar status
+git status
+git branch
+
+# Criar branch para feature
+git checkout -b feature/nome-da-feature
+
+# Desenvolver usando Cursor AI
+# O assistente tem acesso completo ao código e pode:
+# - Analisar erros do Crashlytics via MCP
+# - Fazer correções baseadas em logs reais
+# - Implementar features seguindo padrões do projeto
+
+# Testar
+./gradlew test
+./gradlew :app:assembleRelease
+
+# Commit e push
+git add .
+git commit -m "feat: descrição da feature"
+git push origin feature/nome-da-feature
+```
+
+#### 3. Sincronização GitHub ↔ VM ↔ Local
+
+**IMPORTANTE**: GitHub é a fonte única da verdade. Sempre sincronizar via GitHub.
+
+**Fluxo VM → GitHub → Local:**
+```bash
+# 1. Na VM (Cursor Cloud) - fazer commit e push
+cd /workspace
+git add .
+git commit -m "feat: implementação via Cursor Cloud"
+git push origin nome-da-branch
+
+# 2. Na máquina local - sincronizar
+git fetch origin
+git checkout nome-da-branch
+git pull origin nome-da-branch
+```
+
+**Fluxo Local → GitHub → VM:**
+```bash
+# 1. Na máquina local - fazer commit e push
+git add .
+git commit -m "feat: implementação local"
+git push origin nome-da-branch
+
+# 2. Na VM (Cursor Cloud) - sincronizar
+cd /workspace
+git fetch origin
+git checkout nome-da-branch
+git pull origin nome-da-branch
+```
+
+**Dica**: Sempre fazer `git fetch origin` antes de `git pull` para evitar problemas de sincronização.
+
+### Integração Firebase CLI
+
+#### Autenticação
+```bash
+# Gerar token CI (fazer uma vez)
+firebase login:ci
+
+# O token deve ser exportado como variável de ambiente
+export FIREBASE_TOKEN="seu_token_aqui"
+
+# Verificar autenticação
+firebase projects:list
+```
+
+#### Deploy via Gradle (Recomendado)
+```bash
+# Build e deploy em um comando
+export FIREBASE_TOKEN="seu_token"
+./gradlew :app:appDistributionUploadRelease
+```
+
+#### Deploy via Firebase CLI
+```bash
+# Alternativa usando CLI diretamente
+firebase appdistribution:distribute \
+  app/build/outputs/apk/release/app-release.apk \
+  --app 1:1089459035145:android:2d3b94222b1506a844acd8 \
+  --groups "testers" \
+  --release-notes "Release notes aqui"
+```
+
+### Estrutura de Branches
+
+```
+main (produção)
+├── release/v1.0.1 (releases)
+├── develop (desenvolvimento)
+└── feature/* (features individuais)
+```
+
+**Convenção de Commits:**
+- `feat:` Nova funcionalidade
+- `fix:` Correção de bug
+- `refactor:` Refatoração de código
+- `test:` Adição/atualização de testes
+- `docs:` Documentação
+- `chore:` Tarefas de manutenção
+
+### Monitoramento e Debugging
+
+#### Crashlytics via MCP
+O Cursor Cloud tem acesso direto ao Crashlytics via MCP:
+- Análise de erros em tempo real
+- Stack traces desofuscados (com mapping.txt)
+- Correlação com código fonte
+- Correção proativa de bugs
+
+#### Logs Locais
+```bash
+# Ver logs do app (Android)
+adb logcat | grep -i "gestaobilhares"
+
+# Ver logs de sincronização
+adb logcat | grep -i "sync"
+```
+
+---
 
 ## ⚠️ PENDÊNCIAS NÃO DOCUMENTADAS
 1. **TODOs/FIXMEs no Código**: ~10 arquivos com comentários TODO/FIXME (SignatureView, BaseViewModel, AuthViewModel, ColaboradorManagement, etc.). Revisar e priorizar.
