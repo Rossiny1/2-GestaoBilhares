@@ -249,23 +249,44 @@ class AuthViewModel @Inject constructor(
                         android.util.Log.d("AuthViewModel", "✅ [LOGIN] PASSO 4: Colaborador garantido: ${colaboradorCriado.nome}")
                         
                         // PASSO 5: Recarregar do servidor (Source.SERVER) para obter dados atualizados (await bloqueante)
+                        // ✅ CORREÇÃO: Aguardar um pouco antes de ler para garantir que o documento está disponível
+                        Timber.d("AuthViewModel", "🔍 [LOGIN] PASSO 5: Aguardando sincronização do Firestore...")
+                        android.util.Log.d("AuthViewModel", "🔍 [LOGIN] PASSO 5: Aguardando sincronização do Firestore...")
+                        kotlinx.coroutines.delay(1000) // Aguardar 1 segundo para garantir que o documento está disponível
+                        
                         Timber.d("AuthViewModel", "🔍 [LOGIN] PASSO 5: Recarregando do servidor (Source.SERVER)...")
                         android.util.Log.d("AuthViewModel", "🔍 [LOGIN] PASSO 5: Recarregando do servidor (Source.SERVER)...")
                         
-                        val colaborador = try {
-                            appRepository.getColaboradorByUid("empresa_001", uid)
-                        } catch (e: Exception) {
-                            Timber.e(e, "❌ [LOGIN] Erro em getColaboradorByUid: %s", e.message)
-                            android.util.Log.e("AuthViewModel", "❌ [LOGIN] Erro em getColaboradorByUid: ${e.message}", e)
-                            throw e
+                        var colaborador: Colaborador? = null
+                        var tentativas = 0
+                        while (colaborador == null && tentativas < 3) {
+                            try {
+                                colaborador = appRepository.getColaboradorByUid("empresa_001", uid)
+                                if (colaborador == null) {
+                                    tentativas++
+                                    Timber.w("AuthViewModel", "⚠️ [LOGIN] Colaborador não encontrado (tentativa $tentativas/3), aguardando...")
+                                    android.util.Log.w("AuthViewModel", "⚠️ [LOGIN] Colaborador não encontrado (tentativa $tentativas/3), aguardando...")
+                                    if (tentativas < 3) {
+                                        kotlinx.coroutines.delay(1000) // Aguardar mais 1 segundo
+                                    }
+                                }
+                            } catch (e: Exception) {
+                                tentativas++
+                                Timber.e(e, "❌ [LOGIN] Erro em getColaboradorByUid (tentativa $tentativas/3): %s", e.message)
+                                android.util.Log.e("AuthViewModel", "❌ [LOGIN] Erro em getColaboradorByUid (tentativa $tentativas/3): ${e.message}", e)
+                                if (tentativas < 3) {
+                                    kotlinx.coroutines.delay(1000)
+                                } else {
+                                    throw e
+                                }
+                            }
                         }
                         
+                        // ✅ CORREÇÃO: Se ainda não encontrou, usar o colaborador criado localmente
                         if (colaborador == null) {
-                            val error = "Colaborador não encontrado após criação"
-                            Timber.e("AuthViewModel", "❌ [LOGIN] $error")
-                            _loginUiState.value = LoginUiState.Erro(error, null)
-                            hideLoading()
-                            return@launch
+                            Timber.w("AuthViewModel", "⚠️ [LOGIN] Colaborador não encontrado no Firestore após 3 tentativas, usando colaborador criado localmente")
+                            android.util.Log.w("AuthViewModel", "⚠️ [LOGIN] Colaborador não encontrado no Firestore após 3 tentativas, usando colaborador criado localmente")
+                            colaborador = colaboradorCriado
                         }
                         
                         // ✅ LOGS OBRIGATÓRIOS: Documento lido e campo usado para decisão
