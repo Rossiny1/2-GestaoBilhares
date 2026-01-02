@@ -203,28 +203,62 @@ class AuthViewModel @Inject constructor(
                         
                         // PASSO 2: Autenticar no Firebase Auth (await bloqueante)
                         Timber.d("AuthViewModel", "🔐 [LOGIN] PASSO 2: signInWithEmailAndPassword...")
-                        val result = firebaseAuth.signInWithEmailAndPassword(email, senha).await()
+                        android.util.Log.d("AuthViewModel", "🔐 [LOGIN] PASSO 2: signInWithEmailAndPassword...")
+                        
+                        val result = try {
+                            firebaseAuth.signInWithEmailAndPassword(email, senha).await()
+                        } catch (e: Exception) {
+                            Timber.e(e, "❌ [LOGIN] Erro no await() do signInWithEmailAndPassword: %s", e.message)
+                            android.util.Log.e("AuthViewModel", "❌ [LOGIN] Erro no await(): ${e.message}", e)
+                            throw e
+                        }
+                        
+                        Timber.d("AuthViewModel", "✅ [LOGIN] AWAIT CONCLUÍDO - result: ${result != null}")
+                        android.util.Log.d("AuthViewModel", "✅ [LOGIN] AWAIT CONCLUÍDO - result: ${result != null}")
                         
                         if (result.user == null) {
                             val error = "Firebase Auth retornou user null"
                             Timber.e("AuthViewModel", "❌ [LOGIN] $error")
+                            android.util.Log.e("AuthViewModel", "❌ [LOGIN] $error")
                             _loginUiState.value = LoginUiState.Erro(error, null)
                             hideLoading()
                             return@launch
                         }
                         
+                        Timber.d("AuthViewModel", "✅ [LOGIN] result.user != null: ${result.user != null}")
+                        android.util.Log.d("AuthViewModel", "✅ [LOGIN] result.user != null: ${result.user != null}")
+                        
                         // PASSO 3: Obter UID
                         val uid = result.user!!.uid
                         Timber.d("AuthViewModel", "✅ [LOGIN] PASSO 3: Firebase Auth OK - UID: $uid")
+                        android.util.Log.d("AuthViewModel", "✅ [LOGIN] PASSO 3: Firebase Auth OK - UID: $uid")
                         
                         // PASSO 4: Criar colaborador pendente SE não existir (await bloqueante)
                         Timber.d("AuthViewModel", "🔧 [LOGIN] PASSO 4: createPendingColaboradorIfMissing...")
-                        val colaboradorCriado = appRepository.createPendingColaboradorIfMissing("empresa_001", uid, email)
+                        android.util.Log.d("AuthViewModel", "🔧 [LOGIN] PASSO 4: createPendingColaboradorIfMissing...")
+                        
+                        val colaboradorCriado = try {
+                            appRepository.createPendingColaboradorIfMissing("empresa_001", uid, email)
+                        } catch (e: Exception) {
+                            Timber.e(e, "❌ [LOGIN] Erro em createPendingColaboradorIfMissing: %s", e.message)
+                            android.util.Log.e("AuthViewModel", "❌ [LOGIN] Erro em createPendingColaboradorIfMissing: ${e.message}", e)
+                            throw e
+                        }
+                        
                         Timber.d("AuthViewModel", "✅ [LOGIN] PASSO 4: Colaborador garantido: ${colaboradorCriado.nome}")
+                        android.util.Log.d("AuthViewModel", "✅ [LOGIN] PASSO 4: Colaborador garantido: ${colaboradorCriado.nome}")
                         
                         // PASSO 5: Recarregar do servidor (Source.SERVER) para obter dados atualizados (await bloqueante)
                         Timber.d("AuthViewModel", "🔍 [LOGIN] PASSO 5: Recarregando do servidor (Source.SERVER)...")
-                        val colaborador = appRepository.getColaboradorByUid("empresa_001", uid)
+                        android.util.Log.d("AuthViewModel", "🔍 [LOGIN] PASSO 5: Recarregando do servidor (Source.SERVER)...")
+                        
+                        val colaborador = try {
+                            appRepository.getColaboradorByUid("empresa_001", uid)
+                        } catch (e: Exception) {
+                            Timber.e(e, "❌ [LOGIN] Erro em getColaboradorByUid: %s", e.message)
+                            android.util.Log.e("AuthViewModel", "❌ [LOGIN] Erro em getColaboradorByUid: ${e.message}", e)
+                            throw e
+                        }
                         
                         if (colaborador == null) {
                             val error = "Colaborador não encontrado após criação"
@@ -294,6 +328,13 @@ class AuthViewModel @Inject constructor(
                         Timber.e("AuthViewModel", "   Mensagem: ${e.message}")
                         Timber.e("AuthViewModel", "   Stack: ${e.stackTraceToString()}")
                         Timber.e("AuthViewModel", "═══════════════════════════════════════")
+                        
+                        android.util.Log.e("AuthViewModel", "═══════════════════════════════════════")
+                        android.util.Log.e("AuthViewModel", "❌ [LOGIN] EXCEÇÃO CAPTURADA")
+                        android.util.Log.e("AuthViewModel", "   Tipo: ${e.javaClass.simpleName}")
+                        android.util.Log.e("AuthViewModel", "   Mensagem: ${e.message}")
+                        android.util.Log.e("AuthViewModel", "   Stack: ${e.stackTraceToString()}", e)
+                        android.util.Log.e("AuthViewModel", "═══════════════════════════════════════")
                         
                         val errorCode = (e as? com.google.firebase.auth.FirebaseAuthException)?.errorCode
                         val mensagemErro = when (errorCode) {
