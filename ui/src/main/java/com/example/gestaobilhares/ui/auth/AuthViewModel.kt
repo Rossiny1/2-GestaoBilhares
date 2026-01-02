@@ -27,6 +27,7 @@ import com.google.gson.FieldNamingPolicy
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.tasks.await
 import java.util.Date
+import java.util.Locale
 import dagger.hilt.android.lifecycle.HiltViewModel
 import javax.inject.Inject
 import timber.log.Timber
@@ -102,24 +103,27 @@ class AuthViewModel @Inject constructor(
      */
     fun login(email: String, senha: String) {
         Timber.d("AuthViewModel", "=== INICIANDO LOGIN HÍBRIDO ===")
-        Timber.d("AuthViewModel", "Email: $email")
-        Timber.d("AuthViewModel", "Senha: ${senha.length} caracteres")
+        val emailTrimmed = email.trim()
+        val senhaTrimmed = senha.trim()
+        val normalizedEmail = emailTrimmed.lowercase(Locale.ROOT)
+        Timber.d("AuthViewModel", "Email (trimmed): $emailTrimmed")
+        Timber.d("AuthViewModel", "Senha: ${senhaTrimmed.length} caracteres")
         
         // Validação básica
-        if (email.isBlank() || senha.isBlank()) {
+        if (emailTrimmed.isBlank() || senhaTrimmed.isBlank()) {
             Timber.e("Email ou senha em branco")
             _errorMessage.value = "Email e senha são obrigatórios"
             return
         }
         
-        if (!android.util.Patterns.EMAIL_ADDRESS.matcher(email).matches()) {
-            Timber.e("Email inválido: %s", email)
+        if (!android.util.Patterns.EMAIL_ADDRESS.matcher(emailTrimmed).matches()) {
+            Timber.e("Email inválido: %s", emailTrimmed)
             _errorMessage.value = "Email inválido"
             return
         }
         
-        if (senha.length < 6) {
-            Timber.e("Senha muito curta: %d caracteres", senha.length)
+        if (senhaTrimmed.length < 6) {
+            Timber.e("Senha muito curta: %d caracteres", senhaTrimmed.length)
             _errorMessage.value = "Senha deve ter pelo menos 6 caracteres"
             return
         }

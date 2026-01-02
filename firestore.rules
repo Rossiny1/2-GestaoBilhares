@@ -10,9 +10,9 @@ service cloud.firestore {
     function isAdmin() {
       // ✅ MELHORADO: Check case-insensitive role AND explicit boolean claim
       return request.auth != null && (
-        request.auth.token.role.lower() == 'admin' || 
+        (request.auth.token.role != null && request.auth.token.role.lower() == 'admin') || 
         request.auth.token.admin == true ||
-        request.auth.token.email == "rossinys@gmail.com"
+        (request.auth.token.email != null && request.auth.token.email.toLowerCase() == "rossinys@gmail.com")
       );
     }
 
@@ -20,6 +20,14 @@ service cloud.firestore {
     function belongsToCompany(empresaId) {
       return request.auth != null && 
              request.auth.token.companyId == empresaId;
+    }
+
+    // 3. Comparar emails ignorando case
+    function emailMatches(emailField) {
+      return request.auth != null &&
+             request.auth.token.email != null &&
+             emailField is string &&
+             request.auth.token.email.toLowerCase() == emailField.toLowerCase();
     }
 
     // 3. Admin da Empresa (Pode alterar dados da empresa específica)
@@ -74,11 +82,9 @@ service cloud.firestore {
       // 3. O próprio usuário (bootstrapping via email match se claim falhar)
       allow read: if isAdmin() || 
                   belongsToCompany(empresaId) || 
-                  (request.auth != null && (
-                    request.auth.token.email == resource.data.email || 
-                    request.auth.uid == resource.data.firebaseUid ||
-                    request.auth.token.email == "rossinys@gmail.com"
-                  ));
+                  emailMatches(resource.data.email) ||
+                  emailMatches(resource.data.emailAcesso) ||
+                  (request.auth != null && request.auth.uid == resource.data.firebaseUid);
 
       // ESCRITA: 
       // 1. Admin Global ou Admin Empresa
@@ -90,8 +96,8 @@ service cloud.firestore {
       allow create: if isAdmin() || isCompanyAdmin(empresaId) || 
                     (request.auth != null && (
                       request.auth.uid == resource.data.firebaseUid || 
-                      request.auth.token.email == resource.data.email ||
-                      request.auth.token.email == "rossinys@gmail.com" ||
+                      emailMatches(resource.data.email) ||
+                      emailMatches(resource.data.emailAcesso) ||
                       // Permitir criação anônima apenas para cadastros pendentes
                       // Usuário anônimo: verifica se não tem email OU se email está vazio
                       (request.auth.token.email == null || request.auth.token.email == "") &&
@@ -103,8 +109,8 @@ service cloud.firestore {
       allow update, delete: if isAdmin() || isCompanyAdmin(empresaId) || 
                              (request.auth != null && (
                                request.auth.uid == resource.data.firebaseUid || 
-                               request.auth.token.email == resource.data.email ||
-                               request.auth.token.email == "rossinys@gmail.com"
+                               emailMatches(resource.data.email) ||
+                               emailMatches(resource.data.emailAcesso)
                              ));
     }
 
@@ -112,9 +118,9 @@ service cloud.firestore {
     // Essencial para login em fresh install onde o empresaId ainda é desconhecido
     match /{path=**}/items/{itemId} {
       allow read: if request.auth != null && (
-        request.auth.token.email == resource.data.email || 
-        request.auth.uid == resource.data.firebaseUid ||
-        request.auth.token.email == "rossinys@gmail.com"
+        emailMatches(resource.data.email) ||
+        emailMatches(resource.data.emailAcesso) ||
+        request.auth.uid == resource.data.firebaseUid
       );
     }
 

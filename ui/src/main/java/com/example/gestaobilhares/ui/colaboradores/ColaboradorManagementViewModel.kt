@@ -1,4 +1,4 @@
-﻿package com.example.gestaobilhares.ui.colaboradores
+package com.example.gestaobilhares.ui.colaboradores
 
 import androidx.lifecycle.ViewModel
 import com.example.gestaobilhares.ui.common.BaseViewModel
@@ -19,6 +19,7 @@ import com.google.firebase.firestore.FirebaseFirestore
 import com.google.firebase.firestore.FieldValue
 import com.google.firebase.Timestamp
 import java.util.Date
+import java.util.Locale
 
 import dagger.hilt.android.lifecycle.HiltViewModel
 import javax.inject.Inject
@@ -186,9 +187,11 @@ class ColaboradorManagementViewModel @Inject constructor(
                 }
                 
                 // ✅ CORREÇÃO CRÍTICA: Usar o email ORIGINAL do colaborador (não o emailAcesso sugerido)
-                // O email original é o que foi fornecido no cadastro e já pode ter um usuário Firebase criado
-                val emailParaFirebase = colaborador.email
-                Timber.d("ColaboradorManagementViewModel", "Email original do colaborador: $emailParaFirebase")
+                // O email original é o que foi fornecido no cadastro e será normalizado
+                val emailOriginal = colaborador.email
+                val emailParaFirebase = emailOriginal.trim().lowercase(Locale.ROOT)
+                Timber.d("ColaboradorManagementViewModel", "Email original do colaborador: $emailOriginal")
+                Timber.d("ColaboradorManagementViewModel", "Email normalizado para Firebase/Auth: $emailParaFirebase")
                 Timber.d("ColaboradorManagementViewModel", "Email sugerido (emailAcesso): $email")
                 
                 // ✅ CORREÇÃO: Se o colaborador já tem firebaseUid, usar esse (não criar novo usuário)
@@ -197,7 +200,7 @@ class ColaboradorManagementViewModel @Inject constructor(
                 // Se não tem firebaseUid, criar conta no Firebase Authentication com o email ORIGINAL
                 if (firebaseUid == null) {
                     try {
-                        Timber.d("ColaboradorManagementViewModel", "Criando conta Firebase para email ORIGINAL: $emailParaFirebase")
+                        Timber.d("ColaboradorManagementViewModel", "Criando conta Firebase para email normalizado: $emailParaFirebase")
                         val result = firebaseAuth.createUserWithEmailAndPassword(emailParaFirebase, senha).await()
                         firebaseUid = result.user?.uid
                         Timber.d("ColaboradorManagementViewModel", "✅ Conta Firebase criada com sucesso! UID: $firebaseUid")
@@ -234,7 +237,7 @@ class ColaboradorManagementViewModel @Inject constructor(
                 // IMPORTANTE: Usar o email ORIGINAL do colaborador, não o emailAcesso sugerido
                 appRepository.aprovarColaboradorComCredenciais(
                     colaboradorId = colaboradorId,
-                    email = emailParaFirebase, // ✅ CORREÇÃO: Usar email original, não emailAcesso
+                    email = emailParaFirebase, // ✅ CORREÇÃO: Usar email normalizado
                     senha = senhaHash, // ✅ SEGURANÇA: Armazenar hash, não texto plano
                     nivelAcesso = nivelAcesso,
                     observacoes = observacoes,
