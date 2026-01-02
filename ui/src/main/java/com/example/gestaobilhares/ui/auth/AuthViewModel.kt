@@ -296,27 +296,8 @@ class AuthViewModel @Inject constructor(
                             
                             // ✅ CORREÇÃO: Verificar aprovação e status, mas NÃO fazer signOut()
                             // Apenas mostrar mensagem apropriada e bloquear acesso
-                            // ✅ DIAGNÓSTICO: Log detalhado do status antes de verificar
-                            Timber.d("AuthViewModel", "═══════════════════════════════════════")
-                            Timber.d("AuthViewModel", "🔍 Verificando status do colaborador...")
-                            Timber.d("AuthViewModel", "   Nome: ${colaborador.nome}")
-                            Timber.d("AuthViewModel", "   Email: $email")
-                            Timber.d("AuthViewModel", "   Aprovado: ${colaborador.aprovado} (tipo: ${colaborador.aprovado.javaClass.simpleName})")
-                            Timber.d("AuthViewModel", "   Ativo: ${colaborador.ativo}")
-                            Timber.d("AuthViewModel", "   Firebase UID: ${colaborador.firebaseUid}")
-                            Timber.d("AuthViewModel", "═══════════════════════════════════════")
-                            
                             if (!colaborador.aprovado) {
                                 Timber.w("AuthViewModel", "⚠️ Colaborador não está aprovado - bloqueando acesso")
-                                Timber.w("AuthViewModel", "   Email: $email")
-                                Timber.w("AuthViewModel", "   Nome: ${colaborador.nome}")
-                                Timber.w("AuthViewModel", "   Aprovado: ${colaborador.aprovado}")
-                                Timber.w("AuthViewModel", "   ⚠️ Se você aprovou no Firestore Console, verifique:")
-                                Timber.w("AuthViewModel", "      1. Está aprovando o documento correto? (novo schema: colaboradores/{uid})")
-                                Timber.w("AuthViewModel", "      2. O campo 'aprovado' está como boolean true (não string 'true')?")
-                                Timber.w("AuthViewModel", "      3. O cache do Firestore pode estar desatualizado")
-                                crashlytics.log("[LOGIN] ⚠️ Colaborador não aprovado: ${colaborador.nome}")
-                                crashlytics.setCustomKey("login_aprovado_false", true)
                                 // NÃO fazer signOut() - manter autenticação para permitir retry
                                 _errorMessage.value = "Sua conta está aguardando aprovação do administrador."
                                 hideLoading()
@@ -1628,12 +1609,11 @@ class AuthViewModel @Inject constructor(
      * 
      * Por quê: Lookup por UID é O(1) e mais confiável que queries por email
      * 
-     * ✅ CORREÇÃO BUG APROVADO: Força leitura do servidor e logs detalhados
+     * ✅ CORREÇÃO BUG APROVADO: Força leitura do servidor e corrige mapeamento boolean
      */
     private suspend fun buscarColaboradorPorUid(uid: String, empresaId: String = "empresa_001"): Colaborador? {
         return try {
             Timber.d("AuthViewModel", "🔍 Buscando colaborador por UID: $uid (empresa: $empresaId)")
-            crashlytics.log("[BUSCA_UID] Buscando colaborador por UID: $uid")
             
             // ✅ NOVO SCHEMA: Lookup direto por UID
             val docRef = firestore
@@ -1642,59 +1622,23 @@ class AuthViewModel @Inject constructor(
                 .collection("colaboradores")
                 .document(uid)
             
-            // ✅ CORREÇÃO BUG APROVADO: Forçar leitura do servidor (Source.SERVER) para evitar cache
-            Timber.d("AuthViewModel", "🔍 Forçando leitura do servidor (Source.SERVER) para evitar cache...")
+            // ✅ CORREÇÃO: Forçar leitura do servidor para evitar cache desatualizado
             val doc = docRef.get(com.google.firebase.firestore.Source.SERVER).await()
             
             if (!doc.exists()) {
                 Timber.d("AuthViewModel", "⚠️ Colaborador não encontrado no novo schema (colaboradores/{uid})")
-                crashlytics.log("[BUSCA_UID] Colaborador não encontrado no novo schema")
                 return null
             }
-            
-            // ✅ DIAGNÓSTICO OBRIGATÓRIO: Logs detalhados ANTES de converter
-            Timber.d("AuthViewModel", "═══════════════════════════════════════")
-            Timber.d("AuthViewModel", "📋 DIAGNÓSTICO: Documento encontrado")
-            Timber.d("AuthViewModel", "═══════════════════════════════════════")
-            Timber.d("AuthViewModel", "   Path: ${doc.reference.path}")
-            Timber.d("AuthViewModel", "   É novo schema (colaboradores/{uid}): ${doc.reference.path.contains("/colaboradores/${uid}")}")
-            Timber.d("AuthViewModel", "   É schema antigo (items/...): ${doc.reference.path.contains("/items/")}")
             
             val data = doc.data
             if (data == null) {
                 Timber.e("AuthViewModel", "❌ Documento existe mas data é null!")
-                crashlytics.log("[BUSCA_UID] ERRO: Documento existe mas data é null")
                 return null
             }
             
-            // ✅ DIAGNÓSTICO: Logar TODOS os campos do documento
-            Timber.d("AuthViewModel", "   Data keys (${data.size} campos): ${data.keys.joinToString(", ")}")
-            
-            // ✅ DIAGNÓSTICO CRÍTICO: Ler valor DIRETO do campo "aprovado" antes de converter
-            val aprovadoDireto = doc.getBoolean("aprovado")
-            val aprovadoData = data["aprovado"]
-            val aprovadoDataConvertido = when (aprovadoData) {
-                is Boolean -> aprovadoData
-                is String -> aprovadoData.toBoolean()
-                else -> null
-            }
-            
-            Timber.d("AuthViewModel", "═══════════════════════════════════════")
-            Timber.d("AuthViewModel", "🔍 VALORES DO CAMPO 'aprovado':")
-            Timber.d("AuthViewModel", "   doc.getBoolean('aprovado'): $aprovadoDireto")
-            Timber.d("AuthViewModel", "   data['aprovado'] (raw): $aprovadoData (tipo: ${aprovadoData?.javaClass?.simpleName})")
-            Timber.d("AuthViewModel", "   data['aprovado'] (convertido): $aprovadoDataConvertido")
-            Timber.d("AuthViewModel", "═══════════════════════════════════════")
-            
-            crashlytics.setCustomKey("busca_uid_aprovado_direto", aprovadoDireto ?: false)
-            crashlytics.setCustomKey("busca_uid_aprovado_data", aprovadoDataConvertido ?: false)
-            crashlytics.log("[BUSCA_UID] Campo 'aprovado' - direto: $aprovadoDireto, data: $aprovadoDataConvertido")
-            
-            // ✅ DIAGNÓSTICO: Logar outros campos importantes
-            Timber.d("AuthViewModel", "   Campo 'ativo': ${doc.getBoolean("ativo")} (data: ${data["ativo"]})")
-            Timber.d("AuthViewModel", "   Campo 'email': ${doc.getString("email")}")
-            Timber.d("AuthViewModel", "   Campo 'firebase_uid': ${doc.getString("firebase_uid")}")
-            Timber.d("AuthViewModel", "   Campo 'nivel_acesso': ${doc.getString("nivel_acesso")}")
+            // ✅ CORREÇÃO: Ler valor direto do boolean antes de converter
+            val aprovadoDireto = doc.getBoolean("aprovado") ?: false
+            val ativoDireto = doc.getBoolean("ativo") ?: true
             
             // Converter Timestamps para Date
             val dataConvertida = data.toMutableMap()
@@ -1726,17 +1670,21 @@ class AuthViewModel @Inject constructor(
             
             if (colaborador == null) {
                 Timber.e("AuthViewModel", "❌ Falha ao converter documento para Colaborador")
-                crashlytics.log("[BUSCA_UID] ERRO: Falha na conversão")
-            } else {
-                Timber.d("AuthViewModel", "✅ Colaborador convertido: ${colaborador.nome} (ID: ${colaborador.id})")
-                crashlytics.log("[BUSCA_UID] ✅ Colaborador encontrado: ${colaborador.nome}")
+                return null
             }
             
-            colaborador
+            // ✅ CORREÇÃO CRÍTICA: Se o valor direto do doc é diferente do convertido, usar o valor direto
+            // Isso corrige problemas de mapeamento boolean (prefixo 'is', etc)
+            val colaboradorCorrigido = colaborador.copy(
+                aprovado = aprovadoDireto,
+                ativo = ativoDireto
+            )
+            
+            Timber.d("AuthViewModel", "✅ Colaborador encontrado: ${colaboradorCorrigido.nome} (Aprovado: ${colaboradorCorrigido.aprovado})")
+            colaboradorCorrigido
             
         } catch (e: Exception) {
             Timber.e(e, "❌ Erro ao buscar colaborador por UID: %s", e.message)
-            crashlytics.log("[BUSCA_UID] ERRO: ${e.message}")
             crashlytics.recordException(e)
             null
         }
@@ -1744,9 +1692,9 @@ class AuthViewModel @Inject constructor(
     
     /**
      * ✅ NOVO: Converte DocumentSnapshot do Firestore para Colaborador
-     * Com logs detalhados para diagnóstico de problemas de mapeamento
      * 
-     * ✅ CORREÇÃO BUG APROVADO: Validação explícita do campo boolean antes e depois da conversão
+     * ✅ CORREÇÃO BUG APROVADO: Usa valores diretos do documento para campos boolean
+     * para evitar problemas de mapeamento (prefixo 'is', etc)
      */
     private fun converterDocumentoParaColaborador(
         doc: DocumentSnapshot,
@@ -1754,83 +1702,41 @@ class AuthViewModel @Inject constructor(
         colaboradorId: Long = 0L
     ): Colaborador? {
         return try {
-            Timber.d("AuthViewModel", "═══════════════════════════════════════")
-            Timber.d("AuthViewModel", "🔧 CONVERSÃO: DocumentSnapshot → Colaborador")
-            Timber.d("AuthViewModel", "═══════════════════════════════════════")
-            Timber.d("AuthViewModel", "   Path: ${doc.reference.path}")
-            Timber.d("AuthViewModel", "   ID: $colaboradorId")
-            Timber.d("AuthViewModel", "   Data size: ${data.size}")
-            
-            // ✅ DIAGNÓSTICO: Ler valor ANTES da conversão
-            val aprovadoAntes = doc.getBoolean("aprovado")
-            Timber.d("AuthViewModel", "   Campo 'aprovado' ANTES da conversão: $aprovadoAntes")
+            // ✅ CORREÇÃO: Ler valores boolean diretamente do documento ANTES de converter
+            val aprovadoDireto = doc.getBoolean("aprovado") ?: false
+            val ativoDireto = doc.getBoolean("ativo") ?: true
+            val primeiroAcessoDireto = doc.getBoolean("primeiro_acesso") ?: true
             
             // Tentar usar toObject primeiro (mais eficiente)
             val colaboradorToObject = doc.toObject(Colaborador::class.java)
             if (colaboradorToObject != null) {
-                Timber.d("AuthViewModel", "✅ Conversão via toObject() bem-sucedida")
-                
-                // ✅ DIAGNÓSTICO: Validar valor DEPOIS da conversão
-                Timber.d("AuthViewModel", "═══════════════════════════════════════")
-                Timber.d("AuthViewModel", "🔍 VALIDAÇÃO PÓS-CONVERSÃO (toObject):")
-                Timber.d("AuthViewModel", "   aprovado ANTES: $aprovadoAntes")
-                Timber.d("AuthViewModel", "   aprovado DEPOIS: ${colaboradorToObject.aprovado}")
-                Timber.d("AuthViewModel", "   ativo: ${colaboradorToObject.ativo}")
-                Timber.d("AuthViewModel", "   email: ${colaboradorToObject.email}")
-                Timber.d("AuthViewModel", "═══════════════════════════════════════")
-                
-                // ✅ CORREÇÃO: Se o valor direto do doc é diferente do convertido, usar o valor direto
-                if (aprovadoAntes != null && colaboradorToObject.aprovado != aprovadoAntes) {
-                    Timber.w("AuthViewModel", "⚠️ DISCREPÂNCIA DETECTADA: aprovado no doc ($aprovadoAntes) != aprovado no objeto (${colaboradorToObject.aprovado})")
-                    Timber.w("AuthViewModel", "   Corrigindo usando valor direto do documento...")
-                    crashlytics.log("[CONVERSÃO] ⚠️ Discrepância detectada no campo 'aprovado'")
-                    crashlytics.setCustomKey("conversao_aprovado_discrepancia", true)
-                    
-                    // Corrigir usando o valor direto
-                    return colaboradorToObject.copy(
-                        id = colaboradorId,
-                        aprovado = aprovadoAntes
-                    )
-                }
-                
-                return colaboradorToObject.copy(id = colaboradorId)
+                // ✅ CORREÇÃO: Sempre usar valores diretos do documento para campos boolean
+                return colaboradorToObject.copy(
+                    id = colaboradorId,
+                    aprovado = aprovadoDireto,
+                    ativo = ativoDireto,
+                    primeiroAcesso = primeiroAcessoDireto
+                )
             }
             
             // Fallback: usar Gson se toObject falhar
-            Timber.d("AuthViewModel", "⚠️ toObject() retornou null, tentando Gson...")
             val colaboradorJson = gson.toJson(data)
             val colaboradorGson = gson.fromJson(colaboradorJson, Colaborador::class.java)
             
             if (colaboradorGson != null) {
-                Timber.d("AuthViewModel", "✅ Conversão via Gson bem-sucedida")
-                
-                // ✅ DIAGNÓSTICO: Validar valor DEPOIS da conversão (Gson)
-                Timber.d("AuthViewModel", "═══════════════════════════════════════")
-                Timber.d("AuthViewModel", "🔍 VALIDAÇÃO PÓS-CONVERSÃO (Gson):")
-                Timber.d("AuthViewModel", "   aprovado ANTES: $aprovadoAntes")
-                Timber.d("AuthViewModel", "   aprovado DEPOIS: ${colaboradorGson.aprovado}")
-                Timber.d("AuthViewModel", "═══════════════════════════════════════")
-                
-                // ✅ CORREÇÃO: Se o valor direto do doc é diferente do convertido, usar o valor direto
-                if (aprovadoAntes != null && colaboradorGson.aprovado != aprovadoAntes) {
-                    Timber.w("AuthViewModel", "⚠️ DISCREPÂNCIA DETECTADA (Gson): aprovado no doc ($aprovadoAntes) != aprovado no objeto (${colaboradorGson.aprovado})")
-                    Timber.w("AuthViewModel", "   Corrigindo usando valor direto do documento...")
-                    
-                    return colaboradorGson.copy(
-                        id = colaboradorId,
-                        aprovado = aprovadoAntes
-                    )
-                }
-                
-                return colaboradorGson.copy(id = colaboradorId)
+                // ✅ CORREÇÃO: Sempre usar valores diretos do documento para campos boolean
+                return colaboradorGson.copy(
+                    id = colaboradorId,
+                    aprovado = aprovadoDireto,
+                    ativo = ativoDireto,
+                    primeiroAcesso = primeiroAcessoDireto
+                )
             }
             
-            Timber.e("AuthViewModel", "❌ Ambas as conversões falharam (toObject e Gson)")
             null
             
         } catch (e: Exception) {
             Timber.e(e, "❌ Erro ao converter documento: %s", e.message)
-            Timber.e("AuthViewModel", "   Stack: ${e.stackTraceToString()}")
             null
         }
     }
@@ -1855,25 +1761,10 @@ class AuthViewModel @Inject constructor(
             Timber.d("AuthViewModel", "🔍 getOrCreateColaborador: UID=$uid, Email=$email")
             crashlytics.log("[GET_OR_CREATE] Iniciando: UID=$uid")
             
-            // 1. Tentar buscar no novo schema primeiro (mais eficiente)
+            // ✅ CORREÇÃO: Sempre buscar no novo schema primeiro (por UID)
+            // Se não encontrar, criar automaticamente - NÃO usar schema antigo
+            // Isso evita ler documento errado que pode ter aprovado=false
             var colaborador = buscarColaboradorPorUid(uid, empresaId)
-            
-            // 2. Se não encontrou, tentar schema antigo (fallback durante migração)
-            if (colaborador == null) {
-                Timber.d("AuthViewModel", "⚠️ Não encontrado no novo schema, tentando schema antigo...")
-                val fallbackResult = buscarColaboradorNaNuvemPorEmail(email)
-                if (fallbackResult != null) {
-                    colaborador = fallbackResult.first
-                    Timber.d("AuthViewModel", "✅ Encontrado no schema antigo, migrando para novo schema...")
-                    
-                    // Migrar para novo schema automaticamente
-                    try {
-                        criarColaboradorNoNovoSchema(colaborador, empresaId)
-                    } catch (e: Exception) {
-                        Timber.w(e, "⚠️ Erro ao migrar para novo schema: %s", e.message)
-                    }
-                }
-            }
             
             // 3. Se ainda não encontrou, criar automaticamente
             if (colaborador == null) {
@@ -2055,29 +1946,7 @@ class AuthViewModel @Inject constructor(
             
             crashlytics.setCustomKey("busca_nuvem_resultado_1", querySnapshot.size())
             Timber.d("AuthViewModel", "   Busca 1 (email exato): ${querySnapshot.size()} documentos encontrados")
-            
-            // ✅ DIAGNÓSTICO: Logar TODOS os documentos encontrados
-            querySnapshot.documents.forEachIndexed { index, documento ->
-                Timber.d("AuthViewModel", "   Doc $index: ${documento.reference.path}")
-                Timber.d("AuthViewModel", "      É colaborador: ${documento.reference.path.contains("/colaboradores/items/")}")
-                Timber.d("AuthViewModel", "      Campo 'aprovado': ${documento.getBoolean("aprovado")}")
-                Timber.d("AuthViewModel", "      Campo 'email': ${documento.getString("email")}")
-            }
-            
             var doc = querySnapshot.documents.find { it.reference.path.contains("/colaboradores/items/") }
-            
-            // ✅ DIAGNÓSTICO: Se encontrou documento, logar detalhes
-            if (doc != null) {
-                Timber.d("AuthViewModel", "═══════════════════════════════════════")
-                Timber.d("AuthViewModel", "📋 DIAGNÓSTICO: Documento encontrado (SCHEMA ANTIGO)")
-                Timber.d("AuthViewModel", "═══════════════════════════════════════")
-                Timber.d("AuthViewModel", "   Path: ${doc.reference.path}")
-                Timber.d("AuthViewModel", "   ⚠️ ATENÇÃO: Este é o SCHEMA ANTIGO (items/...)")
-                Timber.d("AuthViewModel", "   Campo 'aprovado' (direto): ${doc.getBoolean("aprovado")}")
-                Timber.d("AuthViewModel", "   Campo 'aprovado' (data): ${doc.data?.get("aprovado")}")
-                Timber.d("AuthViewModel", "═══════════════════════════════════════")
-                crashlytics.log("[BUSCA_NUVEM] ⚠️ Usando SCHEMA ANTIGO: ${doc.reference.path}")
-            }
             
             // 2. Se não encontrou, tentar email normalizado
             if (doc == null && email != emailNormalizado) {
@@ -2225,16 +2094,12 @@ class AuthViewModel @Inject constructor(
 
             val colaboradorId = doc.id.toLongOrNull() ?: (data["id"] as? Number)?.toLong() ?: 0L
             
-            // ✅ DIAGNÓSTICO: Logar valor ANTES da conversão (schema antigo)
-            val aprovadoAntesSchemaAntigo = doc.getBoolean("aprovado")
-            Timber.d("AuthViewModel", "═══════════════════════════════════════")
-            Timber.d("AuthViewModel", "🔍 VALORES ANTES DA CONVERSÃO (SCHEMA ANTIGO):")
-            Timber.d("AuthViewModel", "   doc.getBoolean('aprovado'): $aprovadoAntesSchemaAntigo")
-            Timber.d("AuthViewModel", "   data['aprovado']: ${data["aprovado"]}")
-            Timber.d("AuthViewModel", "═══════════════════════════════════════")
+            // ✅ CORREÇÃO: Ler valores boolean diretamente do documento ANTES de converter
+            val aprovadoDireto = doc.getBoolean("aprovado") ?: false
+            val ativoDireto = doc.getBoolean("ativo") ?: true
+            val primeiroAcessoDireto = doc.getBoolean("primeiro_acesso") ?: true
             
-            // Com a nova política de GSON (LOWER_CASE_WITH_UNDERSCORES) e @SerializedName na entidade,
-            // o mapeamento deve ser automático e robusto.
+            // Converter para Colaborador
             val colaborador = converterDocumentoParaColaborador(doc, dataConvertida, colaboradorId)
             
             if (colaborador == null) {
@@ -2242,23 +2107,14 @@ class AuthViewModel @Inject constructor(
                 return null
             }
             
-            // ✅ DIAGNÓSTICO: Validar valor DEPOIS da conversão (schema antigo)
-            Timber.d("AuthViewModel", "═══════════════════════════════════════")
-            Timber.d("AuthViewModel", "🔍 VALIDAÇÃO FINAL (SCHEMA ANTIGO):")
-            Timber.d("AuthViewModel", "   aprovado ANTES: $aprovadoAntesSchemaAntigo")
-            Timber.d("AuthViewModel", "   aprovado DEPOIS: ${colaborador.aprovado}")
-            Timber.d("AuthViewModel", "   ⚠️ Se diferente, há problema no mapeamento!")
-            Timber.d("AuthViewModel", "═══════════════════════════════════════")
+            // ✅ CORREÇÃO: Sempre usar valores diretos do documento para campos boolean
+            val colaboradorCorrigido = colaborador.copy(
+                aprovado = aprovadoDireto,
+                ativo = ativoDireto,
+                primeiroAcesso = primeiroAcessoDireto
+            )
             
-            // ✅ CORREÇÃO: Se o valor direto do doc é diferente do convertido, usar o valor direto
-            val colaboradorCorrigido = if (aprovadoAntesSchemaAntigo != null && colaborador.aprovado != aprovadoAntesSchemaAntigo) {
-                Timber.w("AuthViewModel", "⚠️ CORREÇÃO APLICADA: Usando valor direto do documento para 'aprovado'")
-                colaborador.copy(aprovado = aprovadoAntesSchemaAntigo)
-            } else {
-                colaborador
-            }
-            
-            Timber.d("AuthViewModel", "✅ Colaborador processado: ${colaboradorCorrigido.nome} (ID: ${colaboradorCorrigido.id}, Aprovado: ${colaboradorCorrigido.aprovado}, Acesso: ${colaboradorCorrigido.nivelAcesso})")
+            Timber.d("AuthViewModel", "✅ Colaborador processado: ${colaboradorCorrigido.nome} (Aprovado: ${colaboradorCorrigido.aprovado})")
             Pair(colaboradorCorrigido, companyId)
             
         } catch (e: Exception) {
