@@ -156,13 +156,19 @@ class AuthViewModel @Inject constructor(
                     crashlytics.log("[LOGIN_FLOW] Tentando login online...")
                     Timber.d("AuthViewModel", "Tentando login online...")
                     try {
+                        Timber.d("AuthViewModel", "🔍 ANTES de signInWithEmailAndPassword...")
+                        crashlytics.log("[LOGIN_FLOW] Chamando signInWithEmailAndPassword...")
                         val result = firebaseAuth.signInWithEmailAndPassword(email, senha).await()
+                        Timber.d("AuthViewModel", "🔍 DEPOIS de signInWithEmailAndPassword - result.user: ${result.user != null}")
+                        crashlytics.log("[LOGIN_FLOW] signInWithEmailAndPassword concluído - user: ${result.user != null}")
                         
                         if (result.user != null) {
                             crashlytics.setCustomKey("login_online_success", true)
                             crashlytics.setCustomKey("login_firebase_uid", result.user!!.uid)
                             crashlytics.log("[LOGIN_FLOW] ✅ Login online bem-sucedido - Firebase UID: ${result.user!!.uid}")
                             Timber.d("AuthViewModel", "✅ LOGIN ONLINE SUCESSO!")
+                            Timber.d("AuthViewModel", "   Firebase UID: ${result.user!!.uid}")
+                            Timber.d("AuthViewModel", "   Email: ${result.user!!.email}")
 
                             // ✅ NOVO: Emitir log específico para criação automática de dados após login
                             Timber.w(
@@ -172,8 +178,18 @@ class AuthViewModel @Inject constructor(
     
                             // ✅ NOVO: Criar/atualizar colaborador para usuário online
                             Timber.d("AuthViewModel", "🔍 Chamando criarOuAtualizarColaboradorOnline...")
-                            var colaborador = criarOuAtualizarColaboradorOnline(result.user!!, senha)
-                            Timber.d("AuthViewModel", "   Resultado: ${if (colaborador != null) "SUCESSO - ${colaborador.nome}" else "NULL - não encontrado"}")
+                            crashlytics.log("[LOGIN_FLOW] Chamando criarOuAtualizarColaboradorOnline...")
+                            var colaborador: Colaborador? = null
+                            try {
+                                colaborador = criarOuAtualizarColaboradorOnline(result.user!!, senha)
+                                Timber.d("AuthViewModel", "   Resultado: ${if (colaborador != null) "SUCESSO - ${colaborador.nome}" else "NULL - não encontrado"}")
+                                crashlytics.log("[LOGIN_FLOW] criarOuAtualizarColaboradorOnline concluído: ${if (colaborador != null) "SUCESSO" else "NULL"}")
+                            } catch (e: Exception) {
+                                Timber.e(e, "❌ ERRO em criarOuAtualizarColaboradorOnline: %s", e.message)
+                                crashlytics.log("[LOGIN_FLOW] ❌ ERRO em criarOuAtualizarColaboradorOnline: ${e.message}")
+                                crashlytics.recordException(e)
+                                // Não lançar exceção, continuar para fallback
+                            }
                             
                             // ✅ SUPERADMIN: Se for rossinys@gmail.com e não encontrou, criar automaticamente
                             if (colaborador == null && email == "rossinys@gmail.com") {
