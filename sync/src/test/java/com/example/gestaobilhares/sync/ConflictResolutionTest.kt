@@ -80,7 +80,7 @@ class ConflictResolutionTest {
     @Test
     fun pull_shouldUpdateLocalData_whenServerIsNewer() = runTest {
         // GIVEN: Local client updated at 1000ms
-        val localCliente = Cliente(id = 1L, nome = "Local Name", rotaId = 1L, dataUltimaAtualizacao = Date(1000L))
+        val localCliente = Cliente(id = 1L, nome = "Local Name", rotaId = 1L, dataUltimaAtualizacao = 1000L)
         whenever(appRepository.obterClientePorId(1L)).thenReturn(localCliente)
         whenever(syncMetadataDao.obterUltimoTimestamp(any(), any())).thenReturn(0L)
         
@@ -124,7 +124,7 @@ class ConflictResolutionTest {
     @Test
     fun pull_shouldNotUpdateLocalData_whenLocalIsNewer() = runTest {
         // GIVEN: Local client updated at 3000ms
-        val localCliente = Cliente(id = 1L, nome = "Local New Name", rotaId = 1L, dataUltimaAtualizacao = Date(3000L))
+        val localCliente = Cliente(id = 1L, nome = "Local New Name", rotaId = 1L, dataUltimaAtualizacao = 3000L)
         whenever(appRepository.obterClientePorId(1L)).thenReturn(localCliente)
         whenever(syncMetadataDao.obterUltimoTimestamp(any(), any())).thenReturn(0L)
         
@@ -151,7 +151,7 @@ class ConflictResolutionTest {
     @Test
     fun pull_shouldReconcileDuplicates_byNameAndRoute() = runTest {
         // GIVEN: Local client with different ID but same name/route, and an OLD timestamp
-        val localCliente = Cliente(id = 100L, nome = "Duplicate Name", rotaId = 1L, dataUltimaAtualizacao = Date(1000L))
+        val localCliente = Cliente(id = 100L, nome = "Duplicate Name", rotaId = 1L, dataUltimaAtualizacao = 1000L)
         whenever(appRepository.obterClientePorId(555L)).thenReturn(null)
         whenever(appRepository.buscarClientePorNomeERota("Duplicate Name", 1L)).thenReturn(localCliente)
         whenever(syncMetadataDao.obterUltimoTimestamp(any(), any())).thenReturn(0L)

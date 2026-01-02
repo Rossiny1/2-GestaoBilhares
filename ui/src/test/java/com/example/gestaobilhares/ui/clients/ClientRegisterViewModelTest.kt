@@ -70,7 +70,7 @@ class ClientRegisterViewModelTest {
             nome = "Novo Cliente",
             endereco = "Rua Teste", 
             telefone = "123", 
-            dataCadastro = Date(),
+            dataCadastro = System.currentTimeMillis(),
             ativo = true
         )
         whenever(appRepository.inserirCliente(any())).thenReturn(100L)
@@ -94,7 +94,7 @@ class ClientRegisterViewModelTest {
             nome = "Cliente Existente",
             endereco = "Rua Teste", 
             telefone = "123", 
-            dataCadastro = Date(),
+            dataCadastro = System.currentTimeMillis(),
             ativo = true
         )
         whenever(appRepository.obterClientePorId(clienteId)).thenReturn(cliente)

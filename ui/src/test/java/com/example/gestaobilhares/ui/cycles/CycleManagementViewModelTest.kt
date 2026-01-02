@@ -57,7 +57,7 @@ class CycleManagementViewModelTest {
         // Arrange
         val cicloId = 1L
         val rotaId = 1L
-        val dataAgora = Date()
+        val dataAgora = System.currentTimeMillis()
         
         val ciclo = CicloAcertoEntity(
             id = cicloId,
@@ -102,7 +102,7 @@ class CycleManagementViewModelTest {
         // Arrange
         val cicloId = 1L
         val rotaId = 1L
-        val dataAgora = Date()
+        val dataAgora = System.currentTimeMillis()
         
         val ciclo = CicloAcertoEntity(
             id = cicloId, rotaId = rotaId, numeroCiclo = 1, ano = 2025,
@@ -113,9 +113,10 @@ class CycleManagementViewModelTest {
         
         // Simular 2 acertos de 100 reais cada (Total 200) - PIX e Dinheiro
         // Acerto 1: 100 reais PIX
-        val acerto1 = Acerto(id = 1, valorRecebido = 100.0, metodosPagamentoJson = "{\"PIX\": 100.0}", rotaId = rotaId, clienteId = 1L, periodoInicio = Date(), periodoFim = Date())
+        val now = System.currentTimeMillis()
+        val acerto1 = Acerto(id = 1, valorRecebido = 100.0, metodosPagamentoJson = "{\"PIX\": 100.0}", rotaId = rotaId, clienteId = 1L, periodoInicio = now, periodoFim = now)
         // Acerto 2: 100 reais DINHEIRO
-        val acerto2 = Acerto(id = 2, valorRecebido = 100.0, metodosPagamentoJson = "{\"DINHEIRO\": 100.0}", rotaId = rotaId, clienteId = 2L, periodoInicio = Date(), periodoFim = Date())
+        val acerto2 = Acerto(id = 2, valorRecebido = 100.0, metodosPagamentoJson = "{\"DINHEIRO\": 100.0}", rotaId = rotaId, clienteId = 2L, periodoInicio = now, periodoFim = now)
         
         whenever(appRepository.buscarAcertosPorCicloId(cicloId)).thenReturn(flowOf(listOf(acerto1, acerto2)))
         whenever(appRepository.buscarDespesasPorCicloId(cicloId)).thenReturn(flowOf(emptyList()))

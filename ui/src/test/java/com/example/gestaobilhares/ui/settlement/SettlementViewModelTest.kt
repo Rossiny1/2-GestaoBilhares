@@ -71,7 +71,7 @@ class SettlementViewModelTest {
             nome = "Bar do Zé", 
             endereco = "Rua Teste", 
             telefone = "123", 
-            dataCadastro = Date(), 
+            dataCadastro = System.currentTimeMillis(), 
             ativo = true,
             debitoAtual = 0.0,
             comissaoFicha = 0.5,
@@ -95,7 +95,7 @@ class SettlementViewModelTest {
         val clienteId = 1L
         val ultimoAcerto = Acerto(
             id = 10, clienteId = clienteId, debitoAtual = 50.0,
-            rotaId = 1L, periodoInicio = Date(), periodoFim = Date()
+            rotaId = 1L, periodoInicio = System.currentTimeMillis(), periodoFim = System.currentTimeMillis()
         )
         whenever(appRepository.buscarUltimoAcertoPorCliente(clienteId)).thenReturn(ultimoAcerto)
 
@@ -115,20 +115,21 @@ class SettlementViewModelTest {
         val rotaId = 10L
         val cicloId = 100L
         
-        val cliente = Cliente(id = clienteId, rotaId = rotaId, nome = "Tião", comissaoFicha = 0.5, valorFicha = 2.0, dataCadastro = Date(), ativo = true, debitoAtual = 0.0)
-        val cicloAtivo = CicloAcertoEntity(id = cicloId, rotaId = rotaId, numeroCiclo = 1, ano = 2025, status = StatusCicloAcerto.EM_ANDAMENTO, dataInicio = Date(), dataFim = Date())
+        val now = System.currentTimeMillis()
+        val cliente = Cliente(id = clienteId, rotaId = rotaId, nome = "Tião", comissaoFicha = 0.5, valorFicha = 2.0, dataCadastro = now, ativo = true, debitoAtual = 0.0)
+        val cicloAtivo = CicloAcertoEntity(id = cicloId, rotaId = rotaId, numeroCiclo = 1, ano = 2025, status = StatusCicloAcerto.EM_ANDAMENTO, dataInicio = now, dataFim = now)
         
         whenever(appRepository.obterClientePorId(clienteId)).thenReturn(cliente)
         whenever(appRepository.buscarCicloAtivo(rotaId)).thenReturn(cicloAtivo)
         whenever(appRepository.buscarAcertosPorClienteECicloId(clienteId, cicloId)).thenReturn(flowOf(emptyList()))
         whenever(appRepository.obterAcertoPorId(any())).thenAnswer { invocation ->
              val id = invocation.arguments[0] as Long
-             Acerto(id = id, clienteId = clienteId, rotaId = rotaId, cicloId = cicloId, valorRecebido = 100.0, periodoInicio = Date(), periodoFim = Date())
+             Acerto(id = id, clienteId = clienteId, rotaId = rotaId, cicloId = cicloId, valorRecebido = 100.0, periodoInicio = now, periodoFim = now)
         }
         whenever(appRepository.buscarAcertosPorRotaECicloId(rotaId, cicloId)).thenReturn(flowOf(emptyList()))
         whenever(appRepository.buscarDespesasPorCicloId(cicloId)).thenReturn(flowOf(emptyList()))
         whenever(appRepository.inserirAcerto(any())).thenReturn(500L)
-        whenever(appRepository.obterAcertoPorId(500L)).thenReturn(Acerto(id = 500L, clienteId = clienteId, rotaId = rotaId, cicloId = cicloId, valorRecebido = 100.0, periodoInicio = Date(), periodoFim = Date()))
+        whenever(appRepository.obterAcertoPorId(500L)).thenReturn(Acerto(id = 500L, clienteId = clienteId, rotaId = rotaId, cicloId = cicloId, valorRecebido = 100.0, periodoInicio = now, periodoFim = now))
         whenever(appRepository.inserirAcertoMesa(any())).thenReturn(1000L)
         whenever(appRepository.atualizarDebitoAtualCliente(any(), any())).thenReturn(Unit)
         whenever(appRepository.atualizarValoresCiclo(any())).thenReturn(Unit)
@@ -169,7 +170,7 @@ class SettlementViewModelTest {
         // Arrange
         val clienteId = 1L
         val rotaId = 10L
-        val cliente = Cliente(id = clienteId, rotaId = rotaId, nome = "Tião", dataCadastro = Date(), ativo = true)
+        val cliente = Cliente(id = clienteId, rotaId = rotaId, nome = "Tião", dataCadastro = System.currentTimeMillis(), ativo = true)
         
         whenever(appRepository.obterClientePorId(clienteId)).thenReturn(cliente)
         whenever(appRepository.buscarCicloAtivo(rotaId)).thenReturn(null)
@@ -196,9 +197,10 @@ class SettlementViewModelTest {
         val rotaId = 10L
         val cicloId = 100L
         
-        val cliente = Cliente(id = clienteId, rotaId = rotaId, nome = "Tião", dataCadastro = Date(), ativo = true)
-        val cicloAtivo = CicloAcertoEntity(id = cicloId, rotaId = rotaId, numeroCiclo = 1, ano = 2025, status = StatusCicloAcerto.EM_ANDAMENTO, dataInicio = Date(), dataFim = Date())
-        val acertoExistente = Acerto(id = acertoId, clienteId = clienteId, status = StatusAcerto.PENDENTE, rotaId = rotaId, cicloId = cicloId, periodoInicio = Date(), periodoFim = Date())
+        val cliente = Cliente(id = clienteId, rotaId = rotaId, nome = "Tião", dataCadastro = System.currentTimeMillis(), ativo = true)
+        val now = System.currentTimeMillis()
+        val cicloAtivo = CicloAcertoEntity(id = cicloId, rotaId = rotaId, numeroCiclo = 1, ano = 2025, status = StatusCicloAcerto.EM_ANDAMENTO, dataInicio = now, dataFim = now)
+        val acertoExistente = Acerto(id = acertoId, clienteId = clienteId, status = StatusAcerto.PENDENTE, rotaId = rotaId, cicloId = cicloId, periodoInicio = now, periodoFim = now)
         
         whenever(appRepository.obterClientePorId(clienteId)).thenReturn(cliente)
         whenever(appRepository.buscarCicloAtivo(rotaId)).thenReturn(cicloAtivo)
@@ -230,8 +232,9 @@ class SettlementViewModelTest {
         val rotaId = 10L
         val cicloId = 100L
         
-        val cliente = Cliente(id = clienteId, rotaId = rotaId, nome = "Tião", comissaoFicha = 0.5, valorFicha = 2.0, dataCadastro = Date(), ativo = true)
-        val cicloAtivo = CicloAcertoEntity(id = cicloId, rotaId = rotaId, numeroCiclo = 1, ano = 2025, status = StatusCicloAcerto.EM_ANDAMENTO, dataInicio = Date(), dataFim = Date())
+        val cliente = Cliente(id = clienteId, rotaId = rotaId, nome = "Tião", comissaoFicha = 0.5, valorFicha = 2.0, dataCadastro = System.currentTimeMillis(), ativo = true)
+        val now = System.currentTimeMillis()
+        val cicloAtivo = CicloAcertoEntity(id = cicloId, rotaId = rotaId, numeroCiclo = 1, ano = 2025, status = StatusCicloAcerto.EM_ANDAMENTO, dataInicio = now, dataFim = now)
         
         whenever(appRepository.obterClientePorId(clienteId)).thenReturn(cliente)
         whenever(appRepository.buscarCicloAtivo(rotaId)).thenReturn(cicloAtivo)
@@ -239,7 +242,8 @@ class SettlementViewModelTest {
         whenever(appRepository.buscarAcertosPorRotaECicloId(any(), any())).thenReturn(flowOf(emptyList()))
         whenever(appRepository.buscarDespesasPorCicloId(any())).thenReturn(flowOf(emptyList()))
         whenever(appRepository.inserirAcerto(any())).thenReturn(500L)
-        whenever(appRepository.obterAcertoPorId(any())).thenReturn(Acerto(id = 500L, clienteId = clienteId, periodoInicio = Date(), periodoFim = Date()))
+        val now = System.currentTimeMillis()
+        whenever(appRepository.obterAcertoPorId(any())).thenReturn(Acerto(id = 500L, clienteId = clienteId, periodoInicio = now, periodoFim = now))
         whenever(appRepository.inserirAcertoMesa(any())).thenReturn(1000L)
         whenever(appRepository.atualizarDebitoAtualCliente(any(), any())).thenReturn(Unit)
         whenever(appRepository.atualizarValoresCiclo(any())).thenReturn(Unit)
@@ -271,7 +275,7 @@ class SettlementViewModelTest {
     fun `prepararMesasParaAcerto deve usar relogio final do ultimo acerto como inicial`() = runTest {
         // Arrange
         val mesaId = 1L
-        val mesa = Mesa(id = mesaId, clienteId = 1L, numero = "01", relogioInicial = 0, tipoMesa = TipoMesa.SINUCA, dataInstalacao = Date(), ativa = true)
+        val mesa = Mesa(id = mesaId, clienteId = 1L, numero = "01", relogioInicial = 0, tipoMesa = TipoMesa.SINUCA, dataInstalacao = System.currentTimeMillis(), ativa = true)
         val ultimoAcertoMesa = com.example.gestaobilhares.data.entities.AcertoMesa(
             id = 10, acertoId = 100, mesaId = mesaId, relogioInicial = 50, relogioFinal = 150, subtotal = 0.0, fichasJogadas = 100
         )
