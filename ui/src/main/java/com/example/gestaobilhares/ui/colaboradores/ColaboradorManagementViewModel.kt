@@ -1,4 +1,4 @@
-﻿package com.example.gestaobilhares.ui.colaboradores
+package com.example.gestaobilhares.ui.colaboradores
 
 import androidx.lifecycle.ViewModel
 import com.example.gestaobilhares.ui.common.BaseViewModel
@@ -350,33 +350,34 @@ class ColaboradorManagementViewModel @Inject constructor(
                     // Se não existe, criar novo documento
                     Timber.d("ColaboradorManagementViewModel", "   Documento não existe. Criando novo...")
                     
+                    // ✅ CORREÇÃO CRÍTICA: Usar snake_case para corresponder às regras do Firestore
                     val colaboradorMap = mutableMapOf<String, Any?>()
                     colaboradorMap["id"] = System.currentTimeMillis() // ID temporário único
-                    colaboradorMap["roomId"] = colaboradorMap["id"]
+                    colaboradorMap["room_id"] = colaboradorMap["id"]
                     colaboradorMap["nome"] = email.substringBefore("@")
                     colaboradorMap["email"] = email
                     colaboradorMap["telefone"] = ""
                     colaboradorMap["cpf"] = ""
-                    colaboradorMap["nivelAcesso"] = nivelAcesso.name
+                    colaboradorMap["nivel_acesso"] = nivelAcesso.name // ✅ CORREÇÃO: snake_case
                     colaboradorMap["ativo"] = true
                     colaboradorMap["aprovado"] = true
-                    colaboradorMap["primeiroAcesso"] = true
-                    colaboradorMap["senhaTemporaria"] = senha
-                    colaboradorMap["senhaHash"] = senha // TEMPORÁRIO: usar hash depois
-                    colaboradorMap["dataCadastro"] = Timestamp(Date())
-                    colaboradorMap["dataAprovacao"] = Timestamp(Date())
-                    colaboradorMap["dataUltimaAtualizacao"] = Timestamp(Date())
-                    colaboradorMap["aprovadoPor"] = aprovadoPor
+                    colaboradorMap["primeiro_acesso"] = true // ✅ CORREÇÃO: snake_case
+                    colaboradorMap["senha_temporaria"] = senha // ✅ CORREÇÃO: snake_case
+                    colaboradorMap["senha_hash"] = senha // ✅ CORREÇÃO: snake_case (TEMPORÁRIO: usar hash depois)
+                    colaboradorMap["data_cadastro"] = Timestamp(Date()) // ✅ CORREÇÃO: snake_case
+                    colaboradorMap["data_aprovacao"] = Timestamp(Date()) // ✅ CORREÇÃO: snake_case
+                    colaboradorMap["data_ultima_atualizacao"] = Timestamp(Date()) // ✅ CORREÇÃO: snake_case
+                    colaboradorMap["aprovado_por"] = aprovadoPor // ✅ CORREÇÃO: snake_case
                     colaboradorMap["observacoes"] = observacoes
-                    colaboradorMap["lastModified"] = FieldValue.serverTimestamp()
-                    colaboradorMap["syncTimestamp"] = FieldValue.serverTimestamp()
+                    colaboradorMap["last_modified"] = FieldValue.serverTimestamp() // ✅ CORREÇÃO: snake_case
+                    colaboradorMap["sync_timestamp"] = FieldValue.serverTimestamp() // ✅ CORREÇÃO: snake_case
                     
                     // Tentar buscar firebaseUid do Authentication
                     try {
                         // Buscar todos os usuários e encontrar pelo email
                         // Nota: Isso requer Admin SDK, então vamos deixar null por enquanto
                         // A Cloud Function vai preencher depois
-                        colaboradorMap["firebaseUid"] = null
+                        colaboradorMap["firebase_uid"] = null // ✅ CORREÇÃO: snake_case
                     } catch (e: Exception) {
                         Timber.w("ColaboradorManagementViewModel", "   Não foi possível obter firebaseUid: ${e.message}")
                     }
@@ -387,17 +388,18 @@ class ColaboradorManagementViewModel @Inject constructor(
                     // Se existe, atualizar com dados de aprovação
                     Timber.d("ColaboradorManagementViewModel", "   Documento existe. Atualizando...")
                     
+                    // ✅ CORREÇÃO CRÍTICA: Usar snake_case para corresponder às regras do Firestore
                     val updateMap = mutableMapOf<String, Any?>()
                     updateMap["aprovado"] = true
-                    updateMap["dataAprovacao"] = Timestamp(Date())
-                    updateMap["aprovadoPor"] = aprovadoPor
-                    updateMap["nivelAcesso"] = nivelAcesso.name
-                    updateMap["senhaTemporaria"] = senha
-                    updateMap["senhaHash"] = senha // TEMPORÁRIO
+                    updateMap["data_aprovacao"] = Timestamp(Date()) // ✅ CORREÇÃO: snake_case
+                    updateMap["aprovado_por"] = aprovadoPor // ✅ CORREÇÃO: snake_case
+                    updateMap["nivel_acesso"] = nivelAcesso.name // ✅ CORREÇÃO: snake_case
+                    updateMap["senha_temporaria"] = senha // ✅ CORREÇÃO: snake_case
+                    updateMap["senha_hash"] = senha // ✅ CORREÇÃO: snake_case (TEMPORÁRIO)
                     updateMap["observacoes"] = observacoes
-                    updateMap["dataUltimaAtualizacao"] = Timestamp(Date())
-                    updateMap["lastModified"] = FieldValue.serverTimestamp()
-                    updateMap["syncTimestamp"] = FieldValue.serverTimestamp()
+                    updateMap["data_ultima_atualizacao"] = Timestamp(Date()) // ✅ CORREÇÃO: snake_case
+                    updateMap["last_modified"] = FieldValue.serverTimestamp() // ✅ CORREÇÃO: snake_case
+                    updateMap["sync_timestamp"] = FieldValue.serverTimestamp() // ✅ CORREÇÃO: snake_case
                     
                     collectionRef.document(documentId).update(updateMap).await()
                     Timber.d("ColaboradorManagementViewModel", "✅ Documento atualizado no Firestore")
