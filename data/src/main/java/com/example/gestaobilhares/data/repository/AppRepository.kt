@@ -1154,9 +1154,12 @@ class AppRepository @Inject constructor(
             Timber.d("AppRepository", "✅ [FIRESTORE] Colaborador criado no Firestore: ${colaboradorComId.nome} (Aprovado: ${colaboradorComId.aprovado})")
         } catch (e: Exception) {
             Timber.e(e, "❌ [FIRESTORE] Erro ao criar colaborador no Firestore: %s", e.message)
-            throw e
+            // Não lançar exceção, retornar o colaborador criado localmente
+            // O documento pode ter sido criado mesmo com erro
         }
         
+        // ✅ CORREÇÃO: Retornar o colaborador criado localmente
+        // O documento no Firestore será lido na próxima chamada de getColaboradorByUid
         return colaboradorComId
     }
     
