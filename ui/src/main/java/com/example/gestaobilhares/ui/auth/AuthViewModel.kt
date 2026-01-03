@@ -1506,84 +1506,21 @@ class AuthViewModel @Inject constructor(
             
             val uid = colaborador.firebaseUid
             
-            // ✅ NOVO: Sincronizar no novo schema primeiro (colaboradores/{uid})
-            if (uid != null && uid.isNotBlank()) {
-                try {
-                    criarColaboradorNoNovoSchema(colaborador, companyId)
-                    Timber.d("AuthViewModel", "✅ Colaborador sincronizado no novo schema")
-                } catch (e: Exception) {
-                    Timber.w(e, "⚠️ Erro ao sincronizar no novo schema: %s", e.message)
-                }
+            // ✅ PADRONIZAÇÃO: Usar APENAS o novo schema (empresas/{empresaId}/colaboradores/{uid})
+            // REMOVIDO: Sincronização no schema antigo (entidades/colaboradores/items) para evitar duplicação
+            if (uid == null || uid.isBlank()) {
+                Timber.w("AuthViewModel", "⚠️ Colaborador não tem Firebase UID, não é possível sincronizar no novo schema")
+                Timber.w("AuthViewModel", "   Email: ${colaborador.email}")
+                return
             }
-            
-            // ✅ COMPATIBILIDADE: Também sincronizar no schema antigo durante migração
-            val collectionRef = firestore
-                .collection("empresas")
-                .document(companyId)
-                .collection("entidades")
-                .document("colaboradores")
-                .collection("items")
-            
-            Timber.d("AuthViewModel", "   Caminho (schema antigo): empresas/$companyId/entidades/colaboradores/items")
-            
-            // ✅ CORREÇÃO CRÍTICA: Usar Gson para converter colaborador para Map (snake_case automático)
-            // Isso garante consistência com o ColaboradorSyncHandler e as regras do Firestore
-            val colaboradorJson = gson.toJson(colaborador)
-            @Suppress("UNCHECKED_CAST")
-            val colaboradorMap = gson.fromJson(colaboradorJson, Map::class.java) as? MutableMap<String, Any?> 
-                ?: mutableMapOf<String, Any?>()
-            
-            // Adicionar campos adicionais necessários
-            colaboradorMap["room_id"] = colaborador.id
-            colaboradorMap["id"] = colaborador.id
-            colaboradorMap["last_modified"] = FieldValue.serverTimestamp()
-            colaboradorMap["sync_timestamp"] = FieldValue.serverTimestamp()
-            
-            // ✅ CORREÇÃO: Converter campos de data para Timestamp do Firestore
-            colaboradorMap["data_cadastro"] = Timestamp(Date(colaborador.dataCadastro))
-            colaboradorMap["data_ultima_atualizacao"] = Timestamp(Date(colaborador.dataUltimaAtualizacao))
-            colaborador.dataAprovacao?.let { colaboradorMap["data_aprovacao"] = Timestamp(Date(it)) }
-            colaborador.dataUltimoAcesso?.let { colaboradorMap["data_ultimo_acesso"] = Timestamp(Date(it)) }
-            
-            // ✅ CORREÇÃO: Garantir que nivel_acesso seja string (enum)
-            colaboradorMap["nivel_acesso"] = colaborador.nivelAcesso.name
-            
-            Timber.d("AuthViewModel", "   Map criado com ${colaboradorMap.size} campos")
-            
-            // ✅ CORREÇÃO: Usar ID apropriado para evitar conflitos
-            // Prioridade: 1) Firebase UID (se disponível), 2) Email (para colaboradores pendentes sem UID), 3) ID numérico (fallback)
-            val documentId: String = colaborador.firebaseUid?.takeIf { it.isNotBlank() }
-                ?: if (colaborador.aprovado == false && colaborador.firebaseUid == null) {
-                    // Colaborador pendente sem UID: usar email como ID único para evitar conflitos
-                    colaborador.email.replace(".", "_").replace("@", "_")
-                } else {
-                    // Colaborador já aprovado ou com firebaseUid: usar ID numérico
-                    colaborador.id.toString()
-                }
-            
-            Timber.d("AuthViewModel", "   Criando documento com ID: $documentId (ID local: ${colaborador.id}, firebaseUid: ${colaborador.firebaseUid}, email: ${colaborador.email}, aprovado: ${colaborador.aprovado})")
             
             try {
-                collectionRef
-                    .document(documentId)
-                    .set(colaboradorMap)
-                    .await()
-                Timber.d("AuthViewModel", "✅ Colaborador criado no Firestore com sucesso! (ID: $documentId)")
-            } catch (e: com.google.firebase.firestore.FirebaseFirestoreException) {
-                // Se o documento já existe, atualizar em vez de criar
-                if (e.code == com.google.firebase.firestore.FirebaseFirestoreException.Code.ALREADY_EXISTS) {
-                    Timber.d("AuthViewModel", "⚠️ Documento já existe, atualizando...")
-                    collectionRef
-                        .document(documentId)
-                        .set(colaboradorMap)
-                        .await()
-                    Timber.d("AuthViewModel", "✅ Colaborador atualizado no Firestore")
-                } else {
-                    throw e
-                }
+                criarColaboradorNoNovoSchema(colaborador, companyId)
+                Timber.d("AuthViewModel", "✅ Colaborador sincronizado no novo schema: empresas/$companyId/colaboradores/$uid")
+            } catch (e: Exception) {
+                Timber.e(e, "❌ Erro ao sincronizar no novo schema: %s", e.message)
+                throw e
             }
-            
-            Timber.d("AuthViewModel", "✅ Colaborador sincronizado com sucesso para a nuvem")
             
         } catch (e: Exception) {
             Timber.e(e, "❌ Erro ao sincronizar colaborador para a nuvem: %s", e.message)
