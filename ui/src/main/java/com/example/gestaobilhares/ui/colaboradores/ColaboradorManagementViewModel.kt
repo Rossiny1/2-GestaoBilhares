@@ -199,6 +199,7 @@ class ColaboradorManagementViewModel @Inject constructor(
             Timber.d("ColaboradorManagementViewModel", "   Email: ${colaborador.email}")
             Timber.d("ColaboradorManagementViewModel", "   Firebase UID: ${colaborador.firebaseUid}")
             Timber.d("ColaboradorManagementViewModel", "   Aprovado: ${colaborador.aprovado}")
+            Timber.d("ColaboradorManagementViewModel", "   Company ID: $companyId")
             
             val uid = colaborador.firebaseUid
             
@@ -208,6 +209,7 @@ class ColaboradorManagementViewModel @Inject constructor(
                 Timber.w("ColaboradorManagementViewModel", "⚠️ Colaborador não tem Firebase UID, não é possível sincronizar")
                 Timber.w("ColaboradorManagementViewModel", "   Email: ${colaborador.email}")
                 Timber.w("ColaboradorManagementViewModel", "   É necessário ter Firebase UID para sincronizar no novo schema")
+                Timber.w("ColaboradorManagementViewModel", "   DICA: Use 'Aprovar com Credenciais' para criar o usuário no Firebase Auth primeiro")
                 return
             }
             
@@ -218,11 +220,20 @@ class ColaboradorManagementViewModel @Inject constructor(
                 .collection("colaboradores")
                 .document(uid)
             
+            Timber.d("ColaboradorManagementViewModel", "   Caminho Firestore: ${docRef.path}")
+            
             // Preparar e atualizar dados do colaborador
             prepararDadosColaboradorParaFirestore(colaborador, companyId, uid, docRef)
             
+            Timber.d("ColaboradorManagementViewModel", "✅ Sincronização concluída com sucesso!")
+            
+        } catch (e: com.google.firebase.firestore.FirebaseFirestoreException) {
+            Timber.e("ColaboradorManagementViewModel", "❌ Erro Firestore ao sincronizar colaborador: ${e.code} - ${e.message}")
+            Timber.e("ColaboradorManagementViewModel", "   Caminho: empresas/$companyId/colaboradores/${colaborador.firebaseUid}")
+            throw e
         } catch (e: Exception) {
             Timber.e("ColaboradorManagementViewModel", "❌ Erro ao sincronizar colaborador para Firestore: %s", e.message)
+            Timber.e("ColaboradorManagementViewModel", "   Stack: ${e.stackTraceToString()}")
             throw e
         }
     }
@@ -277,9 +288,38 @@ class ColaboradorManagementViewModel @Inject constructor(
         // ✅ ATUALIZAÇÃO IMEDIATA: AGUARDAR atualização no Firestore (await bloqueante)
         Timber.d("ColaboradorManagementViewModel", "🔄 Atualizando Firestore: ${docRef.path}")
         Timber.d("ColaboradorManagementViewModel", "   Campo 'aprovado': ${colaboradorMap["aprovado"]}")
-        docRef.set(colaboradorMap).await()
+        Timber.d("ColaboradorManagementViewModel", "   Campo 'ativo': ${colaboradorMap["ativo"]}")
+        Timber.d("ColaboradorManagementViewModel", "   Campo 'nivel_acesso': ${colaboradorMap["nivel_acesso"]}")
+        Timber.d("ColaboradorManagementViewModel", "   Total de campos: ${colaboradorMap.size}")
         
-        Timber.d("ColaboradorManagementViewModel", "✅ Colaborador ATUALIZADO no Firestore: ${colaborador.nome} (Aprovado: ${colaborador.aprovado})")
+        try {
+            // ✅ CORREÇÃO: Usar set() com merge para garantir que campos existentes não sejam sobrescritos
+            // Mas como queremos atualizar tudo, vamos usar set() direto
+            docRef.set(colaboradorMap).await()
+            
+            // ✅ VERIFICAÇÃO: Ler o documento após atualização para confirmar
+            val docSnapshot = docRef.get(com.google.firebase.firestore.Source.SERVER).await()
+            val aprovadoNoFirestore = docSnapshot.getBoolean("aprovado") ?: false
+            
+            Timber.d("ColaboradorManagementViewModel", "✅ Colaborador ATUALIZADO no Firestore: ${colaborador.nome}")
+            Timber.d("ColaboradorManagementViewModel", "   Aprovado local: ${colaborador.aprovado}")
+            Timber.d("ColaboradorManagementViewModel", "   Aprovado no Firestore: $aprovadoNoFirestore")
+            
+            if (aprovadoNoFirestore != colaborador.aprovado) {
+                Timber.w("ColaboradorManagementViewModel", "⚠️ DISCREPÂNCIA: Campo 'aprovado' não foi atualizado corretamente no Firestore!")
+                Timber.w("ColaboradorManagementViewModel", "   Tentando atualizar novamente apenas o campo 'aprovado'...")
+                docRef.update("aprovado", colaborador.aprovado).await()
+                Timber.d("ColaboradorManagementViewModel", "✅ Campo 'aprovado' atualizado separadamente")
+            }
+        } catch (e: com.google.firebase.firestore.FirebaseFirestoreException) {
+            Timber.e("ColaboradorManagementViewModel", "❌ Erro Firestore ao atualizar: ${e.code} - ${e.message}")
+            if (e.code == com.google.firebase.firestore.FirebaseFirestoreException.Code.PERMISSION_DENIED) {
+                Timber.e("ColaboradorManagementViewModel", "   PERMISSÃO NEGADA: Verifique as regras do Firestore")
+                Timber.e("ColaboradorManagementViewModel", "   Usuário atual: ${firebaseAuth.currentUser?.email}")
+                Timber.e("ColaboradorManagementViewModel", "   UID do colaborador: $uid")
+            }
+            throw e
+        }
     }
 
     /**
