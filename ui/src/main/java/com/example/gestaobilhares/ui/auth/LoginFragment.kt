@@ -134,8 +134,35 @@ class LoginFragment : Fragment() {
                         }
                         is LoginUiState.Aprovado -> {
                             // ✅ Aprovado - navegar para home
+                            // ✅ CORREÇÃO: Verificar destino atual e usar ação de navegação correta
                             Timber.d("LoginFragment", "✅ [UI] Colaborador APROVADO - navegando para home")
-                            findNavController().navigate(com.example.gestaobilhares.ui.R.id.action_loginFragment_to_routesFragment)
+                            try {
+                                val navController = findNavController()
+                                val currentDestination = navController.currentDestination?.id
+                                
+                                when (currentDestination) {
+                                    com.example.gestaobilhares.ui.R.id.loginFragment -> {
+                                        // Se estiver no LoginFragment, usar ação direta
+                                        navController.navigate(com.example.gestaobilhares.ui.R.id.action_loginFragment_to_routesFragment)
+                                    }
+                                    com.example.gestaobilhares.ui.R.id.changePasswordFragment -> {
+                                        // Se estiver no ChangePasswordFragment, usar ação específica desse fragment
+                                        navController.navigate(com.example.gestaobilhares.ui.R.id.action_changePasswordFragment_to_routesFragment)
+                                    }
+                                    else -> {
+                                        Timber.w("LoginFragment", "⚠️ [UI] Destino atual ($currentDestination) não é loginFragment nem changePasswordFragment")
+                                        // Tentar navegar de qualquer forma usando popBackStack até loginFragment
+                                        try {
+                                            navController.popBackStack(com.example.gestaobilhares.ui.R.id.loginFragment, false)
+                                            navController.navigate(com.example.gestaobilhares.ui.R.id.action_loginFragment_to_routesFragment)
+                                        } catch (e2: Exception) {
+                                            Timber.e(e2, "LoginFragment", "❌ [UI] Erro na navegação alternativa: ${e2.message}")
+                                        }
+                                    }
+                                }
+                            } catch (e: Exception) {
+                                Timber.e(e, "LoginFragment", "❌ [UI] Erro ao navegar para routesFragment: ${e.message}")
+                            }
                         }
                         is LoginUiState.Pendente -> {
                             // ✅ Pendente - mostrar mensagem (UI não decide, apenas exibe)
