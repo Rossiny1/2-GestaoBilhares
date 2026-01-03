@@ -28,6 +28,7 @@ data class Colaborador(
     
     @ColumnInfo(name = "telefone")
     @SerializedName("telefone")
+    @PropertyName("telefone")
     val telefone: String? = null,
     
     @ColumnInfo(name = "cpf")
@@ -37,6 +38,7 @@ data class Colaborador(
     // Dados pessoais completos
     @ColumnInfo(name = "data_nascimento")
     @SerializedName("data_nascimento")
+    @PropertyName("data_nascimento")
     val dataNascimento: Long? = null,
     
     @ColumnInfo(name = "endereco")
@@ -73,19 +75,23 @@ data class Colaborador(
     
     @ColumnInfo(name = "nome_mae")
     @SerializedName("nome_mae")
+    @PropertyName("nome_mae")
     val nomeMae: String? = null,
     
     @ColumnInfo(name = "nome_pai")
     @SerializedName("nome_pai")
+    @PropertyName("nome_pai")
     val nomePai: String? = null,
     
     @ColumnInfo(name = "foto_perfil")
     @SerializedName("foto_perfil")
+    @PropertyName("foto_perfil")
     val fotoPerfil: String? = null,
     
     // Sistema de acesso
     @ColumnInfo(name = "nivel_acesso")
     @SerializedName("nivel_acesso")
+    @PropertyName("nivel_acesso")
     val nivelAcesso: NivelAcesso = NivelAcesso.USER,
     
     @PropertyName("ativo")
@@ -100,23 +106,28 @@ data class Colaborador(
     
     @ColumnInfo(name = "data_aprovacao")
     @SerializedName("data_aprovacao")
+    @PropertyName("data_aprovacao")
     val dataAprovacao: Long? = null,
     
     @ColumnInfo(name = "aprovado_por")
     @SerializedName("aprovado_por")
+    @PropertyName("aprovado_por")
     val aprovadoPor: String? = null,
     
     // Autenticação
     @ColumnInfo(name = "firebase_uid")
     @SerializedName("firebase_uid")
+    @PropertyName("firebase_uid")
     val firebaseUid: String? = null,
     
     @ColumnInfo(name = "senha_temporaria")
     @SerializedName("senha_temporaria")
+    @PropertyName("senha_temporaria")
     val senhaTemporaria: String? = null,
     
     @ColumnInfo(name = "senha_hash")
     @SerializedName("senha_hash")
+    @PropertyName("senha_hash")
     val senhaHash: String? = null, // Hash da senha pessoal (para login offline)
     
     @PropertyName("primeiro_acesso")
@@ -126,6 +137,7 @@ data class Colaborador(
     
     @ColumnInfo(name = "email_acesso")
     @SerializedName("email_acesso")
+    @PropertyName("email_acesso")
     val emailAcesso: String? = null,
     
     @ColumnInfo(name = "observacoes")
@@ -135,14 +147,17 @@ data class Colaborador(
     // Datas
     @ColumnInfo(name = "data_cadastro")
     @SerializedName("data_cadastro")
+    @PropertyName("data_cadastro")
     val dataCadastro: Long = System.currentTimeMillis(),
     
     @ColumnInfo(name = "data_ultimo_acesso")
     @SerializedName("data_ultimo_acesso")
+    @PropertyName("data_ultimo_acesso")
     val dataUltimoAcesso: Long? = null,
     
     @ColumnInfo(name = "data_ultima_atualizacao")
     @SerializedName("data_ultima_atualizacao")
+    @PropertyName("data_ultima_atualizacao")
     val dataUltimaAtualizacao: Long = System.currentTimeMillis()
 ) : Serializable
 

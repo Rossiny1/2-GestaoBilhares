@@ -49,11 +49,12 @@ interface ColaboradorDao {
     @Query("UPDATE colaboradores SET aprovado = 1, data_aprovacao = :dataAprovacao, aprovado_por = :aprovadoPor, data_ultima_atualizacao = :dataAprovacao WHERE id = :colaboradorId")
     suspend fun aprovarColaborador(colaboradorId: Long, dataAprovacao: Long, aprovadoPor: String)
     
-    @Query("UPDATE colaboradores SET aprovado = 1, data_aprovacao = :dataAprovacao, aprovado_por = :aprovadoPor, email_acesso = :email, senha_temporaria = :senha, nivel_acesso = :nivelAcesso, observacoes = :observacoes, primeiro_acesso = 1, firebase_uid = :firebaseUid, data_ultima_atualizacao = :dataAprovacao WHERE id = :colaboradorId")
+    @Query("UPDATE colaboradores SET aprovado = 1, data_aprovacao = :dataAprovacao, aprovado_por = :aprovadoPor, email_acesso = :email, senha_temporaria = :senha, senha_hash = :senhaHash, nivel_acesso = :nivelAcesso, observacoes = :observacoes, primeiro_acesso = 1, firebase_uid = :firebaseUid, data_ultima_atualizacao = :dataAprovacao WHERE id = :colaboradorId")
     suspend fun aprovarColaboradorComCredenciais(
         colaboradorId: Long,
         email: String,
         senha: String,
+        senhaHash: String?, // ✅ NOVO: Hash para login offline
         nivelAcesso: NivelAcesso,
         observacoes: String,
         dataAprovacao: Long,

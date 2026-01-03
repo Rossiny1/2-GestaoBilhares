@@ -5,7 +5,7 @@ import com.example.gestaobilhares.ui.common.BaseViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.gestaobilhares.data.entities.*
 import com.example.gestaobilhares.data.repository.AppRepository
-// import com.example.gestaobilhares.core.utils.PasswordHasher // TODO: Classe removida
+import com.example.gestaobilhares.core.utils.PasswordHasher
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -417,15 +417,15 @@ class ColaboradorManagementViewModel @Inject constructor(
                 }
                 
                 // ✅ FASE 12.1: Hashear senha antes de armazenar (nunca texto plano)
-                // TODO: Implementar hash de senha (PasswordHasher removido)
-                val senhaHash = senha // TEMPORÁRIO: Usar senha sem hash até implementar
+                val senhaHashValue = PasswordHasher.hash(senha)
                 
                 // ✅ CORREÇÃO: Atualizar colaborador com credenciais e aprovação
                 // IMPORTANTE: Usar o email ORIGINAL do colaborador, não o emailAcesso sugerido
                 appRepository.aprovarColaboradorComCredenciais(
                     colaboradorId = colaboradorId,
                     email = emailParaFirebase, // ✅ CORREÇÃO: Usar email original, não emailAcesso
-                    senha = senhaHash, // ✅ SEGURANÇA: Armazenar hash, não texto plano
+                    senha = senha, // Senha temporária enviada como texto plano
+                    senhaHash = senhaHashValue, // ✅ SEGURANÇA: Armazenar hash para login offline
                     nivelAcesso = nivelAcesso,
                     observacoes = observacoes,
                     dataAprovacao = java.util.Date(),

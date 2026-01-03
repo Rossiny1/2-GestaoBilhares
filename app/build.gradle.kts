@@ -29,6 +29,9 @@ android {
         versionCode = 3
         versionName = "1.0.1"
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
+        
+        // ✅ OTIMIZAÇÃO: Limitar recursos apenas para português (acelera merge de recursos)
+        resConfigs("pt-rBR")
     }
     
     // ✅ ATUALIZADO: Configuração de testes com JaCoCo

@@ -206,30 +206,19 @@ class LoginFragment : Fragment() {
                             ).show()
                             uiState.exception?.printStackTrace()
                         }
+                        is LoginUiState.PrimeiroAcesso -> {
+                            // ✅ Redirecionar para tela de alteração de senha obrigatória
+                            Timber.d("LoginFragment", "🔐 [UI] Primeiro acesso detectado via LoginUiState. Navegando para ChangePasswordFragment...")
+                            findNavController().navigate(
+                                com.example.gestaobilhares.ui.R.id.action_loginFragment_to_changePasswordFragment
+                            )
+                        }
                     }
                 }
             }
         }
         
-        // ✅ Observar AuthState apenas para navegação (FirstAccessRequired)
-        viewLifecycleOwner.lifecycleScope.launch {
-            viewLifecycleOwner.repeatOnLifecycle(Lifecycle.State.STARTED) {
-                authViewModel.authState.collect { authState ->
-                    when (authState) {
-                        is AuthState.FirstAccessRequired -> {
-                            // ✅ Redirecionar para tela de alteração de senha obrigatória
-                            Timber.d("LoginFragment", "🔐 [UI] Primeiro acesso detectado. Navegando para ChangePasswordFragment...")
-                            findNavController().navigate(
-                                com.example.gestaobilhares.ui.R.id.action_loginFragment_to_changePasswordFragment
-                            )
-                        }
-                        else -> {
-                            // Outros estados são gerenciados por loginUiState
-                        }
-                    }
-                }
-            }
-        }
+
 
         // ✅ MODERNIZADO: Observa mensagens de erro com StateFlow
         viewLifecycleOwner.lifecycleScope.launch {
