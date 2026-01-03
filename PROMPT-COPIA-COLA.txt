@@ -1,0 +1,68 @@
+Olá! Preciso que você entenda o estado atual do repositório GitHub após uma organização completa. Aqui está o contexto:
+
+## SITUAÇÃO ATUAL DO REPOSITÓRIO
+
+### Estrutura de Branches:
+- **main** (NOVA - branch principal criada a partir de release/v1.0.0)
+- **release/v1.0.0** (mantida, tag v1.0.0 criada)
+- **fix/build-erros-windows-sync** (BRANCH DE TRABALHO ATIVA - onde estou trabalhando)
+- **cursor/apk-release-and-publish-480f** (também contém commits importantes)
+
+### Branches Deletadas:
+- fix/build-errors-windows-sync (versão antiga, deletada)
+
+## COMMITS IMPORTANTES
+
+### Commit 4d4476fe (CRÍTICO - base do trabalho atual):
+- Mensagem: "docs: documentar problema conhecido - aprovação User não sincroniza"
+- Arquivo: PROBLEMA-APROVACAO-USER.md
+- Localização: fix/build-erros-windows-sync (branch atual de trabalho)
+- Status: Este é o commit base para continuar o trabalho
+
+### Commit fdde0111:
+- Mensagem: "docs: documentar status completo do projeto"
+- Arquivo: STATUS-PROJETO.md
+- Localização: fix/build-erros-windows-sync
+
+## MUDANÇAS EXECUTADAS
+
+1. Branch main criada a partir de release/v1.0.0
+2. Tag v1.0.0 criada e enviada
+3. Branch duplicada fix/build-errors-windows-sync deletada
+4. Documentação criada (STATUS-PROJETO.md, PROBLEMA-APROVACAO-USER.md, etc.)
+
+## PROBLEMA CONHECIDO
+
+Aprovação de User funciona localmente mas NÃO sincroniza com Firestore
+- Status: PENDENTE DE CONSERTO
+- Documentado em: PROBLEMA-APROVACAO-USER.md
+- Commit: 4d4476fe
+- Branch: fix/build-erros-windows-sync
+
+## ONDE CONTINUAR TRABALHANDO
+
+Branch atual: fix/build-erros-windows-sync
+Commit base: 4d4476fe
+Próximo passo: Resolver problema de sincronização de aprovação de User
+
+## COMANDOS ÚTEIS
+
+git checkout fix/build-erros-windows-sync
+git log --oneline -10
+git show 4d4476fe
+
+## IMPORTANTE
+
+- Trabalhar APENAS em fix/build-erros-windows-sync (com "erros" no plural)
+- NÃO trabalhar em fix/build-errors-windows-sync (foi deletada)
+- O commit 4d4476fe é a base do trabalho atual
+- Após resolver o problema, fazer Pull Request para main
+
+## ESTRUTURA ATUAL
+
+main (nova branch principal)
+├── release/v1.0.0 (mantida)
+└── fix/build-erros-windows-sync (branch de trabalho atual)
+    └── 4d4476fe ← commit base para continuar
+
+Por favor, confirme que entendeu este contexto antes de continuar trabalhando.
