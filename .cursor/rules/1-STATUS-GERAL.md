@@ -2,7 +2,7 @@
 
 > **LEIA PRIMEIRO** - Este é o ponto de partida para entender o projeto.  
 > **Propósito**: Visão imediata do projeto, saúde técnica, setup e workflow de desenvolvimento.  
-> **Última Atualização**: 02 de Janeiro de 2026  
+> **Última Atualização**: Janeiro 2026 (Refatoração ColaboradorRepository)  
 > **Versão**: 1.0.1 (3) - Release em Produção  
 > **Status**: ✅ **EM PRODUÇÃO**
 
@@ -53,7 +53,7 @@ export FIREBASE_TOKEN="seu_token_aqui"
 
 ## 🛠️ STATUS DOS MÓDULOS
 1.  **`:sync`**: ✅ **ESTÁVEL**. Orchestrator e Handlers consolidados. CancellationException corrigido. Padronização de entidades concluída.
-2.  **`:data`**: ✅ **ESTÁVEL**. AppRepository em processo de delegação. Entidades protegidas com `@SerializedName` (174 campos padronizados).
+2.  **`:data`**: ✅ **ESTÁVEL**. AppRepository refatorado com delegação completa para repositories especializados. ColaboradorRepository, ColaboradorFirestoreRepository e ColaboradorAuthService implementados. Entidades protegidas com `@SerializedName` (174 campos padronizados). Testes unitários: 28 testes passando.
 3.  **`:ui`**: 🟡 **EM TRANSIÇÃO**. 0% Compose (51 Fragments + 27 Dialogs ainda em ViewBinding). Meta: 60% no Q2/2026.
 4.  **`:core`**: ✅ **ESTÁVEL**. Utilitários e segurança consolidados. `FinancialCalculator` com 100% de cobertura.
 
@@ -167,7 +167,7 @@ export FIREBASE_TOKEN="seu_token"
 ---
 ## 📦 PRÓXIMAS FASES (RESUMO)
 1. **Refatoração SyncRepository**: ⚠️ **CRÍTICO** - Ainda com 3644 linhas (meta: < 300). Bloqueia manutenibilidade.
-2. **Expansão de Testes**: ✅ Handlers críticos cobertos. Todos testes passando. 3 testes corrigidos recentemente (ConflictResolution, ComprehensiveSync).
+2. **Expansão de Testes**: ✅ Handlers críticos cobertos. Todos testes passando. 28 testes unitários para ColaboradorRepository e ColaboradorAuthService implementados e passando.
 3. **Migração Compose**: 🎯 Prioridade Q2/2026. 0% atual (51 Fragments + 27 Dialogs). Meta: 60% até Q2.
 4. **Monitoramento Crashlytics**: ✅ 4 erros corrigidos. Mapping.txt gerado no build release. Monitorar se erros pararam após deploy.
 

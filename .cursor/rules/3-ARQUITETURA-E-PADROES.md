@@ -2,7 +2,7 @@
 
 > **LEIA TERCEIRO** - Entenda a estrutura técnica e padrões antes de implementar.  
 > **Propósito**: Definição da estrutura técnica, padrões de código e modularização.  
-> **Última Atualização**: 02 de Janeiro de 2026  
+> **Última Atualização**: Janeiro 2026 (Refatoração ColaboradorRepository)  
 > **Versão**: 6.0 (Correções Crashlytics + Testes + Deploy Release)
 
 ---
@@ -11,7 +11,7 @@
 O projeto é dividido em 5 módulos Gradle para eficiência e isolamento:
 *   **`:app`**: Ponto de entrada e configuração global.
 *   **`:ui`**: Camada visual (Compose + ViewBinding) e ViewModels.
-*   **`:data`**: Persistência local (Room) e Repositories (MVVM).
+*   **`:data`**: Persistência local (Room) e Repositories (MVVM). ✅ **Refatorado**: AppRepository delega para repositories especializados (ColaboradorRepository, ColaboradorFirestoreRepository, ColaboradorAuthService).
 *   **`:sync`**: Motor de sincronização e handlers Firestore.
 *   **`:core`**: Lógica compartilhada, segurança e utilitários.
 
@@ -37,7 +37,8 @@ Para evitar arquivos massivos, o módulo `:sync` utiliza o padrão **Orchestrato
 *   **Financeiro**: Lógica centralizada em `FinancialCalculator` com 100% de cobertura.
 *   **Sincronização**: Cada `SyncHandler` possui testes unitários (`ComprehensiveSyncTest`, `ConflictResolutionTest`) validando pull, push, integridade relational e resolução de conflitos.
 *   **Repositórios**: `SyncRepositoryTest` valida a orquestração e filtros de rota.
-*   ✅ **Status**: Todos os testes unitários passando (corrigidos 3 testes recentemente).
+*   **Colaboradores**: `ColaboradorRepositoryTest` e `ColaboradorAuthServiceTest` cobrem criação, aprovação, sincronização e resolução de conflitos (28 testes passando).
+*   ✅ **Status**: Todos os testes unitários passando (28 testes para Colaborador implementados recentemente).
 
 ### Cobertura e Regressão
 *   **JaCoCo**: Configurado para medir cobertura em módulos críticos.
@@ -56,10 +57,39 @@ Para evitar arquivos massivos, o módulo `:sync` utiliza o padrão **Orchestrato
 
 ---
 
+## 🏗️ REPOSITORIES ESPECIALIZADOS (Padrão de Delegação)
+
+### Arquitetura de Repositories
+O `AppRepository` atua como **Facade** delegando para repositories especializados:
+
+#### Colaborador (✅ Refatorado - Janeiro 2026)
+*   **`ColaboradorRepository`**: Operações locais (Room) - busca, inserção, atualização, criação de pendentes.
+*   **`ColaboradorFirestoreRepository`**: Operações Firestore - busca por UID, criação, atualização de status de aprovação, sincronização completa.
+*   **`ColaboradorAuthService`**: Coordena o fluxo de autenticação - processa colaborador durante login, preserva status de aprovação, resolve conflitos (local vs Firestore).
+
+**Benefícios**:
+- ✅ Lógica de aprovação centralizada e testável
+- ✅ Preservação automática de status de aprovação durante login
+- ✅ Resolução de conflitos entre local e Firestore
+- ✅ 28 testes unitários cobrindo cenários críticos
+
+#### Outros Repositories Especializados
+*   **`ClienteRepository`**: Operações de clientes (local)
+*   **`AcertoRepository`**: Operações de acertos (local)
+*   **`RotaRepository`**: Operações de rotas (local)
+*   **`DespesaRepository`**: Operações de despesas (local)
+*   **`MesaRepository`**: Operações de mesas (local)
+*   **`CicloRepository`**: Operações de ciclos (local)
+*   **`MetaRepository`**: Operações de metas (local)
+*   **`VeiculoRepository`**: Operações de veículos (local)
+*   **`ContratoRepository`**: Operações de contratos (local)
+*   **`PanoRepository`**: Operações de panos (local)
+
 ## 🧹 BOAS PRÁTICAS
 1.  **Imutabilidade**: Usar `data class` com `val` sempre que possível.
 2.  **Timber**: Usar `Timber.tag(TAG).d()` para debug e `Timber.e()` para erros.
 3.  **Encapsulamento**: DAOs e RemoteDataSources nunca devem ser expostos fora do módulo `:data`.
+4.  **Delegação**: Novos métodos devem ser implementados em repositories especializados, não diretamente no `AppRepository`.
 
 ## 🛠️ FERRAMENTAS DE DESENVOLVIMENTO
 
