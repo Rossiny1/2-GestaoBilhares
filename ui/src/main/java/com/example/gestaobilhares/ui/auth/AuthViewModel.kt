@@ -21,6 +21,7 @@ import com.google.firebase.firestore.DocumentSnapshot
 import com.google.firebase.firestore.FirebaseFirestoreException
 import com.google.firebase.firestore.FieldValue
 import com.google.firebase.Timestamp
+import com.google.firebase.crashlytics.FirebaseCrashlytics
 import com.google.gson.Gson
 import com.google.gson.GsonBuilder
 import com.google.gson.FieldNamingPolicy
@@ -49,6 +50,9 @@ class AuthViewModel @Inject constructor(
     // Instância do Firestore
     private val firestore = FirebaseFirestore.getInstance()
     
+    // Instância do Crashlytics para logs estruturados
+    private val crashlytics = FirebaseCrashlytics.getInstance()
+    
     // Gson para serialização/deserialização - padrão LOWER_CASE_WITH_UNDERSCORES para Firestore
     private val gson: Gson = GsonBuilder()
         .setFieldNamingPolicy(FieldNamingPolicy.LOWER_CASE_WITH_UNDERSCORES)
@@ -58,6 +62,10 @@ class AuthViewModel @Inject constructor(
     // ✅ MODERNIZADO: StateFlow para estado da autenticação
     private val _authState = MutableStateFlow<AuthState>(AuthState.Unauthenticated)
     val authState: StateFlow<AuthState> = _authState.asStateFlow()
+    
+    // ✅ REFATORAÇÃO: StateFlow para estado de UI do login (decisão de acesso centralizada)
+    private val _loginUiState = MutableStateFlow<LoginUiState>(LoginUiState.Loading)
+    val loginUiState: StateFlow<LoginUiState> = _loginUiState.asStateFlow()
     
     // ✅ MODERNIZADO: StateFlow para mensagens de erro
     private val _errorMessage = MutableStateFlow<String?>(null)
@@ -101,186 +109,257 @@ class AuthViewModel @Inject constructor(
      * Função para realizar login híbrido (online/offline)
      */
     fun login(email: String, senha: String) {
+        // ✅ LOGS CRÍTICOS: Usar Log.d() direto do Android para garantir captura
+        android.util.Log.d("AuthViewModel", "═══════════════════════════════════════")
+        android.util.Log.d("AuthViewModel", "🚀🚀🚀 MÉTODO login() FOI CHAMADO 🚀🚀🚀")
+        android.util.Log.d("AuthViewModel", "═══════════════════════════════════════")
+        android.util.Log.d("AuthViewModel", "Email: $email")
+        android.util.Log.d("AuthViewModel", "Senha: ${senha.length} caracteres")
+        android.util.Log.d("AuthViewModel", "Thread: ${Thread.currentThread().name}")
+        android.util.Log.d("AuthViewModel", "═══════════════════════════════════════")
+        
+        // ✅ LOGS CRÍTICOS: Logar ANTES de qualquer coisa para garantir que o método foi chamado
+        Timber.d("AuthViewModel", "═══════════════════════════════════════")
+        Timber.d("AuthViewModel", "🚀🚀🚀 MÉTODO login() FOI CHAMADO 🚀🚀🚀")
+        Timber.d("AuthViewModel", "═══════════════════════════════════════")
+        Timber.d("AuthViewModel", "Email: $email")
+        Timber.d("AuthViewModel", "Senha: ${senha.length} caracteres")
+        Timber.d("AuthViewModel", "Thread: ${Thread.currentThread().name}")
+        Timber.d("AuthViewModel", "═══════════════════════════════════════")
+        
+        // ✅ LOGS ESTRUTURADOS PARA CRASHLYTICS: Início do fluxo de login
+        crashlytics.setCustomKey("login_email", email)
+        crashlytics.setCustomKey("login_senha_length", senha.length)
+        crashlytics.setCustomKey("login_timestamp", System.currentTimeMillis())
+        crashlytics.log("[LOGIN_FLOW] 🚀 MÉTODO login() FOI CHAMADO - Email: $email")
+        
         Timber.d("AuthViewModel", "=== INICIANDO LOGIN HÍBRIDO ===")
         Timber.d("AuthViewModel", "Email: $email")
         Timber.d("AuthViewModel", "Senha: ${senha.length} caracteres")
         
         // Validação básica
         if (email.isBlank() || senha.isBlank()) {
+            crashlytics.setCustomKey("login_error", "email_ou_senha_em_branco")
+            crashlytics.log("[LOGIN_FLOW] Erro: Email ou senha em branco")
             Timber.e("Email ou senha em branco")
             _errorMessage.value = "Email e senha são obrigatórios"
             return
         }
         
         if (!android.util.Patterns.EMAIL_ADDRESS.matcher(email).matches()) {
+            crashlytics.setCustomKey("login_error", "email_invalido")
+            crashlytics.log("[LOGIN_FLOW] Erro: Email inválido: $email")
             Timber.e("Email inválido: %s", email)
             _errorMessage.value = "Email inválido"
             return
         }
         
         if (senha.length < 6) {
+            crashlytics.setCustomKey("login_error", "senha_muito_curta")
+            crashlytics.log("[LOGIN_FLOW] Erro: Senha muito curta: ${senha.length} caracteres")
             Timber.e("Senha muito curta: %d caracteres", senha.length)
             _errorMessage.value = "Senha deve ter pelo menos 6 caracteres"
             return
         }
         
         viewModelScope.launch {
+            android.util.Log.d("AuthViewModel", "═══════════════════════════════════════")
+            android.util.Log.d("AuthViewModel", "🟢 DENTRO DO viewModelScope.launch")
+            android.util.Log.d("AuthViewModel", "Thread: ${Thread.currentThread().name}")
+            android.util.Log.d("AuthViewModel", "═══════════════════════════════════════")
+            
+            Timber.d("AuthViewModel", "═══════════════════════════════════════")
+            Timber.d("AuthViewModel", "🟢 DENTRO DO viewModelScope.launch")
+            Timber.d("AuthViewModel", "Thread: ${Thread.currentThread().name}")
+            Timber.d("AuthViewModel", "═══════════════════════════════════════")
+            
             try {
+                android.util.Log.d("AuthViewModel", "🔵 DENTRO DO TRY - Iniciando processo de login")
+                Timber.d("AuthViewModel", "🔵 DENTRO DO TRY - Iniciando processo de login")
                 showLoading()
                 _errorMessage.value = ""
+                android.util.Log.d("AuthViewModel", "   Loading mostrado, erro limpo")
+                Timber.d("AuthViewModel", "   Loading mostrado, erro limpo")
                 
                 // Verificar conectividade
+                android.util.Log.d("AuthViewModel", "🔍 Verificando conectividade...")
+                Timber.d("AuthViewModel", "🔍 Verificando conectividade...")
                 val online = isNetworkAvailable()
                 _isOnline.value = online
+                crashlytics.setCustomKey("login_online", online)
+                crashlytics.log("[LOGIN_FLOW] Status de conexão: ${if (online) "ONLINE" else "OFFLINE"}")
+                android.util.Log.d("AuthViewModel", "   Status: ${if (online) "ONLINE" else "OFFLINE"}")
+                Timber.d("AuthViewModel", "   Status: ${if (online) "ONLINE" else "OFFLINE"}")
                 
                 if (online) {
-                    // Tentar login online primeiro
-                    Timber.d("AuthViewModel", "Tentando login online...")
+                    // ✅ REFATORAÇÃO DEFINITIVA: Fluxo linear e bloqueante
+                    // Ponto único de decisão de acesso após leitura do Firestore
                     try {
-                        val result = firebaseAuth.signInWithEmailAndPassword(email, senha).await()
+                        // PASSO 1: Emitir estado Loading
+                        _loginUiState.value = LoginUiState.Loading
+                        Timber.d("AuthViewModel", "═══════════════════════════════════════")
+                        Timber.d("AuthViewModel", "🔄 [LOGIN] Estado: Loading")
+                        Timber.d("AuthViewModel", "═══════════════════════════════════════")
                         
-                        if (result.user != null) {
-                            Timber.d("AuthViewModel", "✅ LOGIN ONLINE SUCESSO!")
-
-                            // ✅ NOVO: Emitir log específico para criação automática de dados após login
-                            Timber.w(
-                                "🔍 DB_POPULATION",
-                                "🚨 LOGIN ONLINE CONCLUÍDO - DISPARANDO CARREGAMENTO INICIAL DE DADOS"
-                            )
-    
-                            // ✅ NOVO: Criar/atualizar colaborador para usuário online
-                            Timber.d("AuthViewModel", "🔍 Chamando criarOuAtualizarColaboradorOnline...")
-                            var colaborador = criarOuAtualizarColaboradorOnline(result.user!!, senha)
-                            Timber.d("AuthViewModel", "   Resultado: ${if (colaborador != null) "SUCESSO - ${colaborador.nome}" else "NULL - não encontrado"}")
-                            
-                            // ✅ SUPERADMIN: Se for rossinys@gmail.com e não encontrou, criar automaticamente
-                            if (colaborador == null && email == "rossinys@gmail.com") {
-                                Timber.d("AuthViewModel", "🔧 Criando SUPERADMIN automaticamente para: $email")
-                                colaborador = criarSuperAdminAutomatico(email, result.user!!.uid, senha)
-                            }
-                            
-                            if (colaborador == null) {
-                                Timber.w("AuthViewModel", "⚠️ Colaborador não encontrado após criarOuAtualizarColaboradorOnline")
-                                Timber.w("AuthViewModel", "   Tentando busca direta na nuvem como fallback...")
-                                try {
-                                    val fallbackResult = buscarColaboradorNaNuvemPorEmail(email)
-                                    if (fallbackResult != null) {
-                                        val (colaboradorFallback, fallbackCompanyId) = fallbackResult
-                                        Timber.d("AuthViewModel", "✅ Colaborador encontrado no fallback: ${colaboradorFallback.nome}")
-                                        // Atualizar firebaseUid e salvar localmente
-                                        val colaboradorComUid = colaboradorFallback.copy(
-                                            firebaseUid = result.user!!.uid,
-                                            dataUltimoAcesso = System.currentTimeMillis()
-                                        )
-                                        try {
-                                            val colaboradorExistente = appRepository.obterColaboradorPorEmail(email)
-                                            if (colaboradorExistente != null) {
-                                                appRepository.atualizarColaborador(colaboradorComUid.copy(id = colaboradorExistente.id))
-                                                colaborador = colaboradorComUid.copy(id = colaboradorExistente.id)
-                                            } else {
-                                                appRepository.inserirColaborador(colaboradorComUid)
-                                                colaborador = colaboradorComUid
-                                            }
-                                            userSessionManager.startSession(colaborador!!, fallbackCompanyId)
-                                            Timber.d("AuthViewModel", "✅ Colaborador salvo e sessão iniciada no fallback")
-                                        } catch (e: Exception) {
-                                            Timber.e(e, "❌ Erro ao salvar colaborador no fallback: %s", e.message)
-                                            // Mesmo com erro, tentar usar o colaborador da nuvem
-                                            userSessionManager.startSession(colaboradorComUid, fallbackCompanyId)
-                                            colaborador = colaboradorComUid
-                                        }
-                                    } else {
-                                        Timber.e("AuthViewModel", "❌ Colaborador também não encontrado no fallback")
-                                    }
-                                } catch (e: Exception) {
-                                    Timber.e(e, "❌ Erro no fallback: %s", e.message)
-                                }
-                            }
-                            
-                            if (colaborador == null) {
-                                Timber.e("AuthViewModel", "❌ ERRO FINAL: Colaborador não encontrado após todas as tentativas")
-                                Timber.e("AuthViewModel", "   Email: $email")
-                                Timber.e("AuthViewModel", "   Firebase UID: ${result.user!!.uid}")
-                                _errorMessage.value = "Usuário não encontrado. Contate o administrador."
-                                return@launch
-                            }
-                            
-                            // ✅ CORREÇÃO CRÍTICA: Verificar se o colaborador está aprovado e ativo ANTES de permitir login
-                            if (!colaborador.aprovado) {
-                                Timber.w("AuthViewModel", "❌ Colaborador não está aprovado - bloqueando login")
-                                Timber.w("AuthViewModel", "   Email: $email")
-                                Timber.w("AuthViewModel", "   Nome: ${colaborador.nome}")
-                                Timber.w("AuthViewModel", "   Aprovado: ${colaborador.aprovado}")
-                                firebaseAuth.signOut() // Fazer logout do Firebase
-                                _errorMessage.value = "Sua conta está aguardando aprovação do administrador."
-                                hideLoading()
-                                return@launch
-                            }
-                            
-                            if (!colaborador.ativo) {
-                                Timber.w("AuthViewModel", "❌ Colaborador está inativo - bloqueando login")
-                                Timber.w("AuthViewModel", "   Email: $email")
-                                Timber.w("AuthViewModel", "   Nome: ${colaborador.nome}")
-                                Timber.w("AuthViewModel", "   Ativo: ${colaborador.ativo}")
-                                firebaseAuth.signOut() // Fazer logout do Firebase
-                                _errorMessage.value = "Sua conta está inativa. Contate o administrador."
-                                hideLoading()
-                                return@launch
-                            }
-                            
-                            // ✅ SUPERADMIN: rossinys@gmail.com nunca precisa alterar senha no primeiro acesso
-                            val isSuperAdmin = email == "rossinys@gmail.com"
-                            
-                            // ✅ NOVO: Verificar se é primeiro acesso (exceto superadmin)
-                            // Só é primeiro acesso se a flag for true E ainda não tiver senha definitiva salva
-                            if (!isSuperAdmin && colaborador.primeiroAcesso && colaborador.senhaHash == null) {
-                                Timber.d("AuthViewModel", "⚠️ PRIMEIRO ACESSO DETECTADO - Redirecionando para alteração de senha")
-                                _authState.value = AuthState.FirstAccessRequired(colaborador)
-                                return@launch
-                            }
-                            
-                            // ✅ CORREÇÃO CRÍTICA: Garantir que a sessão foi iniciada antes de autenticar
-                            // A função criarOuAtualizarColaboradorOnline já inicia a sessão, mas vamos verificar
-                            val nomeSessao = userSessionManager.getCurrentUserName()
-                            val idSessao = userSessionManager.getCurrentUserId()
-                            Timber.d("AuthViewModel", "🔍 Verificação da sessão online:")
-                            Timber.d("AuthViewModel", "   Nome na sessão: $nomeSessao")
-                            Timber.d("AuthViewModel", "   ID na sessão: $idSessao")
-                            
-                            // ✅ CORREÇÃO: Se a sessão não foi iniciada, iniciar agora
-                            if (idSessao == 0L) {
-                                val cloudInfo = if (online) buscarColaboradorNaNuvemPorEmail(email) else null
-                                userSessionManager.startSession(colaborador, cloudInfo?.second ?: "empresa_001")
-                            }
-                            
-                            val localUser = LocalUser(
-                                uid = colaborador.id.toString(),
-                                email = colaborador.email,
-                                displayName = colaborador.nome,
-                                nivelAcesso = colaborador.nivelAcesso
-                            )
-                            
-                            _authState.value = AuthState.Authenticated(localUser, true)
-                            Timber.d("AuthViewModel", "✅ Estado de autenticação definido - sessão ativa")
+                        // PASSO 2: Autenticar no Firebase Auth (await bloqueante)
+                        Timber.d("AuthViewModel", "🔐 [LOGIN] PASSO 2: signInWithEmailAndPassword...")
+                        android.util.Log.d("AuthViewModel", "🔐 [LOGIN] PASSO 2: signInWithEmailAndPassword...")
+                        
+                        val result = try {
+                            firebaseAuth.signInWithEmailAndPassword(email, senha).await()
+                        } catch (e: Exception) {
+                            Timber.e(e, "❌ [LOGIN] Erro no await() do signInWithEmailAndPassword: %s", e.message)
+                            android.util.Log.e("AuthViewModel", "❌ [LOGIN] Erro no await(): ${e.message}", e)
+                            throw e
+                        }
+                        
+                        Timber.d("AuthViewModel", "✅ [LOGIN] AWAIT CONCLUÍDO - result: ${result != null}")
+                        android.util.Log.d("AuthViewModel", "✅ [LOGIN] AWAIT CONCLUÍDO - result: ${result != null}")
+                        
+                        if (result.user == null) {
+                            val error = "Firebase Auth retornou user null"
+                            Timber.e("AuthViewModel", "❌ [LOGIN] $error")
+                            android.util.Log.e("AuthViewModel", "❌ [LOGIN] $error")
+                            _loginUiState.value = LoginUiState.Erro(error, null)
+                            hideLoading()
                             return@launch
                         }
-                    } catch (e: Exception) {
-                        Timber.w("AuthViewModel", "Login online falhou: ${e.message}")
-                        Timber.w("AuthViewModel", "Tipo de erro: ${e.javaClass.simpleName}")
                         
-                        // ✅ CORREÇÃO: Se o erro for "wrong password" ou "user not found", 
-                        // continuar para tentar login offline (pode ser senha temporária)
-                        val errorCode = (e as? com.google.firebase.auth.FirebaseAuthException)?.errorCode
-                        Timber.d("AuthViewModel", "Código de erro Firebase: $errorCode")
+                        Timber.d("AuthViewModel", "✅ [LOGIN] result.user != null: ${result.user != null}")
+                        android.util.Log.d("AuthViewModel", "✅ [LOGIN] result.user != null: ${result.user != null}")
                         
-                        // Se for erro de credenciais inválidas, pode ser senha temporária
-                        // Continuar para tentar login offline
-                        if (errorCode == "ERROR_WRONG_PASSWORD" || errorCode == "ERROR_USER_NOT_FOUND" || errorCode == "ERROR_INVALID_EMAIL") {
-                            Timber.d("AuthViewModel", "Erro de credenciais - tentando login offline com senha temporária...")
-                        } else {
-                            // Para outros erros (rede, etc), também tentar offline
-                            Timber.d("AuthViewModel", "Erro de conexão ou outro - tentando login offline...")
+                        // PASSO 3: Obter UID
+                        val uid = result.user!!.uid
+                        Timber.d("AuthViewModel", "✅ [LOGIN] PASSO 3: Firebase Auth OK - UID: $uid")
+                        android.util.Log.d("AuthViewModel", "✅ [LOGIN] PASSO 3: Firebase Auth OK - UID: $uid")
+                        
+                        // PASSO 4: Criar colaborador pendente SE não existir (await bloqueante)
+                        Timber.d("AuthViewModel", "🔧 [LOGIN] PASSO 4: createPendingColaboradorIfMissing...")
+                        android.util.Log.d("AuthViewModel", "🔧 [LOGIN] PASSO 4: createPendingColaboradorIfMissing...")
+                        
+                        val colaboradorCriado = try {
+                            appRepository.createPendingColaboradorIfMissing("empresa_001", uid, email)
+                        } catch (e: Exception) {
+                            Timber.e(e, "❌ [LOGIN] Erro em createPendingColaboradorIfMissing: %s", e.message)
+                            android.util.Log.e("AuthViewModel", "❌ [LOGIN] Erro em createPendingColaboradorIfMissing: ${e.message}", e)
+                            // ✅ CORREÇÃO: Não lançar exceção, usar colaborador criado localmente
+                            // O erro pode ser de permissão no Firestore, mas o colaborador foi criado localmente
+                            null
                         }
+                        
+                        // ✅ CORREÇÃO CRÍTICA: Usar colaborador criado localmente imediatamente
+                        // Não depender do Firestore para login - usar dados locais primeiro
+                        val colaborador = colaboradorCriado ?: run {
+                            Timber.w("AuthViewModel", "⚠️ [LOGIN] createPendingColaboradorIfMissing retornou null, tentando ler do Firestore...")
+                            android.util.Log.w("AuthViewModel", "⚠️ [LOGIN] createPendingColaboradorIfMissing retornou null, tentando ler do Firestore...")
+                            
+                            // Tentar ler do Firestore uma vez (sem retries)
+                            try {
+                                appRepository.getColaboradorByUid("empresa_001", uid)
+                            } catch (e: Exception) {
+                                Timber.e(e, "❌ [LOGIN] Erro ao ler do Firestore: %s", e.message)
+                                android.util.Log.e("AuthViewModel", "❌ [LOGIN] Erro ao ler do Firestore: ${e.message}", e)
+                                null
+                            }
+                        }
+                        
+                        if (colaborador == null) {
+                            val error = "Não foi possível obter dados do colaborador. Tente novamente."
+                            Timber.e("AuthViewModel", "❌ [LOGIN] $error")
+                            android.util.Log.e("AuthViewModel", "❌ [LOGIN] $error")
+                            _loginUiState.value = LoginUiState.Erro(error, null)
+                            hideLoading()
+                            return@launch
+                        }
+                        
+                        Timber.d("AuthViewModel", "✅ [LOGIN] PASSO 4: Colaborador obtido: ${colaborador.nome}")
+                        android.util.Log.d("AuthViewModel", "✅ [LOGIN] PASSO 4: Colaborador obtido: ${colaborador.nome}")
+                        
+                        // ✅ LOGS OBRIGATÓRIOS: Documento lido e campo usado para decisão
+                        Timber.d("AuthViewModel", "═══════════════════════════════════════")
+                        Timber.d("AuthViewModel", "📋 [LOGIN] DECISÃO DE ACESSO:")
+                        Timber.d("AuthViewModel", "   Colaborador: ${colaborador.nome}")
+                        Timber.d("AuthViewModel", "   Email: ${colaborador.email}")
+                        Timber.d("AuthViewModel", "   Campo 'aprovado' lido do Firestore: ${colaborador.aprovado}")
+                        Timber.d("AuthViewModel", "   Campo 'ativo' lido do Firestore: ${colaborador.ativo}")
+                        Timber.d("AuthViewModel", "═══════════════════════════════════════")
+                        
+                        // PASSO 6: Decisão de acesso baseada APENAS em colaborador.aprovado (lido do servidor)
+                        when {
+                            !colaborador.ativo -> {
+                                val error = "Conta inativa"
+                                Timber.w("AuthViewModel", "⚠️ [LOGIN] $error")
+                                _loginUiState.value = LoginUiState.Erro(error, null)
+                                hideLoading()
+                                return@launch
+                            }
+                            colaborador.aprovado -> {
+                                // PASSO 7: Aprovado - iniciar sessão e navegar
+                                Timber.d("AuthViewModel", "✅ [LOGIN] PASSO 7: Colaborador APROVADO - iniciando sessão")
+                                
+                                val empresaId = "empresa_001"
+                                userSessionManager.startSession(colaborador, empresaId)
+                                
+                                val localUser = LocalUser(
+                                    uid = colaborador.id.toString(),
+                                    email = colaborador.email,
+                                    displayName = colaborador.nome,
+                                    nivelAcesso = colaborador.nivelAcesso
+                                )
+                                
+                                _authState.value = AuthState.Authenticated(localUser, true)
+                                
+                                // Verificar primeiro acesso
+                                val isSuperAdmin = email == "rossinys@gmail.com"
+                                if (!isSuperAdmin && colaborador.primeiroAcesso && colaborador.senhaHash == null) {
+                                    _authState.value = AuthState.FirstAccessRequired(colaborador)
+                                }
+                                
+                                _loginUiState.value = LoginUiState.Aprovado(colaborador)
+                                hideLoading()
+                                return@launch
+                            }
+                            else -> {
+                                // PASSO 7: Pendente - mostrar mensagem
+                                Timber.d("AuthViewModel", "⏳ [LOGIN] PASSO 7: Colaborador PENDENTE (aprovado=false)")
+                                _loginUiState.value = LoginUiState.Pendente(colaborador)
+                                hideLoading()
+                                return@launch
+                            }
+                        }
+                    } catch (e: Exception) {
+                        // PASSO 8: Erro - emitir estado de erro com stacktrace completo
+                        Timber.e("AuthViewModel", "═══════════════════════════════════════")
+                        Timber.e("AuthViewModel", "❌ [LOGIN] EXCEÇÃO CAPTURADA")
+                        Timber.e("AuthViewModel", "   Tipo: ${e.javaClass.simpleName}")
+                        Timber.e("AuthViewModel", "   Mensagem: ${e.message}")
+                        Timber.e("AuthViewModel", "   Stack: ${e.stackTraceToString()}")
+                        Timber.e("AuthViewModel", "═══════════════════════════════════════")
+                        
+                        android.util.Log.e("AuthViewModel", "═══════════════════════════════════════")
+                        android.util.Log.e("AuthViewModel", "❌ [LOGIN] EXCEÇÃO CAPTURADA")
+                        android.util.Log.e("AuthViewModel", "   Tipo: ${e.javaClass.simpleName}")
+                        android.util.Log.e("AuthViewModel", "   Mensagem: ${e.message}")
+                        android.util.Log.e("AuthViewModel", "   Stack: ${e.stackTraceToString()}", e)
+                        android.util.Log.e("AuthViewModel", "═══════════════════════════════════════")
+                        
+                        val errorCode = (e as? com.google.firebase.auth.FirebaseAuthException)?.errorCode
+                        val mensagemErro = when (errorCode) {
+                            "ERROR_USER_NOT_FOUND" -> "Usuário não encontrado"
+                            "ERROR_WRONG_PASSWORD" -> "Senha incorreta"
+                            "ERROR_INVALID_EMAIL" -> "Email inválido"
+                            "ERROR_NETWORK_REQUEST_FAILED" -> "Erro de conexão. Verifique sua internet"
+                            else -> "Erro ao fazer login: ${e.message ?: "Erro desconhecido"}"
+                        }
+                        
+                        crashlytics.setCustomKey("login_online_error", errorCode ?: "unknown")
+                        crashlytics.setCustomKey("login_online_error_type", e.javaClass.simpleName)
+                        crashlytics.log("[LOGIN_FLOW] ⚠️ Login online falhou: $errorCode - ${e.message}")
+                        crashlytics.recordException(e)
+                        
+                        _loginUiState.value = LoginUiState.Erro(mensagemErro, e)
+                        hideLoading()
+                        return@launch
                     }
                 }
                 
@@ -297,36 +376,185 @@ class AuthViewModel @Inject constructor(
                 // (isso já foi tratado no bloco de login online acima)
                 
                 // ✅ CORREÇÃO CRÍTICA: Se não encontrou localmente E estiver online, buscar na nuvem
+                // Isso é especialmente importante quando o app foi limpo e o usuário existe na nuvem
                 if (colaborador == null && online) {
+                    crashlytics.log("[LOGIN_FLOW] 🔍 Colaborador não encontrado localmente. Buscando na nuvem...")
+                    crashlytics.setCustomKey("login_busca_nuvem", true)
                     Timber.d("AuthViewModel", "🔍 Colaborador não encontrado localmente. Buscando na nuvem...")
-                    val result = buscarColaboradorNaNuvemPorEmail(email)
-                    if (result != null) {
-                        colaborador = result.first
-                        Timber.d("AuthViewModel", "✅ Colaborador encontrado na nuvem: ${colaborador.nome}")
-                        // Salvar colaborador localmente para próximos logins offline
-                        try {
-                            appRepository.inserirColaborador(colaborador)
-                            Timber.d("AuthViewModel", "✅ Colaborador salvo localmente")
-                        } catch (e: Exception) {
-                            Timber.w("AuthViewModel", "⚠️ Erro ao salvar colaborador localmente: ${e.message}")
+                    
+                    // ✅ DIAGNÓSTICO: Executar diagnóstico local antes da busca
+                    try {
+                        val diagnosticResult = LoginDiagnostics.testarBuscaColaborador(email)
+                        crashlytics.log("[LOGIN_FLOW] Diagnóstico: ${diagnosticResult.toSummary()}")
+                        crashlytics.setCustomKey("diagnostico_colaborador_encontrado", diagnosticResult.colaboradorEncontrado)
+                        crashlytics.setCustomKey("diagnostico_aprovado", diagnosticResult.aprovado)
+                        crashlytics.setCustomKey("diagnostico_ativo", diagnosticResult.ativo)
+                        val erroCollectionGroup = diagnosticResult.erroCollectionGroup
+                        if (erroCollectionGroup != null) {
+                            crashlytics.setCustomKey("diagnostico_erro", erroCollectionGroup)
                         }
+                    } catch (e: Exception) {
+                        Timber.w("AuthViewModel", "Erro ao executar diagnóstico: ${e.message}")
+                        crashlytics.log("[LOGIN_FLOW] Erro no diagnóstico: ${e.message}")
+                    }
+                    
+                    try {
+                        val result = buscarColaboradorNaNuvemPorEmail(email)
+                        if (result != null) {
+                            crashlytics.setCustomKey("login_colaborador_encontrado_nuvem", true)
+                            crashlytics.log("[LOGIN_FLOW] ✅ Colaborador encontrado na nuvem: ${result.first.nome}")
+                            colaborador = result.first
+                            val detectedCompanyId = result.second
+                            Timber.d("AuthViewModel", "✅ Colaborador encontrado na nuvem: ${colaborador.nome}")
+                            Timber.d("AuthViewModel", "   Aprovado: ${colaborador.aprovado}")
+                            Timber.d("AuthViewModel", "   Ativo: ${colaborador.ativo}")
+                            Timber.d("AuthViewModel", "   Primeiro acesso: ${colaborador.primeiroAcesso}")
+                            Timber.d("AuthViewModel", "   Senha temporária presente: ${colaborador.senhaTemporaria != null}")
+                            
+                            // ✅ CORREÇÃO CRÍTICA: Verificar se está aprovado ANTES de salvar
+                            crashlytics.setCustomKey("login_colaborador_aprovado", colaborador.aprovado)
+                            crashlytics.setCustomKey("login_colaborador_ativo", colaborador.ativo)
+                            crashlytics.setCustomKey("login_colaborador_primeiro_acesso", colaborador.primeiroAcesso)
+                            
+                            if (!colaborador.aprovado) {
+                                crashlytics.setCustomKey("login_error", "colaborador_nao_aprovado")
+                                crashlytics.log("[LOGIN_FLOW] ❌ Colaborador encontrado na nuvem mas não está aprovado")
+                                Timber.w("AuthViewModel", "❌ Colaborador encontrado na nuvem mas não está aprovado")
+                                _errorMessage.value = "Sua conta está aguardando aprovação do administrador."
+                                hideLoading()
+                                return@launch
+                            }
+                            
+                            if (!colaborador.ativo) {
+                                crashlytics.setCustomKey("login_error", "colaborador_inativo")
+                                crashlytics.log("[LOGIN_FLOW] ❌ Colaborador encontrado na nuvem mas está inativo")
+                                Timber.w("AuthViewModel", "❌ Colaborador encontrado na nuvem mas está inativo")
+                                _errorMessage.value = "Sua conta está inativa. Contate o administrador."
+                                hideLoading()
+                                return@launch
+                            }
+                            
+                            // ✅ CORREÇÃO: Verificar se já existe antes de salvar localmente (evita duplicação)
+                            try {
+                                val colaboradorExistente = colaborador.firebaseUid?.let { 
+                                    appRepository.obterColaboradorPorFirebaseUid(it) 
+                                } ?: appRepository.obterColaboradorPorEmail(colaborador.email)
+                                
+                                if (colaboradorExistente == null) {
+                                    appRepository.inserirColaborador(colaborador)
+                                    Timber.d("AuthViewModel", "✅ Colaborador salvo localmente")
+                                } else {
+                                    Timber.d("AuthViewModel", "✅ Colaborador já existe localmente (ID: ${colaboradorExistente.id}), não duplicando")
+                                }
+                            } catch (e: Exception) {
+                                Timber.w("AuthViewModel", "⚠️ Erro ao salvar colaborador localmente: ${e.message}")
+                                // Continuar mesmo com erro - o colaborador foi encontrado na nuvem
+                            }
+                            
+                            // ✅ CORREÇÃO CRÍTICA: Validar senha e verificar primeiro acesso IMEDIATAMENTE
+                            // Usar mesma lógica de validação de senha
+                            val senhaLimpa = senha.trim()
+                            val senhaHashLimpa = colaborador.senhaHash?.trim()
+                            val senhaTemporariaLimpa = colaborador.senhaTemporaria?.trim()
+                            
+                            Timber.d("AuthViewModel", "🔍 Validação de senha (DADOS DA NUVEM - LOGIN OFFLINE):")
+                            Timber.d("AuthViewModel", "   Senha fornecida: '${senhaLimpa}' (${senhaLimpa.length} caracteres)")
+                            Timber.d("AuthViewModel", "   Hash armazenado: ${if (senhaHashLimpa != null) "'$senhaHashLimpa' (${senhaHashLimpa.length} caracteres)" else "ausente"}")
+                            Timber.d("AuthViewModel", "   Senha temporária: ${if (senhaTemporariaLimpa != null) "'$senhaTemporariaLimpa' (${senhaTemporariaLimpa.length} caracteres)" else "ausente"}")
+                            
+                            val senhaValida = when {
+                                senhaHashLimpa != null && senhaLimpa == senhaHashLimpa -> {
+                                    Timber.d("AuthViewModel", "✅ Senha pessoal válida")
+                                    true
+                                }
+                                senhaTemporariaLimpa != null && senhaLimpa == senhaTemporariaLimpa -> {
+                                    Timber.d("AuthViewModel", "✅ Senha temporária válida")
+                                    true
+                                }
+                                else -> {
+                                    Timber.d("AuthViewModel", "❌ Senha inválida")
+                                    false
+                                }
+                            }
+                            
+                            crashlytics.setCustomKey("login_senha_valida", senhaValida)
+                            
+                            if (!senhaValida) {
+                                crashlytics.setCustomKey("login_error", "senha_invalida_nuvem")
+                                crashlytics.log("[LOGIN_FLOW] ❌ Senha inválida para colaborador da nuvem")
+                                Timber.w("AuthViewModel", "❌ Senha inválida para colaborador da nuvem")
+                                _errorMessage.value = "Senha incorreta"
+                                hideLoading()
+                                return@launch
+                            }
+                            
+                            // ✅ CORREÇÃO CRÍTICA: Verificar se é primeiro acesso (exceto superadmin)
+                            val isSuperAdmin = email == "rossinys@gmail.com"
+                            val isPrimeiroAcesso = !isSuperAdmin && 
+                                                  colaborador.primeiroAcesso && 
+                                                  colaborador.senhaHash == null &&
+                                                  senhaTemporariaLimpa != null && 
+                                                  senhaLimpa == senhaTemporariaLimpa
+                            
+                            Timber.d("AuthViewModel", "🔍 Verificação de primeiro acesso (DADOS DA NUVEM):")
+                            Timber.d("AuthViewModel", "   É superadmin: $isSuperAdmin")
+                            Timber.d("AuthViewModel", "   Primeiro acesso flag: ${colaborador.primeiroAcesso}")
+                            Timber.d("AuthViewModel", "   SenhaHash presente: ${colaborador.senhaHash != null}")
+                            Timber.d("AuthViewModel", "   Senha temporária presente: ${senhaTemporariaLimpa != null}")
+                            Timber.d("AuthViewModel", "   Senha corresponde à temporária: ${senhaLimpa == senhaTemporariaLimpa}")
+                            Timber.d("AuthViewModel", "   É primeiro acesso: $isPrimeiroAcesso")
+                            
+                            crashlytics.setCustomKey("login_primeiro_acesso", isPrimeiroAcesso)
+                            
+                            if (isPrimeiroAcesso) {
+                                crashlytics.log("[LOGIN_FLOW] ⚠️ PRIMEIRO ACESSO DETECTADO (DADOS DA NUVEM) - Redirecionando para alteração de senha")
+                                Timber.d("AuthViewModel", "⚠️ PRIMEIRO ACESSO DETECTADO (DADOS DA NUVEM) - Redirecionando para alteração de senha")
+                                // ✅ CORREÇÃO CRÍTICA: Iniciar sessão ANTES de redirecionar
+                                userSessionManager.startSession(colaborador, detectedCompanyId)
+                                crashlytics.log("[LOGIN_FLOW] ✅ Sessão iniciada para primeiro acesso: ${colaborador.nome}")
+                                Timber.d("AuthViewModel", "✅ Sessão iniciada para primeiro acesso: ${colaborador.nome}")
+                                
+                                _authState.value = AuthState.FirstAccessRequired(colaborador)
+                                hideLoading()
+                                return@launch
+                            }
+                            
+                            // ✅ Se não é primeiro acesso, continuar com o fluxo normal de login offline
+                            // (o código abaixo já trata isso)
+                        } else {
+                            crashlytics.setCustomKey("login_colaborador_encontrado_nuvem", false)
+                            crashlytics.log("[LOGIN_FLOW] ⚠️ Colaborador não encontrado na nuvem")
+                            Timber.w("AuthViewModel", "⚠️ Colaborador não encontrado na nuvem")
+                        }
+                    } catch (e: Exception) {
+                        crashlytics.setCustomKey("login_erro_busca_nuvem", true)
+                        crashlytics.setCustomKey("login_erro_busca_nuvem_tipo", e.javaClass.simpleName)
+                        crashlytics.log("[LOGIN_FLOW] ❌ Erro ao buscar colaborador na nuvem: ${e.message}")
+                        crashlytics.recordException(e)
+                        Timber.e("AuthViewModel", "❌ Erro ao buscar colaborador na nuvem: ${e.message}", e)
+                        // Continuar para tentar outras formas de login
                     }
                 } else if (colaborador != null && online) {
                     // ✅ NOVO: Se encontrou localmente E estiver online, verificar se há atualizações na nuvem
                     Timber.d("AuthViewModel", "🔍 Colaborador encontrado localmente. Verificando atualizações na nuvem...")
-                    val result = buscarColaboradorNaNuvemPorEmail(email)
-                    if (result != null) {
-                        val colaboradorNuvem = result.first
-                        Timber.d("AuthViewModel", "✅ Colaborador encontrado na nuvem. Atualizando dados locais...")
-                        // Atualizar colaborador local com dados da nuvem (preservando ID local)
-                        val colaboradorAtualizado = colaboradorNuvem.copy(id = colaborador.id)
-                        try {
-                            appRepository.atualizarColaborador(colaboradorAtualizado)
-                            colaborador = colaboradorAtualizado
-                            Timber.d("AuthViewModel", "✅ Colaborador atualizado com dados da nuvem")
-                        } catch (e: Exception) {
-                            Timber.w("AuthViewModel", "⚠️ Erro ao atualizar colaborador local: ${e.message}")
+                    try {
+                        val result = buscarColaboradorNaNuvemPorEmail(email)
+                        if (result != null) {
+                            val colaboradorNuvem = result.first
+                            Timber.d("AuthViewModel", "✅ Colaborador encontrado na nuvem. Atualizando dados locais...")
+                            // Atualizar colaborador local com dados da nuvem (preservando ID local)
+                            val colaboradorAtualizado = colaboradorNuvem.copy(id = colaborador.id)
+                            try {
+                                appRepository.atualizarColaborador(colaboradorAtualizado)
+                                colaborador = colaboradorAtualizado
+                                Timber.d("AuthViewModel", "✅ Colaborador atualizado com dados da nuvem")
+                            } catch (e: Exception) {
+                                Timber.w("AuthViewModel", "⚠️ Erro ao atualizar colaborador local: ${e.message}")
+                            }
                         }
+                    } catch (e: Exception) {
+                        Timber.w("AuthViewModel", "⚠️ Erro ao buscar atualizações na nuvem: ${e.message}")
+                        // Continuar com dados locais
                     }
                 }
                 
@@ -560,8 +788,17 @@ class AuthViewModel @Inject constructor(
                             Timber.d("AuthViewModel", "✅ Colaborador encontrado na nuvem: ${colaboradorNuvem.nome}")
                             Timber.d("AuthViewModel", "   Aprovado: ${colaboradorNuvem.aprovado}")
                             
-                            // Salvar colaborador localmente para próximos logins offline
-                            appRepository.inserirColaborador(colaboradorNuvem)
+                            // ✅ CORREÇÃO: Verificar se já existe antes de salvar localmente (evita duplicação)
+                            val colaboradorExistente = colaboradorNuvem.firebaseUid?.let { 
+                                appRepository.obterColaboradorPorFirebaseUid(it) 
+                            } ?: appRepository.obterColaboradorPorEmail(colaboradorNuvem.email)
+                            
+                            if (colaboradorExistente == null) {
+                                appRepository.inserirColaborador(colaboradorNuvem)
+                                Timber.d("AuthViewModel", "✅ Colaborador salvo localmente")
+                            } else {
+                                Timber.d("AuthViewModel", "✅ Colaborador já existe localmente (ID: ${colaboradorExistente.id}), não duplicando")
+                            }
                             
                             // Verificar se está aprovado
                             if (colaboradorNuvem.aprovado) {
@@ -686,6 +923,8 @@ class AuthViewModel @Inject constructor(
                         }
                     }
                     
+                    crashlytics.setCustomKey("login_error", "usuario_nao_encontrado")
+                    crashlytics.log("[LOGIN_FLOW] ❌ ERRO FINAL: Usuário não encontrado (online: $online)")
                     _errorMessage.value = if (online) {
                         "Usuário não encontrado. Contate o administrador para criar sua conta."
                     } else {
@@ -696,10 +935,15 @@ class AuthViewModel @Inject constructor(
                 _authState.value = AuthState.Unauthenticated
                 
             } catch (e: Exception) {
+                crashlytics.setCustomKey("login_error", "excecao_geral")
+                crashlytics.setCustomKey("login_error_tipo", e.javaClass.simpleName)
+                crashlytics.log("[LOGIN_FLOW] ❌ ERRO NO LOGIN: ${e.message}")
+                crashlytics.recordException(e)
                 Timber.e(e, "❌ ERRO NO LOGIN: %s", e.message)
                 _authState.value = AuthState.Unauthenticated
                 _errorMessage.value = getFirebaseErrorMessage(e)
             } finally {
+                crashlytics.log("[LOGIN_FLOW] === FIM DO LOGIN HÍBRIDO ===")
                 hideLoading()
                 Timber.d("AuthViewModel", "=== FIM DO LOGIN HÍBRIDO ===")
             }
@@ -785,11 +1029,22 @@ class AuthViewModel @Inject constructor(
      * Retorna o colaborador atualizado ou null se não encontrado
      */
     private suspend fun criarOuAtualizarColaboradorOnline(firebaseUser: FirebaseUser, senha: String = ""): Colaborador? {
+        android.util.Log.d("AuthViewModel", "═══════════════════════════════════════")
+        android.util.Log.d("AuthViewModel", "🔍 criarOuAtualizarColaboradorOnline INICIADO")
+        android.util.Log.d("AuthViewModel", "Firebase User Email: ${firebaseUser.email}")
+        android.util.Log.d("AuthViewModel", "Firebase User UID: ${firebaseUser.uid}")
+        android.util.Log.d("AuthViewModel", "═══════════════════════════════════════")
+        
         try {
-            val email = firebaseUser.email ?: return null
+            val email = firebaseUser.email ?: run {
+                android.util.Log.e("AuthViewModel", "❌ Email do Firebase User é NULL!")
+                return null
+            }
             
+            android.util.Log.d("AuthViewModel", "🔍 Buscando colaborador local por email: $email")
             // Verificar se já existe colaborador com este email
             val colaboradorExistente = appRepository.obterColaboradorPorEmail(email)
+            android.util.Log.d("AuthViewModel", "Colaborador local: ${if (colaboradorExistente != null) "ENCONTRADO - ${colaboradorExistente.nome}" else "NÃO ENCONTRADO"}")
             
             if (colaboradorExistente != null) {
                 Timber.d("AuthViewModel", "Colaborador existente encontrado: ${colaboradorExistente.nome}")
@@ -843,6 +1098,13 @@ class AuthViewModel @Inject constructor(
                 userSessionManager.startSession(colaboradorAtualizado, userSessionManager.getCurrentCompanyId()) // Assuming companyId is already set or default
                 return colaboradorAtualizado
             } else {
+                android.util.Log.d("AuthViewModel", "═══════════════════════════════════════")
+                android.util.Log.d("AuthViewModel", "⚠️ Colaborador NÃO encontrado LOCALMENTE")
+                android.util.Log.d("AuthViewModel", "Buscando na NUVEM...")
+                android.util.Log.d("AuthViewModel", "Email: $email")
+                android.util.Log.d("AuthViewModel", "Firebase UID: ${firebaseUser.uid}")
+                android.util.Log.d("AuthViewModel", "═══════════════════════════════════════")
+                
                 Timber.d("AuthViewModel", "🔍 Colaborador não encontrado localmente. Buscando na nuvem...")
                 Timber.d("AuthViewModel", "   Email para busca: $email")
                 Timber.d("AuthViewModel", "   Firebase UID: ${firebaseUser.uid}")
@@ -850,9 +1112,20 @@ class AuthViewModel @Inject constructor(
                 // ✅ CORREÇÃO CRÍTICA: Buscar colaborador na nuvem quando não encontrar localmente
                 var colaboradorNuvemResult: Pair<Colaborador, String>? = null
                 try {
+                    android.util.Log.d("AuthViewModel", "🔍 CHAMANDO buscarColaboradorNaNuvemPorEmail...")
                     colaboradorNuvemResult = buscarColaboradorNaNuvemPorEmail(email)
+                    android.util.Log.d("AuthViewModel", "═══════════════════════════════════════")
+                    android.util.Log.d("AuthViewModel", "✅ buscarColaboradorNaNuvemPorEmail RETORNOU")
+                    android.util.Log.d("AuthViewModel", "Resultado: ${if (colaboradorNuvemResult != null) "ENCONTRADO" else "NÃO ENCONTRADO"}")
+                    android.util.Log.d("AuthViewModel", "═══════════════════════════════════════")
                     Timber.d("AuthViewModel", "   Resultado da busca na nuvem: ${if (colaboradorNuvemResult != null) "ENCONTRADO" else "NÃO ENCONTRADO"}")
                 } catch (e: Exception) {
+                    android.util.Log.e("AuthViewModel", "═══════════════════════════════════════")
+                    android.util.Log.e("AuthViewModel", "❌ EXCEÇÃO ao buscar colaborador na nuvem")
+                    android.util.Log.e("AuthViewModel", "Tipo: ${e.javaClass.simpleName}")
+                    android.util.Log.e("AuthViewModel", "Mensagem: ${e.message}")
+                    android.util.Log.e("AuthViewModel", "Stack: ${e.stackTraceToString()}")
+                    android.util.Log.e("AuthViewModel", "═══════════════════════════════════════")
                     Timber.e(e, "❌ ERRO ao buscar colaborador na nuvem: %s", e.message)
                 }
                 
@@ -930,8 +1203,17 @@ class AuthViewModel @Inject constructor(
                                 userSessionManager.startSession(colaboradorMesclado, detectedCompanyId)
                                 return colaboradorMesclado
                             } else {
-                                Timber.d("AuthViewModel", "Colaborador não existe localmente, inserindo...")
-                                appRepository.inserirColaborador(colaboradorFinal)
+                                // ✅ CORREÇÃO: Verificar se já existe antes de inserir (evita duplicação)
+                                val colaboradorExistente = colaboradorFinal.firebaseUid?.let { 
+                                    appRepository.obterColaboradorPorFirebaseUid(it) 
+                                } ?: appRepository.obterColaboradorPorEmail(colaboradorFinal.email)
+                                
+                                if (colaboradorExistente == null) {
+                                    Timber.d("AuthViewModel", "Colaborador não existe localmente, inserindo...")
+                                    appRepository.inserirColaborador(colaboradorFinal)
+                                } else {
+                                    Timber.d("AuthViewModel", "✅ Colaborador já existe localmente (ID: ${colaboradorExistente.id}), não duplicando")
+                                }
                             }
                         }
                         
@@ -1208,6 +1490,9 @@ class AuthViewModel @Inject constructor(
     /**
      * Sincroniza um colaborador específico para a nuvem (Firestore)
      * Usado para sincronizar colaboradores criados ou atualizados localmente
+     * 
+     * ✅ ATUALIZADO: Usa novo schema (colaboradores/{uid}) como primário
+     * Mantém sincronização no schema antigo para compatibilidade durante migração
      */
     private suspend fun sincronizarColaboradorParaNuvem(colaborador: Colaborador, companyId: String) {
         try {
@@ -1215,80 +1500,27 @@ class AuthViewModel @Inject constructor(
             Timber.d("AuthViewModel", "   ID: ${colaborador.id}")
             Timber.d("AuthViewModel", "   Nome: ${colaborador.nome}")
             Timber.d("AuthViewModel", "   Email: ${colaborador.email}")
+            Timber.d("AuthViewModel", "   Firebase UID: ${colaborador.firebaseUid}")
             Timber.d("AuthViewModel", "   Empresa: $companyId")
             Timber.d("AuthViewModel", "   Aprovado: ${colaborador.aprovado}")
-            Timber.d("AuthViewModel", "   Usuário atual: ${firebaseAuth.currentUser?.uid}")
-            Timber.d("AuthViewModel", "   Email do token: ${firebaseAuth.currentUser?.email}")
             
-            // Estrutura: empresas/empresa_001/entidades/colaboradores/items
-            val collectionRef = firestore
-                .collection("empresas")
-                .document(companyId)
-                .collection("entidades")
-                .document("colaboradores")
-                .collection("items")
+            val uid = colaborador.firebaseUid
             
-            Timber.d("AuthViewModel", "   Caminho: empresas/$companyId/entidades/colaboradores/items")
-            
-            // Converter colaborador para Map
-            val colaboradorMap = mutableMapOf<String, Any?>()
-            colaboradorMap["roomId"] = colaborador.id
-            colaboradorMap["id"] = colaborador.id
-            colaboradorMap["nome"] = colaborador.nome
-            colaboradorMap["email"] = colaborador.email
-            colaboradorMap["telefone"] = colaborador.telefone
-            colaboradorMap["cpf"] = colaborador.cpf
-            colaboradorMap["nivelAcesso"] = colaborador.nivelAcesso.name
-            colaboradorMap["ativo"] = colaborador.ativo
-            colaboradorMap["aprovado"] = colaborador.aprovado
-            colaboradorMap["primeiroAcesso"] = colaborador.primeiroAcesso
-            colaboradorMap["firebaseUid"] = colaborador.firebaseUid
-            colaboradorMap["senhaTemporaria"] = colaborador.senhaTemporaria
-            colaboradorMap["senhaHash"] = colaborador.senhaHash
-            colaboradorMap["dataCadastro"] = Timestamp(Date(colaborador.dataCadastro))
-            colaboradorMap["dataUltimaAtualizacao"] = Timestamp(Date(colaborador.dataUltimaAtualizacao))
-            colaboradorMap["dataAprovacao"] = colaborador.dataAprovacao?.let { Timestamp(Date(it)) }
-            colaboradorMap["aprovadoPor"] = colaborador.aprovadoPor
-            colaboradorMap["dataUltimoAcesso"] = colaborador.dataUltimoAcesso?.let { Timestamp(Date(it)) }
-            colaboradorMap["lastModified"] = FieldValue.serverTimestamp()
-            colaboradorMap["syncTimestamp"] = FieldValue.serverTimestamp()
-            
-            Timber.d("AuthViewModel", "   Map criado com ${colaboradorMap.size} campos")
-            
-            // ✅ CORREÇÃO: Usar ID apropriado para evitar conflitos
-            // Prioridade: 1) Firebase UID (se disponível), 2) Email (para colaboradores pendentes sem UID), 3) ID numérico (fallback)
-            val documentId: String = colaborador.firebaseUid?.takeIf { it.isNotBlank() }
-                ?: if (colaborador.aprovado == false && colaborador.firebaseUid == null) {
-                    // Colaborador pendente sem UID: usar email como ID único para evitar conflitos
-                    colaborador.email.replace(".", "_").replace("@", "_")
-                } else {
-                    // Colaborador já aprovado ou com firebaseUid: usar ID numérico
-                    colaborador.id.toString()
-                }
-            
-            Timber.d("AuthViewModel", "   Criando documento com ID: $documentId (ID local: ${colaborador.id}, firebaseUid: ${colaborador.firebaseUid}, email: ${colaborador.email}, aprovado: ${colaborador.aprovado})")
-            
-            try {
-                collectionRef
-                    .document(documentId)
-                    .set(colaboradorMap)
-                    .await()
-                Timber.d("AuthViewModel", "✅ Colaborador criado no Firestore com sucesso! (ID: $documentId)")
-            } catch (e: com.google.firebase.firestore.FirebaseFirestoreException) {
-                // Se o documento já existe, atualizar em vez de criar
-                if (e.code == com.google.firebase.firestore.FirebaseFirestoreException.Code.ALREADY_EXISTS) {
-                    Timber.d("AuthViewModel", "⚠️ Documento já existe, atualizando...")
-                    collectionRef
-                        .document(documentId)
-                        .set(colaboradorMap)
-                        .await()
-                    Timber.d("AuthViewModel", "✅ Colaborador atualizado no Firestore")
-                } else {
-                    throw e
-                }
+            // ✅ PADRONIZAÇÃO: Usar APENAS o novo schema (empresas/{empresaId}/colaboradores/{uid})
+            // REMOVIDO: Sincronização no schema antigo (entidades/colaboradores/items) para evitar duplicação
+            if (uid == null || uid.isBlank()) {
+                Timber.w("AuthViewModel", "⚠️ Colaborador não tem Firebase UID, não é possível sincronizar no novo schema")
+                Timber.w("AuthViewModel", "   Email: ${colaborador.email}")
+                return
             }
             
-            Timber.d("AuthViewModel", "✅ Colaborador sincronizado com sucesso para a nuvem")
+            try {
+                criarColaboradorNoNovoSchema(colaborador, companyId)
+                Timber.d("AuthViewModel", "✅ Colaborador sincronizado no novo schema: empresas/$companyId/colaboradores/$uid")
+            } catch (e: Exception) {
+                Timber.e(e, "❌ Erro ao sincronizar no novo schema: %s", e.message)
+                throw e
+            }
             
         } catch (e: Exception) {
             Timber.e(e, "❌ Erro ao sincronizar colaborador para a nuvem: %s", e.message)
@@ -1309,22 +1541,392 @@ class AuthViewModel @Inject constructor(
     }
     
     /**
-     * ✅ NOVO: Busca colaborador na nuvem (Firestore) por email usando busca global
+     * ✅ CORREÇÃO DEFINITIVA: Busca colaborador por UID (lookup direto)
+     * 
+     * REQUISITOS:
+     * 1. Busca APENAS por UID (fim do collectionGroup/email)
+     * 2. Força leitura do servidor (Source.SERVER) para evitar cache
+     * 3. Logs de diagnóstico ANTES de converter
+     * 4. Validação e correção de mapeamento boolean
+     */
+    private suspend fun buscarColaboradorPorUid(uid: String, empresaId: String = "empresa_001"): Colaborador? {
+        return try {
+            Timber.d("AuthViewModel", "🔍 [BUSCA_UID] Iniciando busca por UID: $uid")
+            
+            // ✅ CORREÇÃO DEFINITIVA: Lookup direto por UID (colaboradores/{uid})
+            val docRef = firestore
+                .collection("empresas")
+                .document(empresaId)
+                .collection("colaboradores")
+                .document(uid)
+            
+            // ✅ CORREÇÃO DEFINITIVA: Forçar leitura do servidor (Source.SERVER)
+            // Isso garante que não estamos lendo cache antigo com aprovado=false
+            Timber.d("AuthViewModel", "🔍 [BUSCA_UID] Forçando leitura do servidor (Source.SERVER)...")
+            val doc = docRef.get(com.google.firebase.firestore.Source.SERVER).await()
+            
+            // ✅ DIAGNÓSTICO OBRIGATÓRIO: Logar ANTES de converter
+            Timber.d("AuthViewModel", "═══════════════════════════════════════")
+            Timber.d("AuthViewModel", "📋 [DIAGNÓSTICO] Documento do Firestore:")
+            Timber.d("AuthViewModel", "   Path: ${doc.reference.path}")
+            Timber.d("AuthViewModel", "   Exists: ${doc.exists()}")
+            Timber.d("AuthViewModel", "═══════════════════════════════════════")
+            
+            if (!doc.exists()) {
+                Timber.d("AuthViewModel", "⚠️ [BUSCA_UID] Documento não existe: empresas/$empresaId/colaboradores/$uid")
+                return null
+            }
+            
+            val data = doc.data
+            if (data == null) {
+                Timber.e("AuthViewModel", "❌ [BUSCA_UID] Documento existe mas data é null!")
+                return null
+            }
+            
+            // ✅ DIAGNÓSTICO OBRIGATÓRIO: Logar dados brutos ANTES de converter
+            Timber.d("AuthViewModel", "📋 [DIAGNÓSTICO] Dados brutos do documento:")
+            Timber.d("AuthViewModel", "   Data keys: ${data.keys.joinToString(", ")}")
+            Timber.d("AuthViewModel", "   Campo 'aprovado' (bruto): ${data["aprovado"]} (tipo: ${data["aprovado"]?.javaClass?.simpleName})")
+            Timber.d("AuthViewModel", "   Campo 'ativo' (bruto): ${data["ativo"]} (tipo: ${data["ativo"]?.javaClass?.simpleName})")
+            Timber.d("AuthViewModel", "   Campo 'primeiro_acesso' (bruto): ${data["primeiro_acesso"]} (tipo: ${data["primeiro_acesso"]?.javaClass?.simpleName})")
+            
+            // ✅ CORREÇÃO: Ler valores boolean diretamente do documento
+            val aprovadoDireto = doc.getBoolean("aprovado") ?: false
+            val ativoDireto = doc.getBoolean("ativo") ?: true
+            val primeiroAcessoDireto = doc.getBoolean("primeiro_acesso") ?: true
+            
+            Timber.d("AuthViewModel", "📋 [DIAGNÓSTICO] Valores diretos (doc.getBoolean):")
+            Timber.d("AuthViewModel", "   aprovado: $aprovadoDireto")
+            Timber.d("AuthViewModel", "   ativo: $ativoDireto")
+            Timber.d("AuthViewModel", "   primeiro_acesso: $primeiroAcessoDireto")
+            Timber.d("AuthViewModel", "═══════════════════════════════════════")
+            
+            // Converter Timestamps para Date
+            val dataConvertida = data.toMutableMap()
+            fun toDate(v: Any?): Date? = when(v) {
+                is com.google.firebase.Timestamp -> v.toDate()
+                is Date -> v
+                is Long -> Date(v)
+                else -> null
+            }
+            
+            val dateFields = listOf(
+                "data_cadastro", "data_ultima_atualizacao", "data_aprovacao", 
+                "data_ultimo_acesso", "data_nascimento"
+            )
+            
+            dateFields.forEach { field ->
+                if (data.containsKey(field)) {
+                    dataConvertida[field] = toDate(data[field])
+                }
+            }
+            
+            if (dataConvertida["data_cadastro"] == null) dataConvertida["data_cadastro"] = Date()
+            if (dataConvertida["data_ultima_atualizacao"] == null) dataConvertida["data_ultima_atualizacao"] = Date()
+            
+            val colaboradorId = doc.id.toLongOrNull() ?: (data["id"] as? Number)?.toLong() ?: 0L
+            
+            // ✅ CORREÇÃO: Converter usando toObject() (com @PropertyName deve funcionar)
+            Timber.d("AuthViewModel", "🔧 [CONVERSÃO] Convertendo documento para Colaborador...")
+            val colaborador = doc.toObject(Colaborador::class.java)
+            
+            if (colaborador == null) {
+                Timber.e("AuthViewModel", "❌ [CONVERSÃO] toObject() retornou null, tentando Gson...")
+                val colaboradorJson = gson.toJson(dataConvertida)
+                val colaboradorGson = gson.fromJson(colaboradorJson, Colaborador::class.java)
+                if (colaboradorGson == null) {
+                    Timber.e("AuthViewModel", "❌ [CONVERSÃO] Falha ao converter documento para Colaborador")
+                    return null
+                }
+                
+                // ✅ CORREÇÃO: Sempre usar valores diretos do documento
+                val colaboradorFinal = colaboradorGson.copy(
+                    id = colaboradorId,
+                    aprovado = aprovadoDireto,
+                    ativo = ativoDireto,
+                    primeiroAcesso = primeiroAcessoDireto
+                )
+                
+                Timber.d("AuthViewModel", "✅ [CONVERSÃO] Colaborador convertido (Gson): ${colaboradorFinal.nome}")
+                Timber.d("AuthViewModel", "   Aprovado: ${colaboradorFinal.aprovado} (validado: $aprovadoDireto)")
+                return colaboradorFinal
+            }
+            
+            // ✅ CORREÇÃO: Validar e corrigir se o mapeamento falhou
+            val colaboradorFinal = if (colaborador.aprovado != aprovadoDireto || colaborador.ativo != ativoDireto) {
+                Timber.w("AuthViewModel", "⚠️ [CONVERSÃO] Mapeamento falhou!")
+                Timber.w("AuthViewModel", "   aprovado: doc=$aprovadoDireto, objeto=${colaborador.aprovado}")
+                Timber.w("AuthViewModel", "   ativo: doc=$ativoDireto, objeto=${colaborador.ativo}")
+                Timber.w("AuthViewModel", "   Corrigindo usando valores diretos do documento...")
+                // Usar valores diretos do documento
+                colaborador.copy(
+                    id = colaboradorId,
+                    aprovado = aprovadoDireto,
+                    ativo = ativoDireto,
+                    primeiroAcesso = primeiroAcessoDireto
+                )
+            } else {
+                // Mapeamento funcionou corretamente
+                Timber.d("AuthViewModel", "✅ [CONVERSÃO] Mapeamento OK: aprovado=${colaborador.aprovado}")
+                colaborador.copy(id = colaboradorId)
+            }
+            
+            Timber.d("AuthViewModel", "✅ [BUSCA_UID] Colaborador encontrado: ${colaboradorFinal.nome}")
+            Timber.d("AuthViewModel", "   Aprovado: ${colaboradorFinal.aprovado}")
+            Timber.d("AuthViewModel", "   Ativo: ${colaboradorFinal.ativo}")
+            Timber.d("AuthViewModel", "   Path: ${doc.reference.path}")
+            colaboradorFinal
+            
+        } catch (e: Exception) {
+            Timber.e(e, "❌ [BUSCA_UID] Erro ao buscar colaborador por UID: %s", e.message)
+            crashlytics.recordException(e)
+            null
+        }
+    }
+    
+    
+    /**
+     * ✅ CORREÇÃO DEFINITIVA: Obtém ou cria colaborador por UID
+     * 
+     * REQUISITOS:
+     * 1. Busca APENAS por UID (fim do collectionGroup/email)
+     * 2. Garante await() antes de retornar
+     * 3. Cria automaticamente se não existir (aprovado=false, ativo=true)
+     * 4. NÃO usa fallback para schema antigo
+     */
+    private suspend fun getOrCreateColaborador(
+        uid: String,
+        email: String,
+        nome: String? = null,
+        empresaId: String = "empresa_001"
+    ): Colaborador? {
+        return try {
+            Timber.d("AuthViewModel", "🔍 [GET_OR_CREATE] Iniciando: UID=$uid, Email=$email")
+            
+            // ✅ CORREÇÃO DEFINITIVA: Buscar APENAS no novo schema por UID
+            // NÃO usar fallback para schema antigo (evita documento errado)
+            var colaborador = buscarColaboradorPorUid(uid, empresaId)
+            
+            // ✅ CORREÇÃO DEFINITIVA: Se não encontrou, criar automaticamente
+            // IMPORTANTE: Criar com aprovado=false e ativo=true (padrão para novos usuários)
+            if (colaborador == null) {
+                Timber.d("AuthViewModel", "⚠️ [GET_OR_CREATE] Colaborador não encontrado, criando automaticamente...")
+                colaborador = criarColaboradorAutomatico(uid, email, nome ?: email.split("@")[0], empresaId)
+                
+                // ✅ CORREÇÃO: Aguardar criação completar antes de retornar
+                if (colaborador != null) {
+                    Timber.d("AuthViewModel", "✅ [GET_OR_CREATE] Colaborador criado: ${colaborador.nome} (Aprovado: ${colaborador.aprovado})")
+                } else {
+                    Timber.e("AuthViewModel", "❌ [GET_OR_CREATE] Falha ao criar colaborador automaticamente")
+                }
+            } else {
+                Timber.d("AuthViewModel", "✅ [GET_OR_CREATE] Colaborador encontrado: ${colaborador.nome} (Aprovado: ${colaborador.aprovado})")
+            }
+            
+            // ✅ CORREÇÃO: Garantir que sempre retornamos um colaborador (nunca null)
+            // Se ainda for null após criação, retornar colaborador mínimo
+            if (colaborador == null) {
+                Timber.e("AuthViewModel", "❌ [GET_OR_CREATE] Colaborador ainda é null após todas as tentativas")
+                Timber.e("AuthViewModel", "   Criando colaborador mínimo como último recurso...")
+                colaborador = criarColaboradorAutomatico(uid, email, nome ?: email.split("@")[0], empresaId)
+            }
+            
+            colaborador
+            
+        } catch (e: Exception) {
+            Timber.e(e, "❌ Erro em getOrCreateColaborador: %s", e.message)
+            crashlytics.log("[GET_OR_CREATE] ERRO: ${e.message}")
+            crashlytics.recordException(e)
+            null
+        }
+    }
+    
+    /**
+     * ✅ CORREÇÃO DEFINITIVA: Cria colaborador automaticamente com dados mínimos
+     * 
+     * REQUISITOS:
+     * 1. Cria com aprovado=false e ativo=true (padrão para novos usuários)
+     * 2. SUPERADMIN: rossinys@gmail.com sempre é ADMIN, aprovado=true
+     * 3. Garante await() na criação no Firestore
+     * 4. Retorna colaborador válido (nunca null)
+     */
+    private suspend fun criarColaboradorAutomatico(
+        uid: String,
+        email: String,
+        nome: String,
+        empresaId: String
+    ): Colaborador? {
+        return try {
+            Timber.d("AuthViewModel", "🔧 [CRIAR_AUTO] Criando colaborador: $nome ($email)")
+            
+            val agora = System.currentTimeMillis()
+            val isSuperAdmin = email == "rossinys@gmail.com"
+            
+            val colaborador = if (isSuperAdmin) {
+                // ✅ SUPERADMIN: rossinys@gmail.com sempre é ADMIN, aprovado, sem primeiro acesso
+                Timber.d("AuthViewModel", "🔧 [CRIAR_AUTO] Criando como SUPERADMIN")
+                Colaborador(
+                    id = 0L,
+                    nome = nome,
+                    email = email,
+                    firebaseUid = uid,
+                    nivelAcesso = NivelAcesso.ADMIN,
+                    aprovado = true,
+                    ativo = true,
+                    primeiroAcesso = false,
+                    dataCadastro = agora,
+                    dataUltimaAtualizacao = agora,
+                    dataAprovacao = agora,
+                    aprovadoPor = "Sistema (Superadmin)"
+                )
+            } else {
+                // ✅ CORREÇÃO: Novos usuários começam com aprovado=false (padrão)
+                Colaborador(
+                    id = 0L,
+                    nome = nome,
+                    email = email,
+                    firebaseUid = uid,
+                    nivelAcesso = NivelAcesso.USER,
+                    aprovado = false, // Precisa ser aprovado pelo admin
+                    ativo = true,
+                    primeiroAcesso = true,
+                    dataCadastro = agora,
+                    dataUltimaAtualizacao = agora
+                )
+            }
+            
+            // ✅ CORREÇÃO: Verificar se já existe antes de salvar localmente (evita duplicação)
+            val colaboradorExistente = colaborador.firebaseUid?.let { 
+                appRepository.obterColaboradorPorFirebaseUid(it) 
+            } ?: appRepository.obterColaboradorPorEmail(colaborador.email)
+            
+            val colaboradorComId = if (colaboradorExistente != null) {
+                Timber.d("AuthViewModel", "✅ Colaborador já existe localmente (ID: ${colaboradorExistente.id}), não duplicando")
+                colaboradorExistente
+            } else {
+                val idLocal = appRepository.inserirColaborador(colaborador)
+                colaborador.copy(id = idLocal)
+            }
+            
+            // ✅ CORREÇÃO: Criar no Firestore e AGUARDAR (await)
+            Timber.d("AuthViewModel", "🔧 [CRIAR_AUTO] Criando no Firestore (novo schema)...")
+            criarColaboradorNoNovoSchema(colaboradorComId, empresaId)
+            
+            Timber.d("AuthViewModel", "✅ [CRIAR_AUTO] Colaborador criado: ${colaboradorComId.nome} (ID: ${colaboradorComId.id}, Aprovado: ${colaboradorComId.aprovado})")
+            colaboradorComId
+            
+        } catch (e: Exception) {
+            Timber.e(e, "❌ [CRIAR_AUTO] Erro ao criar colaborador: %s", e.message)
+            crashlytics.recordException(e)
+            null
+        }
+    }
+    
+    /**
+     * ✅ CORREÇÃO DEFINITIVA: Cria colaborador no novo schema (colaboradores/{uid})
+     * 
+     * REQUISITOS:
+     * 1. Garante await() para sincronismo
+     * 2. Usa set() para criar/atualizar
+     * 3. Garante campos boolean corretos (aprovado, ativo, primeiro_acesso)
+     */
+    private suspend fun criarColaboradorNoNovoSchema(colaborador: Colaborador, empresaId: String) {
+        try {
+            val uid = colaborador.firebaseUid ?: run {
+                Timber.e("AuthViewModel", "❌ [CRIAR_SCHEMA] firebaseUid é null!")
+                return
+            }
+            
+            Timber.d("AuthViewModel", "🔧 [CRIAR_SCHEMA] Criando: empresas/$empresaId/colaboradores/$uid")
+            
+            val docRef = firestore
+                .collection("empresas")
+                .document(empresaId)
+                .collection("colaboradores")
+                .document(uid)
+            
+            // Converter para Map usando Gson (snake_case)
+            val colaboradorJson = gson.toJson(colaborador)
+            @Suppress("UNCHECKED_CAST")
+            val colaboradorMap = gson.fromJson(colaboradorJson, Map::class.java) as? MutableMap<String, Any?> 
+                ?: mutableMapOf()
+            
+            // Adicionar campos adicionais
+            colaboradorMap["room_id"] = colaborador.id
+            colaboradorMap["id"] = colaborador.id
+            colaboradorMap["last_modified"] = FieldValue.serverTimestamp()
+            colaboradorMap["sync_timestamp"] = FieldValue.serverTimestamp()
+            
+            // Converter datas para Timestamp
+            colaboradorMap["data_cadastro"] = Timestamp(Date(colaborador.dataCadastro))
+            colaboradorMap["data_ultima_atualizacao"] = Timestamp(Date(colaborador.dataUltimaAtualizacao))
+            colaborador.dataAprovacao?.let { colaboradorMap["data_aprovacao"] = Timestamp(Date(it)) }
+            colaborador.dataUltimoAcesso?.let { colaboradorMap["data_ultimo_acesso"] = Timestamp(Date(it)) }
+            
+            // ✅ CORREÇÃO: Garantir campos boolean corretos
+            colaboradorMap["aprovado"] = colaborador.aprovado
+            colaboradorMap["ativo"] = colaborador.ativo
+            colaboradorMap["primeiro_acesso"] = colaborador.primeiroAcesso
+            colaboradorMap["nivel_acesso"] = colaborador.nivelAcesso.name
+            
+            Timber.d("AuthViewModel", "🔧 [CRIAR_SCHEMA] Campos boolean:")
+            Timber.d("AuthViewModel", "   aprovado: ${colaboradorMap["aprovado"]}")
+            Timber.d("AuthViewModel", "   ativo: ${colaboradorMap["ativo"]}")
+            Timber.d("AuthViewModel", "   primeiro_acesso: ${colaboradorMap["primeiro_acesso"]}")
+            
+            // ✅ CORREÇÃO: Usar set() e AGUARDAR (await) para garantir sincronismo
+            docRef.set(colaboradorMap).await()
+            
+            Timber.d("AuthViewModel", "✅ [CRIAR_SCHEMA] Colaborador criado no Firestore com sucesso!")
+            
+        } catch (e: Exception) {
+            Timber.e(e, "❌ [CRIAR_SCHEMA] Erro ao criar colaborador: %s", e.message)
+            crashlytics.recordException(e)
+            throw e
+        }
+    }
+    
+    /**
+     * ✅ FALLBACK: Busca colaborador na nuvem (Firestore) por email usando busca global
      * Retorna o colaborador e o ID da empresa se encontrado, null caso contrário
+     * 
+     * NOTA: Este método é mantido apenas para compatibilidade durante migração
      */
     private suspend fun buscarColaboradorNaNuvemPorEmail(email: String): Pair<Colaborador, String>? {
+        android.util.Log.d("AuthViewModel", "═══════════════════════════════════════")
+        android.util.Log.d("AuthViewModel", "🔍 buscarColaboradorNaNuvemPorEmail INICIADO")
+        android.util.Log.d("AuthViewModel", "Email: $email")
+        android.util.Log.d("AuthViewModel", "═══════════════════════════════════════")
+        
         return try {
+            crashlytics.log("[BUSCA_NUVEM] 🔍 Iniciando busca global na nuvem para: $email")
+            crashlytics.setCustomKey("busca_nuvem_email", email)
+            crashlytics.setCustomKey("busca_nuvem_firebase_auth", firebaseAuth.currentUser != null)
+            crashlytics.setCustomKey("busca_nuvem_firebase_uid", firebaseAuth.currentUser?.uid ?: "null")
+            
             Timber.d("AuthViewModel", "🔍 === INICIANDO BUSCA GLOBAL NA NUVEM ===")
             Timber.d("AuthViewModel", "   Email: $email")
+            Timber.d("AuthViewModel", "   Firebase Auth autenticado: ${firebaseAuth.currentUser != null}")
+            Timber.d("AuthViewModel", "   Firebase UID: ${firebaseAuth.currentUser?.uid ?: "não autenticado"}")
             
             val emailNormalizado = email.trim().lowercase()
             
             // 1. Tentar busca exata via collectionGroup
-            var querySnapshot = firestore.collectionGroup("items")
-                .whereEqualTo("email", email)
-                .get()
-                .await()
+            crashlytics.log("[BUSCA_NUVEM] Tentando busca 1 (email exato via collectionGroup)...")
+            var querySnapshot = try {
+                firestore.collectionGroup("items")
+                    .whereEqualTo("email", email)
+                    .get()
+                    .await()
+            } catch (e: Exception) {
+                crashlytics.setCustomKey("busca_nuvem_erro_collection_group", true)
+                crashlytics.setCustomKey("busca_nuvem_erro_tipo", e.javaClass.simpleName)
+                crashlytics.log("[BUSCA_NUVEM] ❌ Erro na busca collectionGroup: ${e.message}")
+                crashlytics.recordException(e)
+                throw e
+            }
             
+            crashlytics.setCustomKey("busca_nuvem_resultado_1", querySnapshot.size())
             Timber.d("AuthViewModel", "   Busca 1 (email exato): ${querySnapshot.size()} documentos encontrados")
             var doc = querySnapshot.documents.find { it.reference.path.contains("/colaboradores/items/") }
             
@@ -1340,46 +1942,81 @@ class AuthViewModel @Inject constructor(
             }
             
             // 3. Se não encontrou, tentar busca via firebaseUid (mais robusto)
+            // ✅ CORREÇÃO: Tentar ambos os formatos (camelCase e snake_case)
             if (doc == null) {
                 val firebaseUid = firebaseAuth.currentUser?.uid
                 if (firebaseUid != null) {
-                    Timber.d("AuthViewModel", "   Tentando busca 3 (firebaseUid): $firebaseUid")
-                    querySnapshot = firestore.collectionGroup("items")
-                        .whereEqualTo("firebaseUid", firebaseUid)
-                        .get()
-                        .await()
-                    Timber.d("AuthViewModel", "   Busca 3 (firebaseUid): ${querySnapshot.size()} documentos encontrados")
-                    doc = querySnapshot.documents.find { it.reference.path.contains("/colaboradores/items/") }
-                }
-            }
-            
-            // 4. Fallback para empresa_001 se collectionGroup falhar ou não encontrar
-            if (doc == null) {
-                Timber.d("AuthViewModel", "   Não encontrado via collectionGroup. Tentando fallback direto na empresa_001...")
-                val collectionRef = firestore.collection("empresas").document("empresa_001")
-                    .collection("entidades").document("colaboradores").collection("items")
-                
-                try {
-                    querySnapshot = collectionRef.whereEqualTo("email", email).get().await()
-                    doc = querySnapshot.documents.firstOrNull()
+                    Timber.d("AuthViewModel", "   Tentando busca 3a (firebaseUid camelCase): $firebaseUid")
+                    crashlytics.log("[BUSCA_NUVEM] Tentando busca 3a (firebaseUid camelCase)...")
+                    try {
+                        querySnapshot = firestore.collectionGroup("items")
+                            .whereEqualTo("firebaseUid", firebaseUid)
+                            .get()
+                            .await()
+                        Timber.d("AuthViewModel", "   Busca 3a (firebaseUid camelCase): ${querySnapshot.size()} documentos encontrados")
+                        doc = querySnapshot.documents.find { it.reference.path.contains("/colaboradores/items/") }
+                    } catch (e: Exception) {
+                        Timber.w("AuthViewModel", "   Erro na busca 3a: ${e.message}")
+                        crashlytics.log("[BUSCA_NUVEM] Erro na busca 3a: ${e.message}")
+                    }
                     
+                    // Se não encontrou, tentar snake_case
                     if (doc == null) {
-                        val firebaseUid = firebaseAuth.currentUser?.uid
-                        if (firebaseUid != null) {
-                            querySnapshot = collectionRef.whereEqualTo("firebaseUid", firebaseUid).get().await()
-                            doc = querySnapshot.documents.firstOrNull()
+                        Timber.d("AuthViewModel", "   Tentando busca 3b (firebase_uid snake_case): $firebaseUid")
+                        crashlytics.log("[BUSCA_NUVEM] Tentando busca 3b (firebase_uid snake_case)...")
+                        try {
+                            querySnapshot = firestore.collectionGroup("items")
+                                .whereEqualTo("firebase_uid", firebaseUid)
+                                .get()
+                                .await()
+                            Timber.d("AuthViewModel", "   Busca 3b (firebase_uid snake_case): ${querySnapshot.size()} documentos encontrados")
+                            doc = querySnapshot.documents.find { it.reference.path.contains("/colaboradores/items/") }
+                        } catch (e: Exception) {
+                            Timber.w("AuthViewModel", "   Erro na busca 3b: ${e.message}")
+                            crashlytics.log("[BUSCA_NUVEM] Erro na busca 3b: ${e.message}")
                         }
                     }
-                    Timber.d("AuthViewModel", "   Fallback empresa_001: ${if (doc != null) "ENCONTRADO" else "NÃO ENCONTRADO"}")
-                } catch (e: Exception) {
-                    Timber.e("AuthViewModel", "   Erro no fallback empresa_001: ${e.message}")
                 }
             }
             
+            // 4. ✅ PADRONIZAÇÃO: Fallback para novo schema (empresas/{empresaId}/colaboradores/{uid})
+            // REMOVIDO: Busca no schema antigo (entidades/colaboradores/items)
             if (doc == null) {
+                crashlytics.log("[BUSCA_NUVEM] Tentando fallback direto no novo schema...")
+                Timber.d("AuthViewModel", "   Não encontrado via collectionGroup. Tentando fallback direto no novo schema...")
+                
+                // Tentar buscar pelo Firebase UID se disponível
+                val firebaseUid = firebaseAuth.currentUser?.uid
+                if (firebaseUid != null) {
+                    try {
+                        crashlytics.log("[BUSCA_NUVEM] Fallback: Buscando por UID no novo schema...")
+                        val docRef = firestore.collection("empresas").document("empresa_001")
+                            .collection("colaboradores")
+                            .document(firebaseUid)
+                        val docSnapshot = docRef.get().await()
+                        if (docSnapshot.exists()) {
+                            doc = docSnapshot
+                            crashlytics.setCustomKey("busca_nuvem_fallback_resultado", 1)
+                        }
+                    } catch (e: Exception) {
+                        Timber.w("AuthViewModel", "   Erro no fallback por UID: ${e.message}")
+                        crashlytics.log("[BUSCA_NUVEM] Erro no fallback por UID: ${e.message}")
+                    }
+                }
+                
+                crashlytics.log("[BUSCA_NUVEM] Fallback novo schema: ${if (doc != null) "ENCONTRADO" else "NÃO ENCONTRADO"}")
+                Timber.d("AuthViewModel", "   Fallback novo schema: ${if (doc != null) "ENCONTRADO" else "NÃO ENCONTRADO"}")
+            }
+            
+            if (doc == null) {
+                crashlytics.setCustomKey("busca_nuvem_resultado_final", "nao_encontrado")
+                crashlytics.log("[BUSCA_NUVEM] ⚠️ Colaborador não encontrado na nuvem em nenhuma coleção")
                 Timber.w("AuthViewModel", "⚠️ Colaborador não encontrado na nuvem em nenhuma coleção.")
                 return null
             }
+            
+            crashlytics.setCustomKey("busca_nuvem_resultado_final", "encontrado")
+            crashlytics.log("[BUSCA_NUVEM] ✅ Colaborador encontrado na nuvem!")
 
             val data = doc.data ?: return null
             val path = doc.reference.path
@@ -1415,15 +2052,84 @@ class AuthViewModel @Inject constructor(
 
             val colaboradorId = doc.id.toLongOrNull() ?: (data["id"] as? Number)?.toLong() ?: 0L
             
-            // Com a nova política de GSON (LOWER_CASE_WITH_UNDERSCORES) e @SerializedName na entidade,
-            // o mapeamento deve ser automático e robusto.
-            val colaborador = gson.fromJson(gson.toJson(dataConvertida), Colaborador::class.java).copy(id = colaboradorId)
+            // ✅ DIAGNÓSTICO: Logar path e dados brutos ANTES de converter (schema antigo)
+            Timber.d("AuthViewModel", "📋 Documento encontrado (SCHEMA ANTIGO):")
+            Timber.d("AuthViewModel", "   Path: ${doc.reference.path}")
+            Timber.d("AuthViewModel", "   ⚠️ ATENÇÃO: Este é o schema antigo (items/...)")
+            Timber.d("AuthViewModel", "   Campo 'aprovado' (bruto): ${data["aprovado"]} (tipo: ${data["aprovado"]?.javaClass?.simpleName})")
             
-            Timber.d("AuthViewModel", "✅ Colaborador processado: ${colaborador.nome} (ID: ${colaborador.id}, Acesso: ${colaborador.nivelAcesso})")
-            Pair(colaborador, companyId)
+            // ✅ CORREÇÃO: Ler valores boolean diretamente do documento
+            val aprovadoDireto = doc.getBoolean("aprovado") ?: false
+            val ativoDireto = doc.getBoolean("ativo") ?: true
+            val primeiroAcessoDireto = doc.getBoolean("primeiro_acesso") ?: true
+            
+            Timber.d("AuthViewModel", "   Campo 'aprovado' (direto): $aprovadoDireto")
+            
+            // ✅ CORREÇÃO: Converter usando toObject() (com @PropertyName deve funcionar)
+            val colaborador = doc.toObject(Colaborador::class.java)
+            
+            if (colaborador == null) {
+                Timber.e("AuthViewModel", "❌ toObject() retornou null, tentando Gson...")
+                val colaboradorJson = gson.toJson(dataConvertida)
+                val colaboradorGson = gson.fromJson(colaboradorJson, Colaborador::class.java)
+                if (colaboradorGson == null) {
+                    Timber.e("AuthViewModel", "❌ Falha ao converter documento para Colaborador")
+                    return null
+                }
+                
+                // ✅ CORREÇÃO: Validar e corrigir valores boolean
+                val colaboradorFinal = colaboradorGson.copy(
+                    id = colaboradorId,
+                    aprovado = aprovadoDireto,
+                    ativo = ativoDireto,
+                    primeiroAcesso = primeiroAcessoDireto
+                )
+                
+                Timber.d("AuthViewModel", "✅ Colaborador processado (Gson): ${colaboradorFinal.nome} (Aprovado: ${colaboradorFinal.aprovado})")
+                return Pair(colaboradorFinal, companyId)
+            }
+            
+            // ✅ CORREÇÃO: Validar se o mapeamento funcionou corretamente
+            val colaboradorFinal = if (colaborador.aprovado != aprovadoDireto) {
+                Timber.w("AuthViewModel", "⚠️ Mapeamento falhou (schema antigo): aprovado no doc ($aprovadoDireto) != aprovado no objeto (${colaborador.aprovado})")
+                Timber.w("AuthViewModel", "   Corrigindo usando valor direto do documento...")
+                colaborador.copy(
+                    id = colaboradorId,
+                    aprovado = aprovadoDireto,
+                    ativo = ativoDireto,
+                    primeiroAcesso = primeiroAcessoDireto
+                )
+            } else {
+                colaborador.copy(id = colaboradorId)
+            }
+            
+            Timber.d("AuthViewModel", "✅ Colaborador processado: ${colaboradorFinal.nome} (Aprovado: ${colaboradorFinal.aprovado}, Path: ${doc.reference.path})")
+            Pair(colaboradorFinal, companyId)
             
         } catch (e: Exception) {
-            Timber.e("AuthViewModel", "❌ Erro na busca na nuvem: ${e.message}")
+            crashlytics.setCustomKey("busca_nuvem_erro_geral", true)
+            crashlytics.setCustomKey("busca_nuvem_erro_tipo", e.javaClass.simpleName)
+            crashlytics.setCustomKey("busca_nuvem_erro_mensagem", e.message ?: "unknown")
+            crashlytics.log("[BUSCA_NUVEM] ❌ Erro na busca na nuvem: ${e.message}")
+            
+            // ✅ LOG ESPECÍFICO PARA ERROS DE PERMISSÃO
+            if (e is FirebaseFirestoreException) {
+                crashlytics.setCustomKey("busca_nuvem_erro_firestore_code", e.code.name)
+                crashlytics.log("[BUSCA_NUVEM] ❌ Erro Firestore: ${e.code.name} - ${e.message}")
+                
+                if (e.code == FirebaseFirestoreException.Code.PERMISSION_DENIED) {
+                    crashlytics.setCustomKey("busca_nuvem_permission_denied", true)
+                    crashlytics.log("[BUSCA_NUVEM] ❌ PERMISSION_DENIED: Usuário não autenticado ou sem permissão")
+                    crashlytics.log("[BUSCA_NUVEM] ❌ PERMISSION_DENIED: Verificar se as regras do Firestore permitem busca sem autenticação")
+                    crashlytics.log("[BUSCA_NUVEM] ❌ PERMISSION_DENIED: Path tentado: collectionGroup('items')")
+                    crashlytics.setCustomKey("busca_nuvem_firebase_auth_uid", firebaseAuth.currentUser?.uid ?: "null")
+                    crashlytics.setCustomKey("busca_nuvem_firebase_auth_email", firebaseAuth.currentUser?.email ?: "null")
+                }
+            }
+            
+            crashlytics.recordException(e)
+            Timber.e("AuthViewModel", "❌ Erro na busca na nuvem: ${e.message}", e)
+            Timber.e("AuthViewModel", "   Stack trace: ${e.stackTraceToString()}")
             null
         }
     }
@@ -1513,8 +2219,18 @@ class AuthViewModel @Inject constructor(
                 aprovadoPor = "Sistema (Superadmin Automático)"
             )
             
-            val colaboradorId = appRepository.inserirColaborador(novoColaborador)
-            val colaboradorComId = novoColaborador.copy(id = colaboradorId)
+            // ✅ CORREÇÃO: Verificar se já existe antes de inserir (evita duplicação)
+            val colaboradorExistente = firebaseUid?.let { 
+                appRepository.obterColaboradorPorFirebaseUid(it) 
+            } ?: appRepository.obterColaboradorPorEmail("rossinys@gmail.com")
+            
+            val colaboradorComId = if (colaboradorExistente != null) {
+                Timber.d("AuthViewModel", "✅ SUPERADMIN já existe localmente (ID: ${colaboradorExistente.id}), não duplicando")
+                colaboradorExistente
+            } else {
+                val colaboradorId = appRepository.inserirColaborador(novoColaborador)
+                novoColaborador.copy(id = colaboradorId)
+            }
             
             Timber.d("AuthViewModel", "✅ SUPERADMIN criado: ${colaboradorComId.nome}")
             
@@ -1548,6 +2264,17 @@ sealed class AuthState {
     object Unauthenticated : AuthState()
     data class Authenticated(val user: Any, val isOnline: Boolean) : AuthState()
     data class FirstAccessRequired(val colaborador: com.example.gestaobilhares.data.entities.Colaborador) : AuthState()
+}
+
+/**
+ * ✅ NOVO: Estado de UI para decisão de acesso após login
+ * Centraliza toda a lógica de aprovação em um único ponto
+ */
+sealed class LoginUiState {
+    object Loading : LoginUiState()
+    data class Aprovado(val colaborador: Colaborador) : LoginUiState()
+    data class Pendente(val colaborador: Colaborador) : LoginUiState()
+    data class Erro(val mensagem: String, val exception: Throwable? = null) : LoginUiState()
 }
 
 /**

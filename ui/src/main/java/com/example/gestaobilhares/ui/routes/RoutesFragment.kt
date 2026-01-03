@@ -1,4 +1,4 @@
-﻿package com.example.gestaobilhares.ui.routes
+package com.example.gestaobilhares.ui.routes
 import com.example.gestaobilhares.ui.R
 
 import android.os.Bundle
@@ -746,17 +746,25 @@ class RoutesFragment : Fragment() {
                                 "Falhas: ${status.failedOperations}"
                         }
                         
-                        // Forçar atualização completa dos dados das rotas após sincronização
+                        // ✅ CORREÇÃO: Forçar atualização completa dos dados das rotas após sincronização
+                        // Aguardar um pouco para garantir que os dados foram processados no banco
                         Timber.d("RoutesFragment", "🔄 Aguardando processamento dos dados...")
-                        kotlinx.coroutines.delay(2000)
+                        kotlinx.coroutines.delay(1500)
                         
-                        Timber.d("RoutesFragment", "🔄 Forçando refresh dos dados...")
+                        // ✅ CORREÇÃO: Forçar refresh múltiplas vezes para garantir atualização
+                        // O Flow reativo deve detectar mudanças nos acertos e recalcular pendências
+                        Timber.d("RoutesFragment", "🔄 Forçando refresh dos dados (1/3)...")
                         viewModel.refresh()
                         
-                        kotlinx.coroutines.delay(1000)
+                        kotlinx.coroutines.delay(500)
+                        Timber.d("RoutesFragment", "🔄 Forçando refresh dos dados (2/3)...")
                         viewModel.refresh()
                         
-                        Timber.d("RoutesFragment", "✅ Refresh concluído")
+                        kotlinx.coroutines.delay(500)
+                        Timber.d("RoutesFragment", "🔄 Forçando refresh dos dados (3/3)...")
+                        viewModel.refresh()
+                        
+                        Timber.d("RoutesFragment", "✅ Refresh concluído - Pendências devem estar atualizadas")
                     } else {
                         val status = syncRepository.getSyncStatus()
                         Timber.e("RoutesFragment", "❌ Sincronização falhou: ${status.error ?: "Erro desconhecido"}")

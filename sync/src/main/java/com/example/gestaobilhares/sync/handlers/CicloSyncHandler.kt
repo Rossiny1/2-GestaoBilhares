@@ -13,6 +13,7 @@ import com.google.firebase.firestore.DocumentSnapshot
 import com.google.firebase.Timestamp
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.tasks.await
+import kotlinx.coroutines.CancellationException
 import timber.log.Timber
 import java.util.Date
 import com.example.gestaobilhares.core.utils.FirebaseImageUploader
@@ -64,6 +65,9 @@ class CicloSyncHandler @javax.inject.Inject constructor(
             }
 
             pullComplete(collectionRef, startTime, timestampOverride)
+        } catch (e: CancellationException) {
+            Timber.tag(TAG).d("⏹️ Pull de ciclos cancelado")
+            throw e
         } catch (e: Exception) {
             Timber.tag(TAG).e("Erro no pull de ciclos: ${e.message}", e)
             Result.failure(e)
@@ -98,6 +102,9 @@ class CicloSyncHandler @javax.inject.Inject constructor(
             )
             
             Result.success(syncCount)
+        } catch (e: CancellationException) {
+            Timber.tag(TAG).d("⏹️ Pull completo de ciclos cancelado")
+            throw e
         } catch (e: Exception) {
             Timber.tag(TAG).e("Erro no pull completo de ciclos: ${e.message}", e)
             Result.failure(e)
@@ -142,6 +149,9 @@ class CicloSyncHandler @javax.inject.Inject constructor(
             )
             
             Result.success(syncCount)
+        } catch (e: CancellationException) {
+            Timber.tag(TAG).d("⏹️ Pull incremental de ciclos cancelado")
+            throw e
         } catch (e: Exception) {
             Timber.tag(TAG).e("Erro no pull incremental de ciclos: ${e.message}", e)
             null
@@ -254,6 +264,9 @@ class CicloSyncHandler @javax.inject.Inject constructor(
             savePushMetadata(entityType, syncCount, durationMs, bytesUploaded, if (errorCount > 0) "$errorCount erros" else null)
             
             Result.success(syncCount)
+        } catch (e: CancellationException) {
+            Timber.tag(TAG).d("⏹️ Push de ciclos cancelado")
+            throw e
         } catch (e: Exception) {
             Timber.tag(TAG).e("Erro no push de ciclos: ${e.message}", e)
             Result.failure(e)

@@ -53,7 +53,9 @@ android {
             if (keystorePropertiesFile.exists()) {
                 val props = Properties()
                 props.load(FileInputStream(keystorePropertiesFile))
-                storeFile = file(props["storeFile"] as String)
+                // Caminho relativo à raiz do projeto
+                val storeFilePath = props["storeFile"] as String
+                storeFile = rootProject.file(storeFilePath)
                 storePassword = props["storePassword"] as String
                 keyAlias = props["keyAlias"] as String
                 keyPassword = props["keyPassword"] as String
@@ -82,8 +84,8 @@ android {
             // Não é necessária configuração adicional - o plugin detecta automaticamente o mapping.txt.
             
             firebaseAppDistribution {
-                releaseNotes = "Release gerada via Gradle"
-                groups = "testers"
+                releaseNotes = "Release gerada via Gradle - Versão 1.0.1 (3)"
+                testers = "rossinys@gmail.com"
             }
         }
     }

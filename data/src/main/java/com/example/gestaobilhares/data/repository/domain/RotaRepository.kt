@@ -58,9 +58,10 @@ class RotaRepository(
         return combine(
             rotaDao.getAllRotasAtivas(),
             cicloAcertoDao.listarTodos(),
-            clienteDao.obterTodos() // ✅ NOVO: Incluir clientes para atualizar quando houver mudanças nos débitos
-        ) { rotas, ciclos, clientes ->
-            Timber.tag("RotaRepository").d("🔄 Atualizando resumo de rotas: ${rotas.size} rotas, ${ciclos.size} ciclos, ${clientes.size} clientes")
+            clienteDao.obterTodos(), // ✅ NOVO: Incluir clientes para atualizar quando houver mudanças nos débitos
+            acertoDao.listarTodos() // ✅ CORREÇÃO: Incluir acertos para atualizar quando houver mudanças nos débitos (afeta cálculo de pendências)
+        ) { rotas, ciclos, clientes, acertos ->
+            Timber.tag("RotaRepository").d("🔄 Atualizando resumo de rotas: ${rotas.size} rotas, ${ciclos.size} ciclos, ${clientes.size} clientes, ${acertos.size} acertos")
             
             rotas.map { rota ->
                 val clientesAtivos = calcularClientesAtivos(rota.id)

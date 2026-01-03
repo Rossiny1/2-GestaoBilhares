@@ -13,6 +13,7 @@ import com.google.firebase.firestore.DocumentSnapshot
 import com.google.firebase.Timestamp
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.tasks.await
+import kotlinx.coroutines.CancellationException
 import timber.log.Timber
 import com.example.gestaobilhares.core.utils.FirebaseImageUploader
 import com.example.gestaobilhares.core.utils.DateUtils
@@ -68,6 +69,9 @@ class RotaSyncHandler(
             }
 
             pullComplete(collectionRef, startTime, timestampOverride)
+        } catch (e: CancellationException) {
+            Timber.tag(TAG).d("⏹️ Pull de rotas cancelado")
+            throw e
         } catch (e: Exception) {
             Timber.tag(TAG).e("? Erro no pull de rotas: ${e.message}", e)
             Result.failure(e)
@@ -101,6 +105,9 @@ class RotaSyncHandler(
             )
             
             Result.success(syncCount)
+        } catch (e: CancellationException) {
+            Timber.tag(TAG).d("⏹️ Pull completo de rotas cancelado")
+            throw e
         } catch (e: Exception) {
             Timber.tag(TAG).e("? Erro no pull completo de rotas: ${e.message}", e)
             Result.failure(e)

@@ -1,8 +1,9 @@
-# 2️⃣ REGRAS DE NEGÓCIO
+# 📖 2️⃣ REGRAS DE NEGÓCIO
 
+> **LEIA SEGUNDO** - Entenda o domínio e as regras de negócio antes de codificar.  
 > **Propósito**: Definição da lógica operacional, financeira e multi-tenancy.  
-> **Última Atualização**: Dezembro 2025  
-> **Versão**: 3.0
+> **Última Atualização**: 02 de Janeiro de 2026  
+> **Versão**: 3.1
 
 ---
 

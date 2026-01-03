@@ -80,14 +80,32 @@ class ConflictResolutionTest {
     @Test
     fun pull_shouldUpdateLocalData_whenServerIsNewer() = runTest {
         // GIVEN: Local client updated at 1000ms
-        val localCliente = Cliente(id = 1L, nome = "Local Name", rotaId = 1L, dataUltimaAtualizacao = Date(1000L))
+        val localCliente = Cliente(id = 1L, nome = "Local Name", rotaId = 1L, dataUltimaAtualizacao = 1000L)
         whenever(appRepository.obterClientePorId(1L)).thenReturn(localCliente)
         whenever(syncMetadataDao.obterUltimoTimestamp(any(), any())).thenReturn(0L)
         
+        // Override admin to false for this test (admin bypasses route filter)
+        whenever(userSessionManager.isAdmin()).thenReturn(false)
+        whenever(userSessionManager.getUserAccessibleRoutes(any())).thenReturn(listOf(1L))
+        
+        // Mock pagination query chain - fetchAllDocumentsWithRouteFilter uses whereEqualTo -> executePaginatedQuery -> limit
+        val mockWhereQuery = mock<Query>()
+        val mockLimitQuery = mock<Query>()
+        val mockStartAfterQuery = mock<Query>()
+        whenever(collectionReference.whereEqualTo(any<String>(), any())).thenReturn(mockWhereQuery)
+        // executePaginatedQuery calls limit() directly on the query
+        whenever(mockWhereQuery.limit(any())).thenReturn(mockLimitQuery)
+        whenever(mockLimitQuery.get()).thenReturn(com.google.android.gms.tasks.Tasks.forResult(querySnapshot))
+        whenever(mockLimitQuery.startAfter(any())).thenReturn(mockStartAfterQuery)
+        whenever(mockStartAfterQuery.limit(any())).thenReturn(mockLimitQuery)
+        
         // Server client updated at 2000ms (newer)
-        whenever(collectionReference.get()).thenReturn(com.google.android.gms.tasks.Tasks.forResult(querySnapshot))
         whenever(querySnapshot.documents).thenReturn(listOf(documentSnapshot))
+        whenever(querySnapshot.isEmpty).thenReturn(false)
         whenever(documentSnapshot.id).thenReturn("1")
+        
+        // Mock para garantir que o cliente será processado corretamente
+        whenever(appRepository.buscarClientePorNomeERota(any(), any())).thenReturn(null)
         
         val serverData = mutableMapOf<String, Any>(
             "nome" to "Server Name",
@@ -124,7 +142,7 @@ class ConflictResolutionTest {
     @Test
     fun pull_shouldNotUpdateLocalData_whenLocalIsNewer() = runTest {
         // GIVEN: Local client updated at 3000ms
-        val localCliente = Cliente(id = 1L, nome = "Local New Name", rotaId = 1L, dataUltimaAtualizacao = Date(3000L))
+        val localCliente = Cliente(id = 1L, nome = "Local New Name", rotaId = 1L, dataUltimaAtualizacao = 3000L)
         whenever(appRepository.obterClientePorId(1L)).thenReturn(localCliente)
         whenever(syncMetadataDao.obterUltimoTimestamp(any(), any())).thenReturn(0L)
         
@@ -151,15 +169,35 @@ class ConflictResolutionTest {
     @Test
     fun pull_shouldReconcileDuplicates_byNameAndRoute() = runTest {
         // GIVEN: Local client with different ID but same name/route, and an OLD timestamp
-        val localCliente = Cliente(id = 100L, nome = "Duplicate Name", rotaId = 1L, dataUltimaAtualizacao = Date(1000L))
+        val localCliente = Cliente(id = 100L, nome = "Duplicate Name", rotaId = 1L, dataUltimaAtualizacao = 1000L)
         whenever(appRepository.obterClientePorId(555L)).thenReturn(null)
         whenever(appRepository.buscarClientePorNomeERota("Duplicate Name", 1L)).thenReturn(localCliente)
         whenever(syncMetadataDao.obterUltimoTimestamp(any(), any())).thenReturn(0L)
         
+        // Override admin to false for this test
+        whenever(userSessionManager.isAdmin()).thenReturn(false)
+        whenever(userSessionManager.getUserAccessibleRoutes(any())).thenReturn(listOf(1L))
+        
+        // Mock pagination query chain - fetchAllDocumentsWithRouteFilter uses whereEqualTo -> executePaginatedQuery -> limit
+        val mockWhereQuery = mock<Query>()
+        val mockLimitQuery = mock<Query>()
+        val mockStartAfterQuery = mock<Query>()
+        whenever(collectionReference.whereEqualTo(any<String>(), any())).thenReturn(mockWhereQuery)
+        // executePaginatedQuery calls limit() directly on the query
+        whenever(mockWhereQuery.limit(any())).thenReturn(mockLimitQuery)
+        whenever(mockLimitQuery.get()).thenReturn(com.google.android.gms.tasks.Tasks.forResult(querySnapshot))
+        whenever(mockLimitQuery.startAfter(any())).thenReturn(mockStartAfterQuery)
+        whenever(mockStartAfterQuery.limit(any())).thenReturn(mockLimitQuery)
+        
         // Server data with ID 555
-        whenever(collectionReference.get()).thenReturn(com.google.android.gms.tasks.Tasks.forResult(querySnapshot))
         whenever(querySnapshot.documents).thenReturn(listOf(documentSnapshot))
+        whenever(querySnapshot.isEmpty).thenReturn(false)
         whenever(documentSnapshot.id).thenReturn("555")
+        
+        // Mock para garantir que a reconciliação será executada
+        whenever(appRepository.migrarDadosDeCliente(any(), any())).thenReturn(Unit)
+        whenever(appRepository.deletarCliente(any())).thenReturn(Unit)
+        whenever(appRepository.inserirCliente(any())).thenReturn(555L)
         
         val serverData = mutableMapOf<String, Any>(
             "nome" to "Duplicate Name",

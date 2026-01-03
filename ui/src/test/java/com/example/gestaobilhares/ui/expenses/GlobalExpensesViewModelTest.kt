@@ -62,7 +62,7 @@ class GlobalExpensesViewModelTest {
             valor = 100.0,
             categoria = "Categoria Teste",
             cicloId = 1L,
-            dataHora = java.time.LocalDateTime.now()
+            dataHora = System.currentTimeMillis()
         )
         // Mock especifico para este teste
         whenever(appRepository.buscarDespesasGlobaisPorCiclo(2025, 1)).thenReturn(listOf(despesa))
@@ -103,7 +103,7 @@ class GlobalExpensesViewModelTest {
             descricao = "Para Deletar", 
             valor = 50.0, 
             categoria = "Cat",
-            dataHora = java.time.LocalDateTime.now()
+            dataHora = System.currentTimeMillis()
         )
         whenever(appRepository.buscarDespesasGlobaisPorCiclo(any(), any())).thenReturn(emptyList())
         

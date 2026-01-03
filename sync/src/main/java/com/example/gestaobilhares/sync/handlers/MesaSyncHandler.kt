@@ -14,6 +14,7 @@ import com.google.gson.GsonBuilder
 import com.example.gestaobilhares.core.utils.DateUtils
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.tasks.await
+import kotlinx.coroutines.CancellationException
 import timber.log.Timber
 import java.util.Date
 
@@ -78,6 +79,9 @@ class MesaSyncHandler(
             
             pullComplete(collectionRef, startTime, timestampOverride)
             
+        } catch (e: CancellationException) {
+            Timber.tag(TAG).d("⏹️ Pull de mesas cancelado")
+            throw e
         } catch (e: Exception) {
             Timber.tag(TAG).e("Erro no pull de mesas: ${e.message}", e)
             Result.failure(e)
@@ -420,6 +424,9 @@ class MesaSyncHandler(
             Timber.tag(TAG).d("✅ Push INCREMENTAL de mesas concluído: $syncCount enviadas, $errorCount erros, ${durationMs}ms. MaxServerTimestamp: ${Date(maxServerTimestamp)}")
             
             Result.success(syncCount)
+        } catch (e: CancellationException) {
+            Timber.tag(TAG).d("⏹️ Push de mesas cancelado")
+            throw e
         } catch (e: Exception) {
             val durationMs = System.currentTimeMillis() - startTime
             savePushMetadata(entityType, 0, durationMs, error = e.message)

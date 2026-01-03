@@ -146,8 +146,8 @@ class SecurityAndResilienceTest {
         whenever(syncMetadataDao.obterUltimoTimestamp(eq("clientes_push"), any())).thenReturn(5000L)
         
         // One old cliente (lastMod 4000) and one new (lastMod 6000)
-        val oldCliente = Cliente(id = 1L, nome = "Old", rotaId = 1L, dataUltimaAtualizacao = Date(4000L))
-        val newCliente = Cliente(id = 2L, nome = "New", rotaId = 1L, dataUltimaAtualizacao = Date(6000L))
+        val oldCliente = Cliente(id = 1L, nome = "Old", rotaId = 1L, dataUltimaAtualizacao = 4000L)
+        val newCliente = Cliente(id = 2L, nome = "New", rotaId = 1L, dataUltimaAtualizacao = 6000L)
         
         whenever(appRepository.obterTodosClientes()).thenReturn(kotlinx.coroutines.flow.flowOf(listOf(oldCliente, newCliente)))
         whenever(documentReference.set(any())).thenReturn(com.google.android.gms.tasks.Tasks.forResult(null))

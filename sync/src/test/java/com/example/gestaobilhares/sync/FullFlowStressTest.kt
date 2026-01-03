@@ -273,7 +273,7 @@ class FullFlowStressTest {
             suspend fun testCheck(type: String, id: Long) = ensureEntityExists(type, id)
         }
         
-        val cliente = Cliente(id = 10L, nome = "Test", rotaId = 1, dataCadastro = Date())
+        val cliente = Cliente(id = 10L, nome = "Test", rotaId = 1, dataCadastro = System.currentTimeMillis())
         whenever(appRepository.obterClientePorId(10L)).thenReturn(cliente)
         
         val exists = testHandler.testCheck("cliente", 10L)
@@ -298,7 +298,8 @@ class FullFlowStressTest {
         whenever(acertoDoc.id).thenReturn("100")
         
         // Mock to avoid NPE in toObject
-        whenever(acertoDoc.toObject(Acerto::class.java)).thenReturn(Acerto(clienteId = 999L, dataAcerto = Date(), periodoInicio = Date(), periodoFim = Date()))
+        val now = System.currentTimeMillis()
+        whenever(acertoDoc.toObject(Acerto::class.java)).thenReturn(Acerto(clienteId = 999L, dataAcerto = now, periodoInicio = now, periodoFim = now))
 
         // Mock appRepository to return null for this client
         whenever(appRepository.obterClientePorId(999L)).thenReturn(null)
@@ -331,14 +332,15 @@ class FullFlowStressTest {
      */
     @Test
     fun syncPush_shouldHandleLargeDataset_withBatching() = runTest {
+        val now = System.currentTimeMillis()
         val largeList = List(200) { i ->
             Acerto(
                 id = i.toLong(), 
                 clienteId = 1L, 
-                dataAcerto = Date(),
-                periodoInicio = Date(),
-                periodoFim = Date(),
-                dataCriacao = Date()
+                dataAcerto = now,
+                periodoInicio = now,
+                periodoFim = now,
+                dataCriacao = now
             )
         }
         
@@ -384,13 +386,14 @@ class FullFlowStressTest {
         assertThat(resultPull.isSuccess).isTrue()
         
         // 2. Create new local record
+        val now = System.currentTimeMillis()
         val newAcerto = Acerto(
             id = 500L, 
             clienteId = 1L, 
-            dataAcerto = Date(), 
-            dataCriacao = Date(),
-            periodoInicio = Date(),
-            periodoFim = Date()
+            dataAcerto = now, 
+            dataCriacao = now,
+            periodoInicio = now,
+            periodoFim = now
         )
         whenever(appRepository.obterTodosAcertos()).thenReturn(kotlinx.coroutines.flow.flowOf(listOf(newAcerto)))
         
@@ -437,11 +440,11 @@ class FullFlowStressTest {
         whenever(acertoDoc.reference).thenReturn(acertoRef)
         
         // Mock toObject to avoid NPE in some handlers (though AcertoSyncHandler uses gson)
-        val acertoObj = Acerto(id = 101L, clienteId = 10L, dataAcerto = Date(now), periodoInicio = Date(now), periodoFim = Date(now))
+        val acertoObj = Acerto(id = 101L, clienteId = 10L, dataAcerto = now, periodoInicio = now, periodoFim = now)
         whenever(acertoDoc.toObject(Acerto::class.java)).thenReturn(acertoObj)
         
         // Mock client exists
-        whenever(appRepository.obterClientePorId(10L)).thenReturn(Cliente(id = 10L, nome = "Cliente 10", rotaId = 1, dataCadastro = Date()))
+        whenever(appRepository.obterClientePorId(10L)).thenReturn(Cliente(id = 10L, nome = "Cliente 10", rotaId = 1, dataCadastro = now))
         
         // Mock UserSessionManager to be admin to simplify
         whenever(userSessionManager.isAdmin()).thenReturn(true)

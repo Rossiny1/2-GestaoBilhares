@@ -139,7 +139,7 @@ class ComprehensiveSyncTest {
     @Test
     fun clientePush_shouldSendChangesToFirestore() = runTest {
         whenever(syncMetadataDao.obterUltimoTimestamp(eq("clientes_push"), eq(1L))).thenReturn(1000L)
-        val cliente = Cliente(id = 1, nome = "Teste", rotaId = 1, dataUltimaAtualizacao = Date(2000L))
+        val cliente = Cliente(id = 1, nome = "Teste", rotaId = 1, dataUltimaAtualizacao = 2000L)
         whenever(appRepository.obterTodosClientes()).thenReturn(flowOf(listOf(cliente)))
         whenever(documentReference.set(any())).thenReturn(com.google.android.gms.tasks.Tasks.forResult(null))
         
@@ -152,7 +152,7 @@ class ComprehensiveSyncTest {
     @Test
     fun mesaPush_shouldIncludeRoomId() = runTest {
         whenever(syncMetadataDao.obterUltimoTimestamp(eq("mesas_push"), eq(1L))).thenReturn(1000L)
-        val mesa = Mesa(id = 1, numero = "1", clienteId = 10L, dataUltimaLeitura = Date(2000L))
+        val mesa = Mesa(id = 1, numero = "1", clienteId = 10L, dataUltimaLeitura = 2000L)
         whenever(appRepository.obterTodasMesas()).thenReturn(flowOf(listOf(mesa)))
         whenever(documentReference.set(any())).thenReturn(com.google.android.gms.tasks.Tasks.forResult(null))
         val mockSnapshot = mock<DocumentSnapshot>()
@@ -170,7 +170,7 @@ class ComprehensiveSyncTest {
     fun acertoPush_shouldSendAcertoAndAcertoMesas() = runTest {
         whenever(syncMetadataDao.obterUltimoTimestamp(eq("acertos_push"), eq(1L))).thenReturn(1000L)
         
-        val now = Date(2000L)
+        val now = 2000L
         val acerto = Acerto(id = 200, clienteId = 1, dataAcerto = now, periodoInicio = now, periodoFim = now, dataCriacao = now)
         val acertoMesa = AcertoMesa(id = 1, acertoId = 200, mesaId = 10, relogioInicial = 0, relogioFinal = 10, fichasJogadas = 10, subtotal = 100.0)
         
@@ -194,7 +194,8 @@ class ComprehensiveSyncTest {
         
         // Use a fixed date to be certain
         val fixedDate = java.time.LocalDateTime.of(2023, 1, 1, 12, 0)
-        val despesa = Despesa(id = 300, rotaId = 1, descricao = "Gasosa", valor = 50.0, categoria = "Combustivel", dataHora = fixedDate)
+        val fixedDateMillis = fixedDate.atZone(java.time.ZoneId.systemDefault()).toInstant().toEpochMilli()
+        val despesa = Despesa(id = 300, rotaId = 1, descricao = "Gasosa", valor = 50.0, categoria = "Combustivel", dataHora = fixedDateMillis)
         
         whenever(appRepository.obterTodasDespesas()).thenReturn(flowOf(listOf(despesa)))
         whenever(appRepository.buscarCategoriasAtivas()).thenReturn(flowOf(emptyList()))
@@ -215,7 +216,7 @@ class ComprehensiveSyncTest {
     fun contratoPush_shouldSendContratoAndChildren() = runTest {
         whenever(syncMetadataDao.obterUltimoTimestamp(eq("contratos_push"), eq(1L))).thenReturn(1000L)
         
-        val now = Date(2000L)
+        val now = 2000L
         val contrato = ContratoLocacao(
             id = 400, 
             clienteId = 1, 
@@ -338,15 +339,26 @@ class ComprehensiveSyncTest {
         whenever(userSessionManager.isAdmin()).thenReturn(false)
         whenever(userSessionManager.getUserAccessibleRoutes(any())).thenReturn(listOf(10L))
         
-        val mockQuery = mock<Query>()
-        whenever(collectionReference.whereEqualTo(any<String>(), any())).thenReturn(mockQuery)
-        whenever(mockQuery.get()).thenReturn(com.google.android.gms.tasks.Tasks.forResult(querySnapshot))
+        // Mock the query chain for pagination - fetchAllDocumentsWithRouteFilter uses whereEqualTo then orderBy then limit
+        val mockWhereQuery = mock<Query>()
+        val mockOrderQuery = mock<Query>()
+        val mockLimitQuery = mock<Query>()
+        val mockStartAfterQuery = mock<Query>()
+        
+        whenever(collectionReference.whereEqualTo(any<String>(), any())).thenReturn(mockWhereQuery)
+        whenever(mockWhereQuery.orderBy(any<String>())).thenReturn(mockOrderQuery)
+        whenever(mockOrderQuery.limit(any())).thenReturn(mockLimitQuery)
+        whenever(mockLimitQuery.get()).thenReturn(com.google.android.gms.tasks.Tasks.forResult(querySnapshot))
+        whenever(mockLimitQuery.startAfter(any())).thenReturn(mockStartAfterQuery)
+        whenever(mockStartAfterQuery.limit(any())).thenReturn(mockLimitQuery)
+        
         whenever(querySnapshot.isEmpty).thenReturn(true)
+        whenever(querySnapshot.documents).thenReturn(emptyList())
         
         testCicloHandler.pull()
         
-        // Should use route filter
-        verify(collectionReference).whereEqualTo(eq("rotaId"), eq(10L))
+        // Should use route filter with snake_case field name (FIELD_ROTA_ID = "rota_id")
+        verify(collectionReference).whereEqualTo(eq("rota_id"), eq(10L))
     }
 
     @Test

@@ -14,6 +14,7 @@ import com.google.firebase.firestore.FieldValue
 import com.google.firebase.firestore.FirebaseFirestore
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.tasks.await
+import kotlinx.coroutines.CancellationException
 import timber.log.Timber
 import java.io.File
 import java.util.Date
@@ -61,6 +62,9 @@ class AcertoSyncHandler(
             }
             
             pullComplete(startTime, timestampOverride)
+        } catch (e: CancellationException) {
+            Timber.tag(TAG).d("⏹️ Pull de acertos cancelado")
+            throw e
         } catch (e: Exception) {
             Timber.tag(TAG).e(e, "Erro no pull de acertos")
             Result.failure(e)
@@ -114,6 +118,9 @@ class AcertoSyncHandler(
             saveSyncMetadata(entityType, syncCount, durationMs, timestampOverride = timestampOverride)
             
             Result.success(syncCount)
+        } catch (e: CancellationException) {
+            Timber.tag(TAG).d("⏹️ Pull completo de acertos cancelado")
+            throw e
         } catch (e: Exception) {
             Timber.tag(TAG).e(e, "Erro no pull completo de acertos")
             Result.failure(e)
@@ -140,10 +147,22 @@ class AcertoSyncHandler(
                     val updated = appRepository.atualizarAcerto(acerto)
                     if (updated == 0) {
                         appRepository.inserirAcerto(acerto)
+                        Timber.tag(TAG).d("✅ Acerto inserido: ID=${acerto.id}")
+                    } else {
+                        Timber.tag(TAG).d("✅ Acerto atualizado: ID=${acerto.id}")
                     }
                     
                     syncCount++
-                    pullAcertoMesas(acerto.id)
+                    
+                    // ✅ CORREÇÃO CRÍTICA: Buscar mesas do acerto APÓS garantir que o acerto foi salvo
+                    // Isso garante que as mesas possam ser vinculadas corretamente
+                    try {
+                        pullAcertoMesas(acerto.id)
+                        Timber.tag(TAG).d("✅ Mesas do acerto ${acerto.id} processadas")
+                    } catch (e: Exception) {
+                        Timber.tag(TAG).e(e, "❌ Erro ao buscar mesas do acerto ${acerto.id}, mas acerto foi salvo")
+                        // Não falhar o sync do acerto por causa das mesas - continuar processamento
+                    }
                 } else {
                     Timber.tag(TAG).w("⏭️ Pulando acerto ${acerto.id} por falha na FK")
                 }
@@ -179,55 +198,136 @@ class AcertoSyncHandler(
 
     private suspend fun pullAcertoMesas(acertoId: Long) {
         try {
+            Timber.tag(TAG).d("🔍 Buscando mesas do acerto $acertoId no Firestore...")
             val collectionRef = getCollectionReference(COLLECTION_ACERTO_MESAS)
+            
+            // ✅ CORREÇÃO CRÍTICA: Usar "acerto_id" (snake_case) em vez de "acertoId" (camelCase)
+            // O Gson está configurado com FieldNamingPolicy.LOWER_CASE_WITH_UNDERSCORES,
+            // então os dados são salvos no Firestore com snake_case
             val snapshot = collectionRef
-                .whereEqualTo("acertoId", acertoId)
+                .whereEqualTo("acerto_id", acertoId) // ✅ CORREÇÃO: snake_case para corresponder ao Firestore
                 .get()
                 .await()
             
-            for (doc in snapshot.documents) {
-                try {
-                    val data = doc.data ?: continue
-                    val json = gson.toJson(data)
-                    var acertoMesa = gson.fromJson(json, AcertoMesa::class.java) ?: continue
-                    
-                    // Validar FKs
-                    if (!ensureEntityExists("acerto", acertoMesa.acertoId) || !ensureEntityExists("mesa", acertoMesa.mesaId)) {
-                        Timber.tag(TAG).w("⏭️ Pulando acerto_mesa ${doc.id} por falha na FK (acerto ou mesa não encontrados).")
-                        continue
-                    }
-
-                    // Tratamento de foto
-                    val remoteUrl = acertoMesa.fotoRelogioFinal
-                    if (!remoteUrl.isNullOrEmpty() && firebaseImageUploader.isFirebaseStorageUrl(remoteUrl)) {
-                        val existing = appRepository.buscarAcertoMesaPorAcertoEMesa(acertoMesa.acertoId, acertoMesa.mesaId)
-                        val existingFoto = existing?.fotoRelogioFinal
-                        
-                        val localPath = if (!existingFoto.isNullOrEmpty() && 
-                            !firebaseImageUploader.isFirebaseStorageUrl(existingFoto)) {
-                            
-                            val file = File(existingFoto)
-                            if (file.exists()) {
-                                existingFoto
-                            } else {
-                                firebaseImageUploader.downloadMesaRelogio(remoteUrl, acertoMesa.mesaId, acertoMesa.acertoId)
-                            }
-                        } else {
-                            firebaseImageUploader.downloadMesaRelogio(remoteUrl, acertoMesa.mesaId, acertoMesa.acertoId)
-                        }
-                        
-                        if (localPath != null) {
-                            acertoMesa = acertoMesa.copy(fotoRelogioFinal = localPath)
-                        }
-                    }
-                    
-                    appRepository.inserirAcertoMesa(acertoMesa)
-                } catch (e: Exception) {
-                    Timber.tag(TAG).e(e, "Erro ao sincronizar AcertoMesa ${doc.id}")
+            Timber.tag(TAG).d("📊 Encontradas ${snapshot.documents.size} mesas do acerto $acertoId no Firestore")
+            
+            if (snapshot.documents.isEmpty()) {
+                Timber.tag(TAG).w("⚠️ Nenhuma mesa encontrada para acerto $acertoId no Firestore")
+                // ✅ NOVO: Tentar buscar também com camelCase como fallback (caso dados antigos)
+                val snapshotFallback = collectionRef
+                    .whereEqualTo("acertoId", acertoId)
+                    .get()
+                    .await()
+                
+                if (snapshotFallback.documents.isNotEmpty()) {
+                    Timber.tag(TAG).d("✅ Encontradas ${snapshotFallback.documents.size} mesas usando fallback (camelCase)")
+                    processAcertoMesas(snapshotFallback.documents, acertoId)
                 }
+                return
+            }
+            
+            processAcertoMesas(snapshot.documents, acertoId)
+            
+            // ✅ VERIFICAÇÃO FINAL: Confirmar que as mesas foram salvas corretamente
+            val mesasSalvas = appRepository.buscarAcertoMesasPorAcerto(acertoId)
+            Timber.tag(TAG).d("✅ Verificação final: ${mesasSalvas.size} mesas salvas no banco local para acerto $acertoId")
+            if (mesasSalvas.isEmpty() && snapshot.documents.isNotEmpty()) {
+                Timber.tag(TAG).w("⚠️ ATENÇÃO: Mesas foram encontradas no Firestore (${snapshot.documents.size}) mas não foram salvas no banco local!")
             }
         } catch (e: Exception) {
             Timber.tag(TAG).e(e, "Erro no pull de AcertoMesas para acerto $acertoId")
+        }
+    }
+    
+    /**
+     * ✅ NOVO: Processa documentos de AcertoMesa do Firestore
+     * Extraído para evitar duplicação de código
+     */
+    private suspend fun processAcertoMesas(documents: List<com.google.firebase.firestore.DocumentSnapshot>, acertoId: Long) {
+        for (doc in documents) {
+            try {
+                val data = doc.data ?: continue
+                
+                Timber.tag(TAG).d("📄 Processando documento ${doc.id} do Firestore")
+                Timber.tag(TAG).d("   Campos disponíveis: ${data.keys.joinToString()}")
+                
+                // ✅ CORREÇÃO: Garantir que acerto_id esteja presente no data
+                if (!data.containsKey("acerto_id") && !data.containsKey("acertoId")) {
+                    Timber.tag(TAG).w("⚠️ Documento ${doc.id} não possui acerto_id, adicionando...")
+                    data["acerto_id"] = acertoId
+                    data["acertoId"] = acertoId
+                } else if (data.containsKey("acertoId") && !data.containsKey("acerto_id")) {
+                    // Converter camelCase para snake_case
+                    data["acerto_id"] = data["acertoId"]
+                }
+                
+                // ✅ CORREÇÃO: Extrair ID do documento ou do campo id
+                // O documento pode ter ID no formato "acertoId_mesaId" ou ter campo "id" no data
+                val acertoMesaId = when {
+                    data.containsKey("id") -> (data["id"] as? Number)?.toLong() ?: 0L
+                    else -> 0L // Será gerado automaticamente pelo Room
+                }
+                
+                val json = gson.toJson(data)
+                var acertoMesa = gson.fromJson(json, AcertoMesa::class.java) ?: continue
+                
+                // ✅ CORREÇÃO CRÍTICA: Garantir que acertoId esteja correto
+                if (acertoMesa.acertoId != acertoId) {
+                    Timber.tag(TAG).w("⚠️ AcertoMesa ${doc.id} tem acertoId incorreto (${acertoMesa.acertoId} != $acertoId), corrigindo...")
+                    acertoMesa = acertoMesa.copy(acertoId = acertoId)
+                }
+                
+                Timber.tag(TAG).d("📋 Processando AcertoMesa: acertoId=${acertoMesa.acertoId}, mesaId=${acertoMesa.mesaId}, id=$acertoMesaId")
+                
+                // Validar FKs
+                if (!ensureEntityExists("acerto", acertoMesa.acertoId) || !ensureEntityExists("mesa", acertoMesa.mesaId)) {
+                    Timber.tag(TAG).w("⏭️ Pulando acerto_mesa ${doc.id} por falha na FK (acerto ou mesa não encontrados).")
+                    Timber.tag(TAG).w("   Acerto existe: ${ensureEntityExists("acerto", acertoMesa.acertoId)}")
+                    Timber.tag(TAG).w("   Mesa existe: ${ensureEntityExists("mesa", acertoMesa.mesaId)}")
+                    continue
+                }
+
+                // Tratamento de foto
+                val remoteUrl = acertoMesa.fotoRelogioFinal
+                if (!remoteUrl.isNullOrEmpty() && firebaseImageUploader.isFirebaseStorageUrl(remoteUrl)) {
+                    val existing = appRepository.buscarAcertoMesaPorAcertoEMesa(acertoMesa.acertoId, acertoMesa.mesaId)
+                    val existingFoto = existing?.fotoRelogioFinal
+                    
+                    val localPath = if (!existingFoto.isNullOrEmpty() && 
+                        !firebaseImageUploader.isFirebaseStorageUrl(existingFoto)) {
+                        
+                        val file = File(existingFoto)
+                        if (file.exists()) {
+                            existingFoto
+                        } else {
+                            firebaseImageUploader.downloadMesaRelogio(remoteUrl, acertoMesa.mesaId, acertoMesa.acertoId)
+                        }
+                    } else {
+                        firebaseImageUploader.downloadMesaRelogio(remoteUrl, acertoMesa.mesaId, acertoMesa.acertoId)
+                    }
+                    
+                    if (localPath != null) {
+                        acertoMesa = acertoMesa.copy(fotoRelogioFinal = localPath)
+                    }
+                }
+                
+                // ✅ CORREÇÃO CRÍTICA: Verificar se já existe antes de inserir
+                // Usar buscarAcertoMesaPorAcertoEMesa para evitar duplicatas
+                val existing = appRepository.buscarAcertoMesaPorAcertoEMesa(acertoMesa.acertoId, acertoMesa.mesaId)
+                if (existing != null) {
+                    // ✅ Atualizar existente mantendo o ID local
+                    val acertoMesaAtualizado = acertoMesa.copy(id = existing.id)
+                    appRepository.inserirAcertoMesa(acertoMesaAtualizado)
+                    Timber.tag(TAG).d("✅ AcertoMesa atualizado: acertoId=${acertoMesa.acertoId}, mesaId=${acertoMesa.mesaId}, id=${existing.id}")
+                } else {
+                    // ✅ Inserir novo (ID será gerado automaticamente pelo Room)
+                    // Não usar acertoMesaId do Firestore pois pode causar conflitos
+                    val novoId = appRepository.inserirAcertoMesa(acertoMesa.copy(id = 0))
+                    Timber.tag(TAG).d("✅ AcertoMesa inserido: acertoId=${acertoMesa.acertoId}, mesaId=${acertoMesa.mesaId}, novoId=$novoId")
+                }
+            } catch (e: Exception) {
+                Timber.tag(TAG).e(e, "Erro ao sincronizar AcertoMesa ${doc.id}")
+            }
         }
     }
 
@@ -270,6 +370,9 @@ class AcertoSyncHandler(
             
             savePushMetadata(entityType, syncCount, System.currentTimeMillis() - startTime)
             Result.success(syncCount)
+        } catch (e: CancellationException) {
+            Timber.tag(TAG).d("⏹️ Push de acertos cancelado")
+            throw e
         } catch (e: Exception) {
             Timber.tag(TAG).e(e, "Erro no push de acertos")
             Result.failure(e)

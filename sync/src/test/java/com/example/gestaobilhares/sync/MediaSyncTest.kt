@@ -84,7 +84,7 @@ class MediaSyncTest {
             nome = "John Doe",
             email = "john@example.com",
             fotoPerfil = localPhotoPath,
-            dataUltimaAtualizacao = Date()
+            dataUltimaAtualizacao = System.currentTimeMillis()
         )
         
         whenever(appRepository.obterTodosColaboradores()).thenReturn(kotlinx.coroutines.flow.flowOf(listOf(collaborator)))
@@ -115,7 +115,7 @@ class MediaSyncTest {
             nome = "John Doe",
             email = "john@example.com",
             fotoPerfil = remoteUrl,
-            dataUltimaAtualizacao = Date()
+            dataUltimaAtualizacao = System.currentTimeMillis()
         )
         
         whenever(appRepository.obterTodosColaboradores()).thenReturn(kotlinx.coroutines.flow.flowOf(listOf(collaborator)))

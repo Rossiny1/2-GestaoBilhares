@@ -17,6 +17,7 @@ import com.google.firebase.firestore.FieldValue
 import com.google.firebase.firestore.FirebaseFirestore
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.tasks.await
+import kotlinx.coroutines.CancellationException
 import timber.log.Timber
 import java.time.LocalDateTime
 import java.time.ZoneId
@@ -73,6 +74,9 @@ class DespesaSyncHandler(
             }
             
             Result.success(0) // Return value will be ignored by orchestrator if using individual counts
+        } catch (e: CancellationException) {
+            Timber.tag(TAG).d("⏹️ Pull de despesas cancelado")
+            throw e
         } catch (e: Exception) {
             Timber.tag(TAG).e(e, "Erro no pull de despesas")
             Result.failure(e)
@@ -130,6 +134,9 @@ class DespesaSyncHandler(
             saveSyncMetadata(entityType, syncCount, durationMs, timestampOverride = timestampOverride)
             
             Result.success(syncCount)
+        } catch (e: CancellationException) {
+            Timber.tag(TAG).d("⏹️ Pull completo de despesas cancelado")
+            throw e
         } catch (e: Exception) {
             Timber.tag(TAG).e(e, "Erro no pull completo de despesas")
             Result.failure(e)
@@ -255,6 +262,9 @@ class DespesaSyncHandler(
             }
 
             Result.success(syncCount)
+        } catch (e: CancellationException) {
+            Timber.tag(TAG).d("⏹️ Push de despesas cancelado")
+            throw e
         } catch (e: Exception) {
             Timber.tag(TAG).e(e, "Erro no push de despesas")
             Result.failure(e)

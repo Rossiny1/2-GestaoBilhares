@@ -1,4 +1,4 @@
-﻿package com.example.gestaobilhares.ui.auth
+package com.example.gestaobilhares.ui.auth
 import com.example.gestaobilhares.ui.R
 
 import android.os.Bundle
@@ -86,9 +86,30 @@ class LoginFragment : Fragment() {
      */
     private fun setupClickListeners() {
         binding.loginButton.setOnClickListener {
+            android.util.Log.d("LoginFragment", "═══════════════════════════════════════")
+            android.util.Log.d("LoginFragment", "🔘 BOTÃO LOGIN CLICADO")
+            android.util.Log.d("LoginFragment", "═══════════════════════════════════════")
+            Timber.d("LoginFragment", "🔘 BOTÃO LOGIN CLICADO")
+            
             val email = binding.emailEditText.text.toString()
             val password = binding.passwordEditText.text.toString()
-            authViewModel.login(email, password)
+            
+            android.util.Log.d("LoginFragment", "Email: $email")
+            android.util.Log.d("LoginFragment", "Senha: ${password.length} caracteres")
+            Timber.d("LoginFragment", "Email: $email, Senha: ${password.length} caracteres")
+            
+            android.util.Log.d("LoginFragment", "Chamando authViewModel.login()...")
+            Timber.d("LoginFragment", "Chamando authViewModel.login()...")
+            
+            try {
+                authViewModel.login(email, password)
+                android.util.Log.d("LoginFragment", "✅ authViewModel.login() chamado com sucesso")
+                Timber.d("LoginFragment", "✅ authViewModel.login() chamado com sucesso")
+            } catch (e: Exception) {
+                android.util.Log.e("LoginFragment", "❌ ERRO ao chamar authViewModel.login(): ${e.message}")
+                android.util.Log.e("LoginFragment", "Stack: ${e.stackTraceToString()}")
+                Timber.e(e, "LoginFragment", "❌ ERRO ao chamar authViewModel.login(): ${e.message}")
+            }
         }
 
         binding.forgotPasswordTextView.setOnClickListener {
@@ -98,27 +119,89 @@ class LoginFragment : Fragment() {
     }
     
     /**
-     * Observa mudanças no estado de autenticação
+     * Observa mudanças no estado de autenticação e UI do login
      */
     private fun observeAuthState() {
-        // ✅ MODERNIZADO: Observa o estado de autenticação com StateFlow
+        // ✅ REFATORAÇÃO: Observar apenas loginUiState para decisão de acesso
+        // A UI não decide aprovação com base em AuthStateListener
+        viewLifecycleOwner.lifecycleScope.launch {
+            viewLifecycleOwner.repeatOnLifecycle(Lifecycle.State.STARTED) {
+                authViewModel.loginUiState.collect { uiState ->
+                    when (uiState) {
+                        is LoginUiState.Loading -> {
+                            // Estado de loading já é gerenciado pelo ViewModel
+                            Timber.d("LoginFragment", "🔄 [UI] Estado: Loading")
+                        }
+                        is LoginUiState.Aprovado -> {
+                            // ✅ Aprovado - navegar para home
+                            // ✅ CORREÇÃO: Verificar destino atual e usar ação de navegação correta
+                            Timber.d("LoginFragment", "✅ [UI] Colaborador APROVADO - navegando para home")
+                            try {
+                                val navController = findNavController()
+                                val currentDestination = navController.currentDestination?.id
+                                
+                                when (currentDestination) {
+                                    com.example.gestaobilhares.ui.R.id.loginFragment -> {
+                                        // Se estiver no LoginFragment, usar ação direta
+                                        navController.navigate(com.example.gestaobilhares.ui.R.id.action_loginFragment_to_routesFragment)
+                                    }
+                                    com.example.gestaobilhares.ui.R.id.changePasswordFragment -> {
+                                        // Se estiver no ChangePasswordFragment, usar ação específica desse fragment
+                                        navController.navigate(com.example.gestaobilhares.ui.R.id.action_changePasswordFragment_to_routesFragment)
+                                    }
+                                    else -> {
+                                        Timber.w("LoginFragment", "⚠️ [UI] Destino atual ($currentDestination) não é loginFragment nem changePasswordFragment")
+                                        // Tentar navegar de qualquer forma usando popBackStack até loginFragment
+                                        try {
+                                            navController.popBackStack(com.example.gestaobilhares.ui.R.id.loginFragment, false)
+                                            navController.navigate(com.example.gestaobilhares.ui.R.id.action_loginFragment_to_routesFragment)
+                                        } catch (e2: Exception) {
+                                            Timber.e(e2, "LoginFragment", "❌ [UI] Erro na navegação alternativa: ${e2.message}")
+                                        }
+                                    }
+                                }
+                            } catch (e: Exception) {
+                                Timber.e(e, "LoginFragment", "❌ [UI] Erro ao navegar para routesFragment: ${e.message}")
+                            }
+                        }
+                        is LoginUiState.Pendente -> {
+                            // ✅ Pendente - mostrar mensagem (UI não decide, apenas exibe)
+                            Timber.d("LoginFragment", "⏳ [UI] Colaborador PENDENTE - mostrando mensagem")
+                            Toast.makeText(
+                                requireContext(),
+                                "Sua conta está aguardando aprovação do administrador.",
+                                Toast.LENGTH_LONG
+                            ).show()
+                        }
+                        is LoginUiState.Erro -> {
+                            // ✅ Erro - mostrar mensagem
+                            Timber.e("LoginFragment", "❌ [UI] Erro: ${uiState.mensagem}")
+                            Toast.makeText(
+                                requireContext(),
+                                uiState.mensagem,
+                                Toast.LENGTH_LONG
+                            ).show()
+                            uiState.exception?.printStackTrace()
+                        }
+                    }
+                }
+            }
+        }
+        
+        // ✅ Observar AuthState apenas para navegação (FirstAccessRequired)
         viewLifecycleOwner.lifecycleScope.launch {
             viewLifecycleOwner.repeatOnLifecycle(Lifecycle.State.STARTED) {
                 authViewModel.authState.collect { authState ->
                     when (authState) {
-                        is AuthState.Authenticated -> {
-                            // Navegar para a tela de rotas em caso de sucesso
-                            findNavController().navigate(com.example.gestaobilhares.ui.R.id.action_loginFragment_to_routesFragment)
-                        }
                         is AuthState.FirstAccessRequired -> {
-                            // ✅ NOVO: Redirecionar para tela de alteração de senha obrigatória
-                            Timber.d("LoginFragment", "Primeiro acesso detectado. Navegando para ChangePasswordFragment...")
+                            // ✅ Redirecionar para tela de alteração de senha obrigatória
+                            Timber.d("LoginFragment", "🔐 [UI] Primeiro acesso detectado. Navegando para ChangePasswordFragment...")
                             findNavController().navigate(
                                 com.example.gestaobilhares.ui.R.id.action_loginFragment_to_changePasswordFragment
                             )
                         }
-                        AuthState.Unauthenticated -> {
-                            // Manter na tela de login
+                        else -> {
+                            // Outros estados são gerenciados por loginUiState
                         }
                     }
                 }
