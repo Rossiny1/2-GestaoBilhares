@@ -202,29 +202,21 @@ class ColaboradorManagementViewModel @Inject constructor(
             
             val uid = colaborador.firebaseUid
             
-            // ✅ CORREÇÃO: Se não tem UID, tentar buscar pelo email ou usar ID como fallback
-            val docRef = if (uid != null && uid.isNotBlank()) {
-                // ✅ Sincronizar no novo schema: empresas/{empresaId}/colaboradores/{uid}
-                firestore
-                    .collection("empresas")
-                    .document(companyId)
-                    .collection("colaboradores")
-                    .document(uid)
-            } else {
-                // ✅ FALLBACK: Se não tem UID, tentar atualizar no schema antigo ou criar com email
-                Timber.w("ColaboradorManagementViewModel", "⚠️ Colaborador não tem Firebase UID, tentando atualizar no schema antigo")
-                
-                // Tentar buscar documento existente pelo email no schema antigo
-                val collectionRef = firestore
-                    .collection("empresas")
-                    .document(companyId)
-                    .collection("entidades")
-                    .document("colaboradores")
-                    .collection("items")
-                
-                val emailDocId = colaborador.email.replace(".", "_").replace("@", "_")
-                collectionRef.document(emailDocId)
+            // ✅ PADRONIZAÇÃO: Usar APENAS o novo schema (empresas/{empresaId}/colaboradores/{uid})
+            // REMOVIDO: Fallback para schema antigo para evitar duplicação
+            if (uid == null || uid.isBlank()) {
+                Timber.w("ColaboradorManagementViewModel", "⚠️ Colaborador não tem Firebase UID, não é possível sincronizar")
+                Timber.w("ColaboradorManagementViewModel", "   Email: ${colaborador.email}")
+                Timber.w("ColaboradorManagementViewModel", "   É necessário ter Firebase UID para sincronizar no novo schema")
+                return
             }
+            
+            // ✅ Sincronizar APENAS no novo schema: empresas/{empresaId}/colaboradores/{uid}
+            val docRef = firestore
+                .collection("empresas")
+                .document(companyId)
+                .collection("colaboradores")
+                .document(uid)
             
             // Preparar e atualizar dados do colaborador
             prepararDadosColaboradorParaFirestore(colaborador, companyId, uid, docRef)
@@ -481,81 +473,12 @@ class ColaboradorManagementViewModel @Inject constructor(
                     throw Exception("Usuário não encontrado no Firebase Authentication: ${e.message}")
                 }
                 
-                // 2. Buscar documento no Firestore usando email como ID temporário
-                val companyId = userSessionManager.getCurrentCompanyId() ?: "empresa_001"
-                val documentId = email.replace(".", "_").replace("@", "_")
-                val collectionRef = firestore
-                    .collection("empresas")
-                    .document(companyId)
-                    .collection("entidades")
-                    .document("colaboradores")
-                    .collection("items")
-                
-                Timber.d("ColaboradorManagementViewModel", "   Buscando documento no Firestore: $documentId")
-                
-                val docSnapshot = collectionRef.document(documentId).get().await()
-                
-                if (!docSnapshot.exists()) {
-                    // Se não existe, criar novo documento
-                    Timber.d("ColaboradorManagementViewModel", "   Documento não existe. Criando novo...")
-                    
-                    // ✅ CORREÇÃO CRÍTICA: Usar snake_case para corresponder às regras do Firestore
-                    val colaboradorMap = mutableMapOf<String, Any?>()
-                    colaboradorMap["id"] = System.currentTimeMillis() // ID temporário único
-                    colaboradorMap["room_id"] = colaboradorMap["id"]
-                    colaboradorMap["nome"] = email.substringBefore("@")
-                    colaboradorMap["email"] = email
-                    colaboradorMap["telefone"] = ""
-                    colaboradorMap["cpf"] = ""
-                    colaboradorMap["nivel_acesso"] = nivelAcesso.name // ✅ CORREÇÃO: snake_case
-                    colaboradorMap["ativo"] = true
-                    colaboradorMap["aprovado"] = true
-                    colaboradorMap["primeiro_acesso"] = true // ✅ CORREÇÃO: snake_case
-                    colaboradorMap["senha_temporaria"] = senha // ✅ CORREÇÃO: snake_case
-                    colaboradorMap["senha_hash"] = senha // ✅ CORREÇÃO: snake_case (TEMPORÁRIO: usar hash depois)
-                    colaboradorMap["data_cadastro"] = Timestamp(Date()) // ✅ CORREÇÃO: snake_case
-                    colaboradorMap["data_aprovacao"] = Timestamp(Date()) // ✅ CORREÇÃO: snake_case
-                    colaboradorMap["data_ultima_atualizacao"] = Timestamp(Date()) // ✅ CORREÇÃO: snake_case
-                    colaboradorMap["aprovado_por"] = aprovadoPor // ✅ CORREÇÃO: snake_case
-                    colaboradorMap["observacoes"] = observacoes
-                    colaboradorMap["last_modified"] = FieldValue.serverTimestamp() // ✅ CORREÇÃO: snake_case
-                    colaboradorMap["sync_timestamp"] = FieldValue.serverTimestamp() // ✅ CORREÇÃO: snake_case
-                    
-                    // Tentar buscar firebaseUid do Authentication
-                    try {
-                        // Buscar todos os usuários e encontrar pelo email
-                        // Nota: Isso requer Admin SDK, então vamos deixar null por enquanto
-                        // A Cloud Function vai preencher depois
-                        colaboradorMap["firebase_uid"] = null // ✅ CORREÇÃO: snake_case
-                    } catch (e: Exception) {
-                        Timber.w("ColaboradorManagementViewModel", "   Não foi possível obter firebaseUid: ${e.message}")
-                    }
-                    
-                    collectionRef.document(documentId).set(colaboradorMap).await()
-                    Timber.d("ColaboradorManagementViewModel", "✅ Documento criado no Firestore")
-                } else {
-                    // Se existe, atualizar com dados de aprovação
-                    Timber.d("ColaboradorManagementViewModel", "   Documento existe. Atualizando...")
-                    
-                    // ✅ CORREÇÃO CRÍTICA: Usar snake_case para corresponder às regras do Firestore
-                    val updateMap = mutableMapOf<String, Any?>()
-                    updateMap["aprovado"] = true
-                    updateMap["data_aprovacao"] = Timestamp(Date()) // ✅ CORREÇÃO: snake_case
-                    updateMap["aprovado_por"] = aprovadoPor // ✅ CORREÇÃO: snake_case
-                    updateMap["nivel_acesso"] = nivelAcesso.name // ✅ CORREÇÃO: snake_case
-                    updateMap["senha_temporaria"] = senha // ✅ CORREÇÃO: snake_case
-                    updateMap["senha_hash"] = senha // ✅ CORREÇÃO: snake_case (TEMPORÁRIO)
-                    updateMap["observacoes"] = observacoes
-                    updateMap["data_ultima_atualizacao"] = Timestamp(Date()) // ✅ CORREÇÃO: snake_case
-                    updateMap["last_modified"] = FieldValue.serverTimestamp() // ✅ CORREÇÃO: snake_case
-                    updateMap["sync_timestamp"] = FieldValue.serverTimestamp() // ✅ CORREÇÃO: snake_case
-                    
-                    collectionRef.document(documentId).update(updateMap).await()
-                    Timber.d("ColaboradorManagementViewModel", "✅ Documento atualizado no Firestore")
-                }
-                
-                showMessage("Colaborador aprovado com sucesso! O documento foi criado/atualizado no Firestore.")
-                carregarDados() // Recarregar dados
+                // ✅ PADRONIZAÇÃO: Usar APENAS o novo schema (empresas/{empresaId}/colaboradores/{uid})
+                // REMOVIDO: Criação no schema antigo (entidades/colaboradores/items) para evitar duplicação
+                // Esta função está DEPRECATED - use aprovarColaboradorComCredenciais que cria o usuário no Firebase Auth primeiro
+                Timber.w("ColaboradorManagementViewModel", "⚠️ aprovarColaboradorDoAuthentication está DEPRECATED")
+                Timber.w("ColaboradorManagementViewModel", "   Use aprovarColaboradorComCredenciais que cria o usuário no Firebase Auth primeiro")
+                _errorMessage.value = "Esta função está desativada. Use 'Aprovar com Credenciais' que cria o usuário no Firebase Auth primeiro."
                 
             } catch (e: Exception) {
                 Timber.e("ColaboradorManagementViewModel", "Erro ao aprovar colaborador do Authentication: ${e.message}", e)
