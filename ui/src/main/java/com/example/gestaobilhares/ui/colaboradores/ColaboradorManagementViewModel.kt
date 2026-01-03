@@ -208,8 +208,36 @@ class ColaboradorManagementViewModel @Inject constructor(
             if (uid == null || uid.isBlank()) {
                 Timber.w("ColaboradorManagementViewModel", "⚠️ Colaborador não tem Firebase UID, não é possível sincronizar")
                 Timber.w("ColaboradorManagementViewModel", "   Email: ${colaborador.email}")
+                Timber.w("ColaboradorManagementViewModel", "   ID Local: ${colaborador.id}")
+                Timber.w("ColaboradorManagementViewModel", "   Aprovado: ${colaborador.aprovado}")
                 Timber.w("ColaboradorManagementViewModel", "   É necessário ter Firebase UID para sincronizar no novo schema")
                 Timber.w("ColaboradorManagementViewModel", "   DICA: Use 'Aprovar com Credenciais' para criar o usuário no Firebase Auth primeiro")
+                
+                // ✅ CORREÇÃO CRÍTICA: Tentar buscar UID do Firebase Auth pelo email
+                try {
+                    Timber.d("ColaboradorManagementViewModel", "   Tentando buscar Firebase UID pelo email...")
+                    // Nota: Não podemos buscar usuário por email diretamente no cliente
+                    // Mas podemos verificar se o usuário atual tem esse email
+                    val currentUser = firebaseAuth.currentUser
+                    if (currentUser != null && currentUser.email == colaborador.email) {
+                        val foundUid = currentUser.uid
+                        Timber.d("ColaboradorManagementViewModel", "   ✅ Firebase UID encontrado via currentUser: $foundUid")
+                        // Atualizar colaborador localmente com o UID encontrado
+                        val colaboradorComUid = colaborador.copy(firebaseUid = foundUid)
+                        appRepository.atualizarColaborador(colaboradorComUid)
+                        // Tentar sincronizar novamente com o UID encontrado
+                        val docRef = firestore.collection("empresas").document(companyId)
+                            .collection("colaboradores").document(foundUid)
+                        prepararDadosColaboradorParaFirestore(colaboradorComUid, companyId, foundUid, docRef)
+                        return
+                    } else {
+                        Timber.w("ColaboradorManagementViewModel", "   ⚠️ Usuário atual não corresponde ao email do colaborador")
+                        Timber.w("ColaboradorManagementViewModel", "   CurrentUser email: ${currentUser?.email}, Colaborador email: ${colaborador.email}")
+                    }
+                } catch (e: Exception) {
+                    Timber.e(e, "ColaboradorManagementViewModel", "   Erro ao buscar Firebase UID: ${e.message}")
+                }
+                
                 return
             }
             
