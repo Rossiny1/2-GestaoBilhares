@@ -1075,6 +1075,35 @@ class AppRepository @Inject constructor(
                     return colaboradorLocal
                 } else {
                     Timber.d("AppRepository", "🔧 [CRIAR_PENDENTE] Colaborador existe no Firestore mas não localmente, salvando localmente...")
+                    // ✅ CORREÇÃO CRÍTICA: Verificar se o Firestore tem aprovado=false mas deveria ter true
+                    // Isso pode acontecer se o colaborador foi aprovado mas o Firestore não foi atualizado
+                    // OU se o Firestore foi sobrescrito com dados antigos
+                    // Neste caso, vamos verificar se há um colaborador aprovado em outro lugar (por email)
+                    val colaboradorPorEmail = obterColaboradorPorEmail(email)
+                    if (colaboradorPorEmail != null && colaboradorPorEmail.aprovado && !colaboradorExistente.aprovado) {
+                        Timber.w("AppRepository", "⚠️ [CRIAR_PENDENTE] CONFLITO: Colaborador por email está APROVADO mas Firestore não!")
+                        Timber.w("AppRepository", "   Preservando status aprovado do colaborador por email")
+                        val colaboradorPreservado = colaboradorExistente.copy(
+                            aprovado = true,
+                            dataAprovacao = colaboradorPorEmail.dataAprovacao,
+                            aprovadoPor = colaboradorPorEmail.aprovadoPor,
+                            id = colaboradorPorEmail.id
+                        )
+                        atualizarColaborador(colaboradorPreservado)
+                        // Sincronizar status aprovado para o Firestore
+                        try {
+                            val docRef = firestore
+                                .collection("empresas")
+                                .document(empresaId)
+                                .collection("colaboradores")
+                                .document(uid)
+                            docRef.update("aprovado", true).await()
+                            Timber.d("AppRepository", "✅ [CRIAR_PENDENTE] Status aprovado sincronizado para Firestore")
+                        } catch (e: Exception) {
+                            Timber.e(e, "❌ [CRIAR_PENDENTE] Erro ao sincronizar status aprovado: ${e.message}")
+                        }
+                        return colaboradorPreservado
+                    }
                     inserirColaborador(colaboradorExistente)
                 }
                 return colaboradorExistente
@@ -1131,8 +1160,12 @@ class AppRepository @Inject constructor(
                 colaboradorMap["empresa_id"] = empresaId
                 colaboradorMap["companyId"] = empresaId
                 
-                docRef.set(colaboradorMap).await()
-                Timber.d("AppRepository", "✅ [CRIAR_PENDENTE] Colaborador aprovado sincronizado para Firestore")
+                // ✅ CORREÇÃO: Usar merge para não sobrescrever campos existentes
+                // Mas garantir que aprovado=true seja sempre escrito
+                docRef.set(colaboradorMap, com.google.firebase.firestore.SetOptions.merge()).await()
+                // ✅ GARANTIR que aprovado=true após merge (proteção extra)
+                docRef.update("aprovado", true).await()
+                Timber.d("AppRepository", "✅ [CRIAR_PENDENTE] Colaborador aprovado sincronizado para Firestore (aprovado=true garantido)")
             } catch (e: Exception) {
                 Timber.e(e, "❌ [CRIAR_PENDENTE] Erro ao sincronizar colaborador aprovado: ${e.message}")
             }
