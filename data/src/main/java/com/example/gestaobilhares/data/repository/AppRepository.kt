@@ -1001,13 +1001,14 @@ class AppRepository @Inject constructor(
         colaboradorId: Long,
         email: String,
         senha: String,
+        senhaHash: String?, // ✅ NOVO
         nivelAcesso: NivelAcesso,
         observacoes: String,
         dataAprovacao: java.util.Date,
         aprovadoPor: String,
         firebaseUid: String? = null
     ) = colaboradorDao.aprovarColaboradorComCredenciais(
-        colaboradorId, email, senha, nivelAcesso, observacoes, dataAprovacao.time, aprovadoPor, firebaseUid
+        colaboradorId, email, senha, senhaHash, nivelAcesso, observacoes, dataAprovacao.time, aprovadoPor, firebaseUid
     )
     
     suspend fun marcarPrimeiroAcessoConcluido(colaboradorId: Long, senhaHash: String) = 

@@ -13,7 +13,7 @@ import com.example.gestaobilhares.data.repository.AppRepository
 import com.example.gestaobilhares.ui.common.BaseViewModel
 import com.example.gestaobilhares.core.utils.NetworkUtils
 import com.example.gestaobilhares.core.utils.UserSessionManager
-// import com.example.gestaobilhares.core.utils.PasswordHasher // TODO: Classe removida
+import com.example.gestaobilhares.core.utils.PasswordHasher
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.auth.FirebaseUser
 import com.google.firebase.firestore.FirebaseFirestore
@@ -366,8 +366,12 @@ class AuthViewModel @Inject constructor(
                                 
                                 // Verificar primeiro acesso
                                 val isSuperAdmin = email == "rossinys@gmail.com"
-                                if (!isSuperAdmin && colaboradorFinal.primeiroAcesso && colaboradorFinal.senhaHash == null) {
+                                if (!isSuperAdmin && colaboradorFinal.primeiroAcesso) {
+                                    Timber.d("AuthViewModel", "🔐 [LOGIN] Primeiro acesso detectado - Redirecionando")
                                     _authState.value = AuthState.FirstAccessRequired(colaboradorFinal)
+                                    _loginUiState.value = LoginUiState.PrimeiroAcesso(colaboradorFinal)
+                                    hideLoading()
+                                    return@launch
                                 }
                                 
                                 _loginUiState.value = LoginUiState.Aprovado(colaboradorFinal)
@@ -522,7 +526,7 @@ class AuthViewModel @Inject constructor(
                             Timber.d("AuthViewModel", "   Senha temporária: ${if (senhaTemporariaLimpa != null) "'$senhaTemporariaLimpa' (${senhaTemporariaLimpa.length} caracteres)" else "ausente"}")
                             
                             val senhaValida = when {
-                                senhaHashLimpa != null && senhaLimpa == senhaHashLimpa -> {
+                                senhaHashLimpa != null && PasswordHasher.verify(senhaLimpa, senhaHashLimpa) -> {
                                     Timber.d("AuthViewModel", "✅ Senha pessoal válida")
                                     true
                                 }
@@ -551,7 +555,6 @@ class AuthViewModel @Inject constructor(
                             val isSuperAdmin = email == "rossinys@gmail.com"
                             val isPrimeiroAcesso = !isSuperAdmin && 
                                                   colaborador.primeiroAcesso && 
-                                                  colaborador.senhaHash == null &&
                                                   senhaTemporariaLimpa != null && 
                                                   senhaLimpa == senhaTemporariaLimpa
                             
@@ -574,6 +577,7 @@ class AuthViewModel @Inject constructor(
                                 Timber.d("AuthViewModel", "✅ Sessão iniciada para primeiro acesso: ${colaborador.nome}")
                                 
                                 _authState.value = AuthState.FirstAccessRequired(colaborador)
+                                _loginUiState.value = LoginUiState.PrimeiroAcesso(colaborador)
                                 hideLoading()
                                 return@launch
                             }
@@ -662,7 +666,7 @@ class AuthViewModel @Inject constructor(
                     val senhaValida = when {
                         // ✅ Verificar senha pessoal (hash) - para logins após primeiro acesso
                         senhaHashLimpa != null && 
-                        senhaLimpa == senhaHashLimpa -> {
+                        PasswordHasher.verify(senhaLimpa, senhaHashLimpa) -> {
                             Timber.d("AuthViewModel", "✅ Senha pessoal válida")
                             true
                         }
@@ -692,12 +696,13 @@ class AuthViewModel @Inject constructor(
                     }
                     
                     if (senhaValida) {
-                        // ✅ CORREÇÃO: Verificar se é primeiro acesso (usando senha temporária) - exceto superadmin
-                        // Usar senha limpa para comparação. 
-                        // SÓ é primeiro acesso se a flag for true E não houver senha definitiva (senhaHash)
+                        // Validação offline: usar hash de senha armazenado (temporária ou pessoal)
+                        // Validação online: sempre usar Firebase Auth (já validado acima)
+                        
+                        // ✅ CORREÇÃO: Primeiro acesso é baseado na flag e no uso da senha temporária
+                        // O fato de termos senhaHash (preenchido para segurança offline) NÃO anula o primeiro acesso
                         val isPrimeiroAcesso = !isSuperAdmin && 
                                               colaborador.primeiroAcesso && 
-                                              colaborador.senhaHash == null &&
                                               senhaTemporariaLimpa != null && 
                                               senhaLimpa == senhaTemporariaLimpa
                         
@@ -722,6 +727,7 @@ class AuthViewModel @Inject constructor(
                                 Timber.d("AuthViewModel", "✅ Sessão iniciada para primeiro acesso: ${colaborador.nome}")
                                 
                                 _authState.value = AuthState.FirstAccessRequired(colaborador)
+                                _loginUiState.value = LoginUiState.PrimeiroAcesso(colaborador)
                                 return@launch
                             } else {
                                 Timber.d("AuthViewModel", "⚠️ PRIMEIRO ACESSO DETECTADO OFFLINE - Requer conexão online")
@@ -737,7 +743,7 @@ class AuthViewModel @Inject constructor(
                                 nivelAcesso = NivelAcesso.ADMIN,
                                 aprovado = true,
                                 primeiroAcesso = false,
-                                senhaHash = senhaLimpa // ✅ Atualizar com senha válida para login offline
+                                senhaHash = PasswordHasher.hash(senhaLimpa) // ✅ Atualizar com hash para login offline
                             ).also {
                                 appRepository.atualizarColaborador(it)
                                 Timber.d("AuthViewModel", "✅ SUPERADMIN: Dados atualizados (senha válida confirmada)")
@@ -822,6 +828,7 @@ class AuthViewModel @Inject constructor(
                         }
                         
                         _authState.value = AuthState.Authenticated(localUser, isOnlineLogin)
+                        _loginUiState.value = LoginUiState.Aprovado(colaboradorFinal) // ✅ CORREÇÃO: Disparar navegação na UI
                         Timber.d("AuthViewModel", "✅ Estado de autenticação definido - online: $isOnlineLogin")
                         Timber.d("AuthViewModel", "   Firebase Auth autenticado: ${firebaseAuth.currentUser != null}")
                         Timber.d("AuthViewModel", "   Firebase UID: ${firebaseAuth.currentUser?.uid ?: "não autenticado"}")
@@ -873,7 +880,7 @@ class AuthViewModel @Inject constructor(
                                 
                                 val senhaValida = when {
                                     // ✅ Verificar senha pessoal (hash) - para logins após primeiro acesso
-                                    senhaHashLimpa != null && senhaLimpa == senhaHashLimpa -> {
+                                    senhaHashLimpa != null && PasswordHasher.verify(senhaLimpa, senhaHashLimpa) -> {
                                         Timber.d("AuthViewModel", "✅ Senha pessoal válida")
                                         true
                                     }
@@ -913,6 +920,7 @@ class AuthViewModel @Inject constructor(
                                         Timber.d("AuthViewModel", "⚠️ PRIMEIRO ACESSO DETECTADO - Redirecionando para alteração de senha")
                                         userSessionManager.startSession(colaboradorNuvemAtualizado, detectedCompanyId)
                                         _authState.value = AuthState.FirstAccessRequired(colaboradorNuvemAtualizado)
+                                        _loginUiState.value = LoginUiState.PrimeiroAcesso(colaboradorNuvemAtualizado)
                                         return@launch
                                     }
                                     
@@ -1113,16 +1121,9 @@ class AuthViewModel @Inject constructor(
                     "🚨 ATUALIZANDO COLABORADOR LOCAL APÓS LOGIN ONLINE: ${colaboradorExistente.email}"
                 )
 
-                // ✅ SUPERADMIN: rossinys@gmail.com sempre é ADMIN e aprovado
                 val colaboradorAtualizado = if (email == "rossinys@gmail.com") {
                     // Superadmin - sempre ADMIN, aprovado, sem primeiro acesso
-                    // ✅ CORREÇÃO CRÍTICA: Atualizar senhaHash com a senha atual para login offline funcionar
-                    val senhaParaHash = if (senha.isNotEmpty()) senha.trim() else colaboradorExistente.senhaHash
-                    Timber.d("AuthViewModel", "🔧 SUPERADMIN: Atualizando senhaHash para login offline")
-                    Timber.d("AuthViewModel", "   Senha fornecida: ${if (senha.isNotEmpty()) "presente (${senha.length} caracteres)" else "ausente"}")
-                    Timber.d("AuthViewModel", "   SenhaHash anterior: ${colaboradorExistente.senhaHash}")
-                    Timber.d("AuthViewModel", "   SenhaHash novo: $senhaParaHash")
-                    
+                    // ✅ CORREÇÃO CRÍTICA: Atualizar senhaHash com o hash da senha atual para login offline funcionar
                     colaboradorExistente.copy(
                         nome = firebaseUser.displayName ?: colaboradorExistente.nome,
                         firebaseUid = firebaseUser.uid,
@@ -1132,7 +1133,7 @@ class AuthViewModel @Inject constructor(
                         primeiroAcesso = false, // Superadmin nunca precisa alterar senha
                         dataAprovacao = colaboradorExistente.dataAprovacao ?: System.currentTimeMillis(),
                         aprovadoPor = colaboradorExistente.aprovadoPor ?: "Sistema (Superadmin)",
-                        senhaHash = senhaParaHash // ✅ Atualizar senhaHash para login offline
+                        senhaHash = if (senha.isNotEmpty()) PasswordHasher.hash(senha.trim()) else colaboradorExistente.senhaHash
                     )
                 } else {
                     // ✅ CORREÇÃO: Para outros usuários, MANTER nível de acesso original
@@ -1213,7 +1214,7 @@ class AuthViewModel @Inject constructor(
                     
                     val colaboradorFinal = if (email == "rossinys@gmail.com") {
                         // (rossinys@gmail.com logic remains the same)
-                        val senhaParaHash = if (senha.isNotEmpty()) senha.trim() else colaboradorAtualizado.senhaHash
+                        val senhaParaHash = if (senha.isNotEmpty()) PasswordHasher.hash(senha.trim()) else colaboradorAtualizado.senhaHash
                         colaboradorAtualizado.copy(
                             nivelAcesso = NivelAcesso.ADMIN,
                             aprovado = true,
@@ -1226,7 +1227,7 @@ class AuthViewModel @Inject constructor(
                         Timber.d("AuthViewModel", "🩹 SELF-HEALING: Detectado que o primeiro acesso já foi feito (senha != temporária). Corrigindo flag...")
                         colaboradorAtualizado.copy(
                             primeiroAcesso = false,
-                            senhaHash = senha.trim(),
+                            senhaHash = PasswordHasher.hash(senha.trim()),
                             senhaTemporaria = null,
                             dataUltimaAtualizacao = System.currentTimeMillis()
                         ).also { 
@@ -1382,9 +1383,8 @@ class AuthViewModel @Inject constructor(
                     Timber.d("AuthViewModel", "   A senha será atualizada localmente e sincronizada depois")
                 }
                 
-                // ✅ OFFLINE-FIRST: Salvar hash da senha no banco local para login offline
-                // TODO: Implementar hash de senha (PasswordHasher removido)
-                val senhaHash = novaSenha // TEMPORÁRIO: Usar senha sem hash até implementar
+                // OFFLINE-FIRST: Salvar hash da senha no banco local para login offline
+                val senhaHash = PasswordHasher.hash(novaSenha)
                 
                 // Marcar primeiro acesso como concluído e salvar hash
                 appRepository.marcarPrimeiroAcessoConcluido(colaborador.id, senhaHash)
@@ -2250,7 +2250,7 @@ class AuthViewModel @Inject constructor(
                     ativo = true,
                     primeiroAcesso = false, // Superadmin nunca precisa alterar senha
                     firebaseUid = firebaseUid ?: existente.firebaseUid,
-                    senhaHash = if (senha.isNotEmpty()) senha else existente.senhaHash, // Salvar senha para login offline
+                    senhaHash = if (senha.isNotEmpty()) PasswordHasher.hash(senha) else existente.senhaHash, // Salvar hash para login offline
                     senhaTemporaria = null, // Limpar senha temporária
                     dataAprovacao = existente.dataAprovacao ?: System.currentTimeMillis(),
                     aprovadoPor = existente.aprovadoPor ?: "Sistema (Superadmin)"
@@ -2262,7 +2262,8 @@ class AuthViewModel @Inject constructor(
             }
             
             // Criar novo superadmin
-            val senhaHash = if (senha.isNotEmpty()) senha else "superadmin123" // TEMPORÁRIO: Senha padrão se não fornecida
+            val pwd = if (senha.isNotEmpty()) senha else "superadmin123"
+            val senhaHash = PasswordHasher.hash(pwd)
             
             val novoColaborador = Colaborador(
                 nome = "Super Admin",
@@ -2334,6 +2335,7 @@ sealed class LoginUiState {
     data class Aprovado(val colaborador: Colaborador) : LoginUiState()
     data class Pendente(val colaborador: Colaborador) : LoginUiState()
     data class Erro(val mensagem: String, val exception: Throwable? = null) : LoginUiState()
+    data class PrimeiroAcesso(val colaborador: Colaborador) : LoginUiState()
 }
 
 /**
