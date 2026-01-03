@@ -362,15 +362,17 @@ class AuthViewModel @Inject constructor(
                                     nivelAcesso = colaboradorFinal.nivelAcesso
                                 )
                                 
-                                _authState.value = AuthState.Authenticated(localUser, true)
-                                
                                 // Verificar primeiro acesso
                                 val isSuperAdmin = email == "rossinys@gmail.com"
                                 if (!isSuperAdmin && colaboradorFinal.primeiroAcesso && colaboradorFinal.senhaHash == null) {
+                                    Timber.d("AuthViewModel", "🔐 [LOGIN] PRIMEIRO ACESSO detectado - forçando troca de senha")
                                     _authState.value = AuthState.FirstAccessRequired(colaboradorFinal)
+                                    // NÃO emitir LoginUiState.Aprovado quando é primeiro acesso
+                                } else {
+                                    Timber.d("AuthViewModel", "✅ [LOGIN] Acesso normal - emitindo AuthState.Authenticated")
+                                    _authState.value = AuthState.Authenticated(localUser, true)
+                                    _loginUiState.value = LoginUiState.Aprovado(colaboradorFinal)
                                 }
-                                
-                                _loginUiState.value = LoginUiState.Aprovado(colaboradorFinal)
                                 hideLoading()
                                 return@launch
                             }
@@ -1429,6 +1431,7 @@ class AuthViewModel @Inject constructor(
                 )
                 
                 _authState.value = AuthState.Authenticated(localUser, isNetworkAvailable())
+                _loginUiState.value = LoginUiState.Aprovado(colaboradorAtualizado)
                 showMessage("Senha alterada com sucesso!")
                 
             } catch (e: Exception) {
