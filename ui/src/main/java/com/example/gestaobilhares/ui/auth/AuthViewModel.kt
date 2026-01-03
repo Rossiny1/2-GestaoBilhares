@@ -280,49 +280,108 @@ class AuthViewModel @Inject constructor(
                         Timber.d("AuthViewModel", "📋 [LOGIN] DECISÃO DE ACESSO:")
                         Timber.d("AuthViewModel", "   Colaborador: ${colaborador.nome}")
                         Timber.d("AuthViewModel", "   Email: ${colaborador.email}")
-                        Timber.d("AuthViewModel", "   Campo 'aprovado' lido do Firestore: ${colaborador.aprovado}")
-                        Timber.d("AuthViewModel", "   Campo 'ativo' lido do Firestore: ${colaborador.ativo}")
+                        Timber.d("AuthViewModel", "   ID Local: ${colaborador.id}")
+                        Timber.d("AuthViewModel", "   Firebase UID: ${colaborador.firebaseUid}")
+                        Timber.d("AuthViewModel", "   Campo 'aprovado' lido: ${colaborador.aprovado}")
+                        Timber.d("AuthViewModel", "   Campo 'ativo' lido: ${colaborador.ativo}")
+                        Timber.d("AuthViewModel", "   Data Aprovação: ${colaborador.dataAprovacao}")
+                        Timber.d("AuthViewModel", "   Aprovado Por: ${colaborador.aprovadoPor}")
                         Timber.d("AuthViewModel", "═══════════════════════════════════════")
+                        android.util.Log.d("AuthViewModel", "📋 [LOGIN] DECISÃO DE ACESSO:")
+                        android.util.Log.d("AuthViewModel", "   Colaborador: ${colaborador.nome}")
+                        android.util.Log.d("AuthViewModel", "   Email: ${colaborador.email}")
+                        android.util.Log.d("AuthViewModel", "   Aprovado: ${colaborador.aprovado}")
+                        android.util.Log.d("AuthViewModel", "   Ativo: ${colaborador.ativo}")
                         
-                        // PASSO 6: Decisão de acesso baseada APENAS em colaborador.aprovado (lido do servidor)
+                        // ✅ CORREÇÃO CRÍTICA: Verificar novamente o status local ANTES de decidir
+                        // Isso garante que não estamos usando dados desatualizados
+                        val colaboradorLocalVerificacao = appRepository.obterColaboradorPorFirebaseUid(uid) 
+                            ?: appRepository.obterColaboradorPorEmail(email)
+                        
+                        // ✅ Variável final para usar na decisão
+                        val colaboradorFinal = if (colaboradorLocalVerificacao != null && colaboradorLocalVerificacao.aprovado && !colaborador.aprovado) {
+                            Timber.w("AuthViewModel", "⚠️ [LOGIN] CONFLITO DETECTADO: Local está APROVADO mas colaborador obtido não!")
+                            Timber.w("AuthViewModel", "   Local aprovado: ${colaboradorLocalVerificacao.aprovado}")
+                            Timber.w("AuthViewModel", "   Obtido aprovado: ${colaborador.aprovado}")
+                            Timber.w("AuthViewModel", "   Usando colaborador LOCAL aprovado")
+                            android.util.Log.w("AuthViewModel", "⚠️ [LOGIN] CONFLITO: Local aprovado=${colaboradorLocalVerificacao.aprovado}, Obtido aprovado=${colaborador.aprovado}")
+                            
+                            // Usar o colaborador local aprovado
+                            val colaboradorCorrigido = colaboradorLocalVerificacao.copy(firebaseUid = uid)
+                            appRepository.atualizarColaborador(colaboradorCorrigido)
+                            
+                            // Sincronizar para Firestore IMEDIATAMENTE (await bloqueante)
+                            try {
+                                val docRef = firestore.collection("empresas").document("empresa_001")
+                                    .collection("colaboradores").document(uid)
+                                val updateMap = mapOf(
+                                    "aprovado" to true,
+                                    "data_aprovacao" to (colaboradorCorrigido.dataAprovacao?.let { com.google.firebase.Timestamp(Date(it)) } ?: com.google.firebase.firestore.FieldValue.serverTimestamp()),
+                                    "aprovado_por" to (colaboradorCorrigido.aprovadoPor ?: "Sistema"),
+                                    "last_modified" to com.google.firebase.firestore.FieldValue.serverTimestamp()
+                                )
+                                docRef.update(updateMap).await()
+                                Timber.d("AuthViewModel", "✅ [LOGIN] Status aprovado sincronizado para Firestore")
+                            } catch (e: Exception) {
+                                Timber.e(e, "❌ [LOGIN] Erro ao sincronizar: ${e.message}")
+                            }
+                            
+                            colaboradorCorrigido
+                        } else {
+                            colaborador
+                        }
+                        
+                        Timber.d("AuthViewModel", "📋 [LOGIN] Colaborador FINAL para decisão:")
+                        Timber.d("AuthViewModel", "   Nome: ${colaboradorFinal.nome}")
+                        Timber.d("AuthViewModel", "   Aprovado: ${colaboradorFinal.aprovado}")
+                        Timber.d("AuthViewModel", "   Ativo: ${colaboradorFinal.ativo}")
+                        android.util.Log.d("AuthViewModel", "📋 [LOGIN] Colaborador FINAL - Aprovado: ${colaboradorFinal.aprovado}")
+                        
+                        // PASSO 6: Decisão de acesso baseada no colaborador FINAL (corrigido se necessário)
                         when {
-                            !colaborador.ativo -> {
+                            !colaboradorFinal.ativo -> {
                                 val error = "Conta inativa"
                                 Timber.w("AuthViewModel", "⚠️ [LOGIN] $error")
+                                android.util.Log.w("AuthViewModel", "⚠️ [LOGIN] $error")
                                 _loginUiState.value = LoginUiState.Erro(error, null)
                                 hideLoading()
                                 return@launch
                             }
-                            colaborador.aprovado -> {
+                            colaboradorFinal.aprovado -> {
                                 // PASSO 7: Aprovado - iniciar sessão e navegar
                                 Timber.d("AuthViewModel", "✅ [LOGIN] PASSO 7: Colaborador APROVADO - iniciando sessão")
+                                android.util.Log.d("AuthViewModel", "✅ [LOGIN] PASSO 7: Colaborador APROVADO - iniciando sessão")
                                 
                                 val empresaId = "empresa_001"
-                                userSessionManager.startSession(colaborador, empresaId)
+                                userSessionManager.startSession(colaboradorFinal, empresaId)
                                 
                                 val localUser = LocalUser(
-                                    uid = colaborador.id.toString(),
-                                    email = colaborador.email,
-                                    displayName = colaborador.nome,
-                                    nivelAcesso = colaborador.nivelAcesso
+                                    uid = colaboradorFinal.id.toString(),
+                                    email = colaboradorFinal.email,
+                                    displayName = colaboradorFinal.nome,
+                                    nivelAcesso = colaboradorFinal.nivelAcesso
                                 )
                                 
                                 _authState.value = AuthState.Authenticated(localUser, true)
                                 
                                 // Verificar primeiro acesso
                                 val isSuperAdmin = email == "rossinys@gmail.com"
-                                if (!isSuperAdmin && colaborador.primeiroAcesso && colaborador.senhaHash == null) {
-                                    _authState.value = AuthState.FirstAccessRequired(colaborador)
+                                if (!isSuperAdmin && colaboradorFinal.primeiroAcesso && colaboradorFinal.senhaHash == null) {
+                                    _authState.value = AuthState.FirstAccessRequired(colaboradorFinal)
                                 }
                                 
-                                _loginUiState.value = LoginUiState.Aprovado(colaborador)
+                                _loginUiState.value = LoginUiState.Aprovado(colaboradorFinal)
                                 hideLoading()
                                 return@launch
                             }
                             else -> {
                                 // PASSO 7: Pendente - mostrar mensagem
                                 Timber.d("AuthViewModel", "⏳ [LOGIN] PASSO 7: Colaborador PENDENTE (aprovado=false)")
-                                _loginUiState.value = LoginUiState.Pendente(colaborador)
+                                Timber.d("AuthViewModel", "   Colaborador: ${colaboradorFinal.nome}")
+                                Timber.d("AuthViewModel", "   Email: ${colaboradorFinal.email}")
+                                Timber.d("AuthViewModel", "   Aprovado: ${colaboradorFinal.aprovado}")
+                                android.util.Log.d("AuthViewModel", "⏳ [LOGIN] PASSO 7: Colaborador PENDENTE (aprovado=${colaboradorFinal.aprovado})")
+                                _loginUiState.value = LoginUiState.Pendente(colaboradorFinal)
                                 hideLoading()
                                 return@launch
                             }
