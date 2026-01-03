@@ -2,17 +2,17 @@
 
 > **LEIA QUINTO** - Entenda o planejamento futuro e pendências após dominar o projeto.  
 > **Propósito**: Planejamento estratégico e fases pendentes de evolução.  
-> **Última Atualização**: 02 de Janeiro de 2026  
+> **Última Atualização**: Janeiro 2026 (Refatoração ColaboradorRepository)  
 > **Versão**: 4.0 (Release 1.0.1 Deployado)
 
 ---
 
 ## 📅 FASES PENDENTES
 
-### FASE 1: Consolidação da Arquitetura (Q1 2026) 🟡 **PARCIALMENTE CONCLUÍDO**
-*   ✅ **Refatoração AppRepository**: Migração de métodos para repositories especializados concluída.
+### FASE 1: Consolidação da Arquitetura (Q1 2026) ✅ **QUASE CONCLUÍDO**
+*   ✅ **Refatoração AppRepository**: Migração de métodos para repositories especializados concluída. **ColaboradorRepository refatorado** com ColaboradorFirestoreRepository e ColaboradorAuthService implementados (Janeiro 2026).
 *   ⚠️ **Orchestrator Sync**: Handlers especializados criados, mas **SyncRepository ainda com 3644 linhas** (meta: < 300). Refatoração pendente.
-*   ✅ **Testes de Cobertura**: 100% de cobertura em `FinancialCalculator`. Testes unitários para todos os `SyncHandlers`. Todos testes passando.
+*   ✅ **Testes de Cobertura**: 100% de cobertura em `FinancialCalculator`. Testes unitários para todos os `SyncHandlers`. **28 testes unitários para Colaborador implementados e passando** (Janeiro 2026).
 *   ✅ **Fix Sincronização**: Resolvido problema de acesso a rotas para não-admins via lógica de Bootstrap.
 *   ✅ **Correções Crashlytics**: 4 erros corrigidos. Release 1.0.1 deployado.
 
@@ -46,3 +46,4 @@
 *   ✅ **CancellationException**: Tratamento correto implementado em todos os 9 handlers principais.
 *   ✅ **Release 1.0.1 (3)**: Deploy realizado com sucesso no Firebase App Distribution.
 *   ✅ **Mapping.txt**: Gerado automaticamente no build de release para desofuscação de erros.
+*   ✅ **Refatoração ColaboradorRepository**: Implementação completa de ColaboradorRepository, ColaboradorFirestoreRepository e ColaboradorAuthService. Lógica de aprovação centralizada e preservação automática de status durante login. 28 testes unitários implementados e passando.

@@ -1,6 +1,6 @@
 # 📚 DOCUMENTAÇÃO DO PROJETO
 
-> **Última Atualização**: 02 de Janeiro de 2026
+> **Última Atualização**: Janeiro 2026 (Refatoração ColaboradorRepository)
 
 ---
 
@@ -25,6 +25,7 @@ Leia os documentos **nesta ordem** para entender completamente o projeto:
 ### 3️⃣ [ARQUITETURA E PADRÕES](./3-ARQUITETURA-E-PADROES.md)
 - Estrutura modular (5 módulos Gradle)
 - Padrões de sincronização (Orchestrator + Handlers)
+- **Repositories especializados** (ColaboradorRepository refatorado - Janeiro 2026)
 - Stack técnico (Hilt, Room, Coroutines, Flow)
 - Boas práticas e convenções de código
 - Ferramentas de desenvolvimento
