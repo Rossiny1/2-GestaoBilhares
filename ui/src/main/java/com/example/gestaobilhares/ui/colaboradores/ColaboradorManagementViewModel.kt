@@ -143,11 +143,33 @@ class ColaboradorManagementViewModel @Inject constructor(
             try {
                 showLoading()
                 
+                // ✅ CORREÇÃO: Buscar colaborador antes de aprovar para sincronizar depois
+                val colaborador = appRepository.obterColaboradorPorId(colaboradorId)
+                if (colaborador == null) {
+                    _errorMessage.value = "Colaborador não encontrado"
+                    hideLoading()
+                    return@launch
+                }
+                
+                // Aprovar no banco local
                 appRepository.aprovarColaborador(
                     colaboradorId = colaboradorId,
                     dataAprovacao = java.util.Date(),
                     aprovadoPor = aprovadoPor
                 )
+                
+                // ✅ CORREÇÃO CRÍTICA: Buscar colaborador atualizado e sincronizar para Firestore
+                val colaboradorAtualizado = appRepository.obterColaboradorPorId(colaboradorId)
+                if (colaboradorAtualizado != null) {
+                    try {
+                        val companyId = userSessionManager.getCurrentCompanyId() ?: "empresa_001"
+                        sincronizarColaboradorParaFirestore(colaboradorAtualizado, companyId)
+                        Timber.d("ColaboradorManagementViewModel", "✅ Colaborador aprovado e sincronizado para Firestore")
+                    } catch (e: Exception) {
+                        Timber.e("ColaboradorManagementViewModel", "⚠️ Erro ao sincronizar para Firestore: ${e.message}")
+                        // Não falhar a aprovação se a sincronização falhar
+                    }
+                }
                 
                 showMessage("Colaborador aprovado com sucesso!")
                 carregarDados() // Recarregar dados
@@ -157,6 +179,77 @@ class ColaboradorManagementViewModel @Inject constructor(
             } finally {
                 hideLoading()
             }
+        }
+    }
+    
+    /**
+     * ✅ NOVO: Sincroniza colaborador para Firestore após aprovação
+     */
+    private suspend fun sincronizarColaboradorParaFirestore(colaborador: Colaborador, companyId: String) {
+        try {
+            Timber.d("ColaboradorManagementViewModel", "=== SINCRONIZANDO COLABORADOR PARA FIRESTORE ===")
+            Timber.d("ColaboradorManagementViewModel", "   ID: ${colaborador.id}")
+            Timber.d("ColaboradorManagementViewModel", "   Nome: ${colaborador.nome}")
+            Timber.d("ColaboradorManagementViewModel", "   Email: ${colaborador.email}")
+            Timber.d("ColaboradorManagementViewModel", "   Firebase UID: ${colaborador.firebaseUid}")
+            Timber.d("ColaboradorManagementViewModel", "   Aprovado: ${colaborador.aprovado}")
+            
+            val uid = colaborador.firebaseUid
+            if (uid == null || uid.isBlank()) {
+                Timber.w("ColaboradorManagementViewModel", "⚠️ Colaborador não tem Firebase UID, não é possível sincronizar no novo schema")
+                return
+            }
+            
+            // ✅ Sincronizar no novo schema: empresas/{empresaId}/colaboradores/{uid}
+            val docRef = firestore
+                .collection("empresas")
+                .document(companyId)
+                .collection("colaboradores")
+                .document(uid)
+            
+            // Converter para Map usando Gson (snake_case)
+            val gson = com.google.gson.GsonBuilder()
+                .setFieldNamingPolicy(com.google.gson.FieldNamingPolicy.LOWER_CASE_WITH_UNDERSCORES)
+                .create()
+            
+            val colaboradorJson = gson.toJson(colaborador)
+            @Suppress("UNCHECKED_CAST")
+            val colaboradorMap = gson.fromJson(colaboradorJson, Map::class.java) as? MutableMap<String, Any?> 
+                ?: mutableMapOf()
+            
+            // Adicionar campos adicionais
+            colaboradorMap["room_id"] = colaborador.id
+            colaboradorMap["id"] = colaborador.id
+            colaboradorMap["last_modified"] = FieldValue.serverTimestamp()
+            colaboradorMap["sync_timestamp"] = FieldValue.serverTimestamp()
+            
+            // Converter datas para Timestamp
+            colaboradorMap["data_cadastro"] = Timestamp(Date(colaborador.dataCadastro))
+            colaboradorMap["data_ultima_atualizacao"] = Timestamp(Date(colaborador.dataUltimaAtualizacao))
+            colaborador.dataAprovacao?.let { colaboradorMap["data_aprovacao"] = Timestamp(Date(it)) }
+            colaborador.dataUltimoAcesso?.let { colaboradorMap["data_ultimo_acesso"] = Timestamp(Date(it)) }
+            
+            // ✅ CORREÇÃO: Garantir campos boolean corretos
+            colaboradorMap["aprovado"] = colaborador.aprovado
+            colaboradorMap["ativo"] = colaborador.ativo
+            colaboradorMap["primeiro_acesso"] = colaborador.primeiroAcesso
+            colaboradorMap["nivel_acesso"] = colaborador.nivelAcesso.name
+            
+            // ✅ CORREÇÃO: Garantir campos obrigatórios
+            colaboradorMap["nome"] = colaborador.nome
+            colaboradorMap["email"] = colaborador.email
+            colaboradorMap["firebase_uid"] = uid
+            colaboradorMap["firebaseUid"] = uid
+            colaboradorMap["empresa_id"] = companyId
+            colaboradorMap["companyId"] = companyId
+            
+            // ✅ AGUARDAR atualização no Firestore (await bloqueante)
+            docRef.set(colaboradorMap).await()
+            
+            Timber.d("ColaboradorManagementViewModel", "✅ Colaborador sincronizado no Firestore: ${colaborador.nome} (Aprovado: ${colaborador.aprovado})")
+        } catch (e: Exception) {
+            Timber.e("ColaboradorManagementViewModel", "❌ Erro ao sincronizar colaborador para Firestore: %s", e.message)
+            throw e
         }
     }
 
@@ -242,6 +335,19 @@ class ColaboradorManagementViewModel @Inject constructor(
                     aprovadoPor = aprovadoPor,
                     firebaseUid = firebaseUid // ✅ NOVO: Salvar Firebase UID
                 )
+                
+                // ✅ CORREÇÃO CRÍTICA: Buscar colaborador atualizado e sincronizar para Firestore
+                val colaboradorAtualizado = appRepository.obterColaboradorPorId(colaboradorId)
+                if (colaboradorAtualizado != null) {
+                    try {
+                        val companyId = userSessionManager.getCurrentCompanyId() ?: "empresa_001"
+                        sincronizarColaboradorParaFirestore(colaboradorAtualizado, companyId)
+                        Timber.d("ColaboradorManagementViewModel", "✅ Colaborador aprovado com credenciais e sincronizado para Firestore")
+                    } catch (e: Exception) {
+                        Timber.e("ColaboradorManagementViewModel", "⚠️ Erro ao sincronizar para Firestore: ${e.message}")
+                        // Não falhar a aprovação se a sincronização falhar
+                    }
+                }
                 
                 showMessage("Colaborador aprovado com credenciais geradas!")
                 carregarDados() // Recarregar dados
