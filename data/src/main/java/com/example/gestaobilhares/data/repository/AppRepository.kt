@@ -1041,69 +1041,94 @@ class AppRepository @Inject constructor(
         if (doc.exists()) {
             Timber.d("AppRepository", "✅ [CRIAR_PENDENTE] Colaborador já existe no Firestore: ${doc.reference.path}")
             val colaboradorExistente = getColaboradorByUid(empresaId, uid)
+            Timber.d("AppRepository", "📋 [CRIAR_PENDENTE] Colaborador do Firestore:")
+            Timber.d("AppRepository", "   Nome: ${colaboradorExistente?.nome}")
+            Timber.d("AppRepository", "   Email: ${colaboradorExistente?.email}")
+            Timber.d("AppRepository", "   Aprovado: ${colaboradorExistente?.aprovado}")
+            Timber.d("AppRepository", "   UID: ${colaboradorExistente?.firebaseUid}")
+            
             if (colaboradorExistente != null) {
                 // ✅ CORREÇÃO CRÍTICA: Preservar status de aprovação se já existe localmente
                 val colaboradorLocal = obterColaboradorPorFirebaseUid(uid) ?: obterColaboradorPorEmail(email)
+                Timber.d("AppRepository", "📋 [CRIAR_PENDENTE] Colaborador local:")
+                Timber.d("AppRepository", "   Existe: ${colaboradorLocal != null}")
+                Timber.d("AppRepository", "   Aprovado: ${colaboradorLocal?.aprovado}")
+                
                 if (colaboradorLocal != null) {
                     // ✅ CRÍTICO: Se existe localmente e está aprovado, SEMPRE preservar esse status
                     if (colaboradorLocal.aprovado) {
                         Timber.w("AppRepository", "⚠️ [CRIAR_PENDENTE] Colaborador local está APROVADO! Preservando status local.")
                         Timber.w("AppRepository", "   Local aprovado: ${colaboradorLocal.aprovado}, Firestore aprovado: ${colaboradorExistente.aprovado}")
-                        // Usar dados do Firestore mas preservar status de aprovação do local
-                        val colaboradorPreservado = colaboradorExistente.copy(
-                            aprovado = true, // ✅ SEMPRE preservar se local está aprovado
-                            dataAprovacao = colaboradorLocal.dataAprovacao ?: colaboradorExistente.dataAprovacao,
-                            aprovadoPor = colaboradorLocal.aprovadoPor ?: colaboradorExistente.aprovadoPor,
-                            id = colaboradorLocal.id // Preservar ID local
+                        // ✅ CRÍTICO: Usar dados do LOCAL aprovado, não do Firestore
+                        val colaboradorPreservado = colaboradorLocal.copy(
+                            firebaseUid = uid, // Garantir que o UID está atualizado
+                            // Preservar TODOS os campos do local, especialmente aprovado
                         )
                         atualizarColaborador(colaboradorPreservado)
-                        // ✅ Sincronizar status aprovado de volta para o Firestore
+                        // ✅ Sincronizar status aprovado de volta para o Firestore IMEDIATAMENTE
                         try {
                             val docRef = firestore
                                 .collection("empresas")
                                 .document(empresaId)
                                 .collection("colaboradores")
                                 .document(uid)
-                            docRef.update("aprovado", true).await()
+                            val updateMap = mapOf(
+                                "aprovado" to true,
+                                "data_aprovacao" to (colaboradorPreservado.dataAprovacao?.let { Timestamp(Date(it)) } ?: FieldValue.serverTimestamp()),
+                                "aprovado_por" to (colaboradorPreservado.aprovadoPor ?: "Sistema"),
+                                "last_modified" to FieldValue.serverTimestamp()
+                            )
+                            docRef.update(updateMap).await()
                             Timber.d("AppRepository", "✅ [CRIAR_PENDENTE] Status aprovado sincronizado para Firestore")
                         } catch (e: Exception) {
                             Timber.e(e, "❌ [CRIAR_PENDENTE] Erro ao sincronizar status aprovado: ${e.message}")
                         }
                         return colaboradorPreservado
                     }
-                    // Se existe localmente, usar o local (mais atualizado)
+                    // Se existe localmente mas não está aprovado, usar o local (mais atualizado)
+                    Timber.d("AppRepository", "   Usando colaborador local (não aprovado)")
                     return colaboradorLocal
                 } else {
-                    Timber.d("AppRepository", "🔧 [CRIAR_PENDENTE] Colaborador existe no Firestore mas não localmente, salvando localmente...")
+                    Timber.d("AppRepository", "🔧 [CRIAR_PENDENTE] Colaborador existe no Firestore mas não localmente")
+                    Timber.d("AppRepository", "   Firestore aprovado: ${colaboradorExistente.aprovado}")
                     // ✅ CORREÇÃO CRÍTICA: Verificar se o Firestore tem aprovado=false mas deveria ter true
                     // Isso pode acontecer se o colaborador foi aprovado mas o Firestore não foi atualizado
                     // OU se o Firestore foi sobrescrito com dados antigos
                     // Neste caso, vamos verificar se há um colaborador aprovado em outro lugar (por email)
                     val colaboradorPorEmail = obterColaboradorPorEmail(email)
-                    if (colaboradorPorEmail != null && colaboradorPorEmail.aprovado && !colaboradorExistente.aprovado) {
-                        Timber.w("AppRepository", "⚠️ [CRIAR_PENDENTE] CONFLITO: Colaborador por email está APROVADO mas Firestore não!")
+                    if (colaboradorPorEmail != null && colaboradorPorEmail.aprovado) {
+                        Timber.w("AppRepository", "⚠️ [CRIAR_PENDENTE] CONFLITO: Colaborador por email está APROVADO!")
+                        Timber.w("AppRepository", "   Local aprovado: ${colaboradorPorEmail.aprovado}, Firestore aprovado: ${colaboradorExistente.aprovado}")
                         Timber.w("AppRepository", "   Preservando status aprovado do colaborador por email")
-                        val colaboradorPreservado = colaboradorExistente.copy(
-                            aprovado = true,
-                            dataAprovacao = colaboradorPorEmail.dataAprovacao,
-                            aprovadoPor = colaboradorPorEmail.aprovadoPor,
-                            id = colaboradorPorEmail.id
+                        // ✅ CRÍTICO: Usar dados do colaborador local aprovado, não do Firestore
+                        val colaboradorPreservado = colaboradorPorEmail.copy(
+                            firebaseUid = uid, // Atualizar UID se necessário
+                            id = colaboradorPorEmail.id // Preservar ID local
                         )
                         atualizarColaborador(colaboradorPreservado)
-                        // Sincronizar status aprovado para o Firestore
+                        // ✅ Sincronizar status aprovado para o Firestore IMEDIATAMENTE
                         try {
                             val docRef = firestore
                                 .collection("empresas")
                                 .document(empresaId)
                                 .collection("colaboradores")
                                 .document(uid)
-                            docRef.update("aprovado", true).await()
+                            // ✅ Usar set com merge para atualizar apenas campos necessários
+                            val updateMap = mapOf(
+                                "aprovado" to true,
+                                "data_aprovacao" to (colaboradorPreservado.dataAprovacao?.let { Timestamp(Date(it)) } ?: FieldValue.serverTimestamp()),
+                                "aprovado_por" to (colaboradorPreservado.aprovadoPor ?: "Sistema"),
+                                "last_modified" to FieldValue.serverTimestamp()
+                            )
+                            docRef.update(updateMap).await()
                             Timber.d("AppRepository", "✅ [CRIAR_PENDENTE] Status aprovado sincronizado para Firestore")
                         } catch (e: Exception) {
                             Timber.e(e, "❌ [CRIAR_PENDENTE] Erro ao sincronizar status aprovado: ${e.message}")
                         }
                         return colaboradorPreservado
                     }
+                    // ✅ Se não há colaborador local aprovado, inserir o do Firestore
+                    Timber.d("AppRepository", "   Salvando colaborador do Firestore localmente (aprovado: ${colaboradorExistente.aprovado})")
                     inserirColaborador(colaboradorExistente)
                 }
                 return colaboradorExistente
