@@ -1042,9 +1042,38 @@ class AppRepository @Inject constructor(
             Timber.d("AppRepository", "✅ [CRIAR_PENDENTE] Colaborador já existe no Firestore: ${doc.reference.path}")
             val colaboradorExistente = getColaboradorByUid(empresaId, uid)
             if (colaboradorExistente != null) {
-                // ✅ CORREÇÃO: Salvar localmente se não existir
+                // ✅ CORREÇÃO CRÍTICA: Preservar status de aprovação se já existe localmente
                 val colaboradorLocal = obterColaboradorPorFirebaseUid(uid) ?: obterColaboradorPorEmail(email)
-                if (colaboradorLocal == null) {
+                if (colaboradorLocal != null) {
+                    // ✅ CRÍTICO: Se existe localmente e está aprovado, SEMPRE preservar esse status
+                    if (colaboradorLocal.aprovado) {
+                        Timber.w("AppRepository", "⚠️ [CRIAR_PENDENTE] Colaborador local está APROVADO! Preservando status local.")
+                        Timber.w("AppRepository", "   Local aprovado: ${colaboradorLocal.aprovado}, Firestore aprovado: ${colaboradorExistente.aprovado}")
+                        // Usar dados do Firestore mas preservar status de aprovação do local
+                        val colaboradorPreservado = colaboradorExistente.copy(
+                            aprovado = true, // ✅ SEMPRE preservar se local está aprovado
+                            dataAprovacao = colaboradorLocal.dataAprovacao ?: colaboradorExistente.dataAprovacao,
+                            aprovadoPor = colaboradorLocal.aprovadoPor ?: colaboradorExistente.aprovadoPor,
+                            id = colaboradorLocal.id // Preservar ID local
+                        )
+                        atualizarColaborador(colaboradorPreservado)
+                        // ✅ Sincronizar status aprovado de volta para o Firestore
+                        try {
+                            val docRef = firestore
+                                .collection("empresas")
+                                .document(empresaId)
+                                .collection("colaboradores")
+                                .document(uid)
+                            docRef.update("aprovado", true).await()
+                            Timber.d("AppRepository", "✅ [CRIAR_PENDENTE] Status aprovado sincronizado para Firestore")
+                        } catch (e: Exception) {
+                            Timber.e(e, "❌ [CRIAR_PENDENTE] Erro ao sincronizar status aprovado: ${e.message}")
+                        }
+                        return colaboradorPreservado
+                    }
+                    // Se existe localmente, usar o local (mais atualizado)
+                    return colaboradorLocal
+                } else {
                     Timber.d("AppRepository", "🔧 [CRIAR_PENDENTE] Colaborador existe no Firestore mas não localmente, salvando localmente...")
                     inserirColaborador(colaboradorExistente)
                 }
@@ -1053,13 +1082,64 @@ class AppRepository @Inject constructor(
                 Timber.e("AppRepository", "❌ [CRIAR_PENDENTE] Colaborador existe no Firestore mas conversão falhou")
                 Timber.e("AppRepository", "   Path: ${doc.reference.path}")
                 Timber.e("AppRepository", "   Data keys: ${doc.data?.keys?.joinToString(", ") ?: "null"}")
+                // ✅ CORREÇÃO: Verificar se existe localmente antes de recriar
+                val colaboradorLocal = obterColaboradorPorFirebaseUid(uid) ?: obterColaboradorPorEmail(email)
+                if (colaboradorLocal != null) {
+                    Timber.d("AppRepository", "✅ [CRIAR_PENDENTE] Usando colaborador local existente (conversão Firestore falhou)")
+                    return colaboradorLocal
+                }
                 Timber.e("AppRepository", "   Tentando recriar documento...")
                 // Tentar recriar o documento com dados corretos
                 return createPendingColaborador(empresaId, uid, email, null)
             }
         }
         
-        // ✅ Criar novo colaborador pendente
+        // ✅ CORREÇÃO CRÍTICA: Antes de criar novo, verificar se existe localmente com status aprovado
+        // Isso evita sobrescrever aprovação quando o Firestore não tem o documento ainda
+        val colaboradorLocalAprovado = obterColaboradorPorFirebaseUid(uid) ?: obterColaboradorPorEmail(email)
+        if (colaboradorLocalAprovado != null && colaboradorLocalAprovado.aprovado) {
+            Timber.w("AppRepository", "⚠️ [CRIAR_PENDENTE] Colaborador local está APROVADO mas não existe no Firestore!")
+            Timber.w("AppRepository", "   Preservando status aprovado. Sincronizando para Firestore...")
+            // Sincronizar o colaborador aprovado para o Firestore
+            try {
+                val docRef = firestore
+                    .collection("empresas")
+                    .document(empresaId)
+                    .collection("colaboradores")
+                    .document(uid)
+                
+                val colaboradorJson = gson.toJson(colaboradorLocalAprovado)
+                @Suppress("UNCHECKED_CAST")
+                val colaboradorMap = gson.fromJson(colaboradorJson, Map::class.java) as? MutableMap<String, Any?> 
+                    ?: mutableMapOf()
+                
+                colaboradorMap["room_id"] = colaboradorLocalAprovado.id
+                colaboradorMap["id"] = colaboradorLocalAprovado.id
+                colaboradorMap["last_modified"] = FieldValue.serverTimestamp()
+                colaboradorMap["sync_timestamp"] = FieldValue.serverTimestamp()
+                colaboradorMap["data_cadastro"] = Timestamp(Date(colaboradorLocalAprovado.dataCadastro))
+                colaboradorMap["data_ultima_atualizacao"] = Timestamp(Date(colaboradorLocalAprovado.dataUltimaAtualizacao))
+                colaboradorLocalAprovado.dataAprovacao?.let { colaboradorMap["data_aprovacao"] = Timestamp(Date(it)) }
+                colaboradorMap["aprovado"] = true // ✅ GARANTIR que está aprovado
+                colaboradorMap["ativo"] = colaboradorLocalAprovado.ativo
+                colaboradorMap["primeiro_acesso"] = colaboradorLocalAprovado.primeiroAcesso
+                colaboradorMap["nivel_acesso"] = colaboradorLocalAprovado.nivelAcesso.name
+                colaboradorMap["nome"] = colaboradorLocalAprovado.nome
+                colaboradorMap["email"] = colaboradorLocalAprovado.email
+                colaboradorMap["firebase_uid"] = uid
+                colaboradorMap["firebaseUid"] = uid
+                colaboradorMap["empresa_id"] = empresaId
+                colaboradorMap["companyId"] = empresaId
+                
+                docRef.set(colaboradorMap).await()
+                Timber.d("AppRepository", "✅ [CRIAR_PENDENTE] Colaborador aprovado sincronizado para Firestore")
+            } catch (e: Exception) {
+                Timber.e(e, "❌ [CRIAR_PENDENTE] Erro ao sincronizar colaborador aprovado: ${e.message}")
+            }
+            return colaboradorLocalAprovado
+        }
+        
+        // ✅ Criar novo colaborador pendente (apenas se realmente não existe)
         Timber.d("AppRepository", "🔧 [CRIAR_PENDENTE] Colaborador não existe, criando pendente...")
         return createPendingColaborador(empresaId, uid, email, null)
     }
