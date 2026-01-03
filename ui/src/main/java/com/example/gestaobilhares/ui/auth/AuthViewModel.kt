@@ -1979,57 +1979,33 @@ class AuthViewModel @Inject constructor(
                 }
             }
             
-            // 4. Fallback para empresa_001 se collectionGroup falhar ou não encontrar
+            // 4. ✅ PADRONIZAÇÃO: Fallback para novo schema (empresas/{empresaId}/colaboradores/{uid})
+            // REMOVIDO: Busca no schema antigo (entidades/colaboradores/items)
             if (doc == null) {
-                crashlytics.log("[BUSCA_NUVEM] Tentando fallback direto na empresa_001...")
-                Timber.d("AuthViewModel", "   Não encontrado via collectionGroup. Tentando fallback direto na empresa_001...")
-                val collectionRef = firestore.collection("empresas").document("empresa_001")
-                    .collection("entidades").document("colaboradores").collection("items")
+                crashlytics.log("[BUSCA_NUVEM] Tentando fallback direto no novo schema...")
+                Timber.d("AuthViewModel", "   Não encontrado via collectionGroup. Tentando fallback direto no novo schema...")
                 
-                try {
-                    crashlytics.log("[BUSCA_NUVEM] Fallback: Buscando por email na empresa_001...")
-                    querySnapshot = collectionRef.whereEqualTo("email", email).get().await()
-                    crashlytics.setCustomKey("busca_nuvem_fallback_resultado", querySnapshot.size())
-                    doc = querySnapshot.documents.firstOrNull()
-                    
-                    if (doc == null) {
-                        val firebaseUid = firebaseAuth.currentUser?.uid
-                        if (firebaseUid != null) {
-                            // ✅ CORREÇÃO: Tentar ambos os formatos (camelCase e snake_case)
-                            crashlytics.log("[BUSCA_NUVEM] Fallback: Buscando por firebaseUid (camelCase) na empresa_001...")
-                            try {
-                                querySnapshot = collectionRef.whereEqualTo("firebaseUid", firebaseUid).get().await()
-                                crashlytics.setCustomKey("busca_nuvem_fallback_resultado_uid", querySnapshot.size())
-                                doc = querySnapshot.documents.firstOrNull()
-                            } catch (e: Exception) {
-                                Timber.w("AuthViewModel", "   Erro na busca fallback firebaseUid: ${e.message}")
-                                crashlytics.log("[BUSCA_NUVEM] Erro na busca fallback firebaseUid: ${e.message}")
-                            }
-                            
-                            // Se não encontrou, tentar snake_case
-                            if (doc == null) {
-                                crashlytics.log("[BUSCA_NUVEM] Fallback: Buscando por firebase_uid (snake_case) na empresa_001...")
-                                try {
-                                    querySnapshot = collectionRef.whereEqualTo("firebase_uid", firebaseUid).get().await()
-                                    crashlytics.setCustomKey("busca_nuvem_fallback_resultado_uid_snake", querySnapshot.size())
-                                    doc = querySnapshot.documents.firstOrNull()
-                                } catch (e: Exception) {
-                                    Timber.w("AuthViewModel", "   Erro na busca fallback firebase_uid: ${e.message}")
-                                    crashlytics.log("[BUSCA_NUVEM] Erro na busca fallback firebase_uid: ${e.message}")
-                                }
-                            }
+                // Tentar buscar pelo Firebase UID se disponível
+                val firebaseUid = firebaseAuth.currentUser?.uid
+                if (firebaseUid != null) {
+                    try {
+                        crashlytics.log("[BUSCA_NUVEM] Fallback: Buscando por UID no novo schema...")
+                        val docRef = firestore.collection("empresas").document("empresa_001")
+                            .collection("colaboradores")
+                            .document(firebaseUid)
+                        val docSnapshot = docRef.get().await()
+                        if (docSnapshot.exists()) {
+                            doc = docSnapshot
+                            crashlytics.setCustomKey("busca_nuvem_fallback_resultado", 1)
                         }
+                    } catch (e: Exception) {
+                        Timber.w("AuthViewModel", "   Erro no fallback por UID: ${e.message}")
+                        crashlytics.log("[BUSCA_NUVEM] Erro no fallback por UID: ${e.message}")
                     }
-                    crashlytics.log("[BUSCA_NUVEM] Fallback empresa_001: ${if (doc != null) "ENCONTRADO" else "NÃO ENCONTRADO"}")
-                    Timber.d("AuthViewModel", "   Fallback empresa_001: ${if (doc != null) "ENCONTRADO" else "NÃO ENCONTRADO"}")
-                } catch (e: Exception) {
-                    crashlytics.setCustomKey("busca_nuvem_erro_fallback", true)
-                    crashlytics.setCustomKey("busca_nuvem_erro_fallback_tipo", e.javaClass.simpleName)
-                    crashlytics.setCustomKey("busca_nuvem_erro_fallback_mensagem", e.message ?: "unknown")
-                    crashlytics.log("[BUSCA_NUVEM] ❌ Erro no fallback empresa_001: ${e.message}")
-                    crashlytics.recordException(e)
-                    Timber.e("AuthViewModel", "   Erro no fallback empresa_001: ${e.message}", e)
                 }
+                
+                crashlytics.log("[BUSCA_NUVEM] Fallback novo schema: ${if (doc != null) "ENCONTRADO" else "NÃO ENCONTRADO"}")
+                Timber.d("AuthViewModel", "   Fallback novo schema: ${if (doc != null) "ENCONTRADO" else "NÃO ENCONTRADO"}")
             }
             
             if (doc == null) {
