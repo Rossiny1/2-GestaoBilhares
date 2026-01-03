@@ -36,13 +36,27 @@ class ColaboradorSyncHandler @javax.inject.Inject constructor(
     companion object {
         private const val COLLECTION_COLABORADORES = "colaboradores"
     }
+    
+    /**
+     * ✅ PADRONIZAÇÃO: Retorna CollectionReference para o NOVO schema de colaboradores
+     * Caminho: empresas/{empresaId}/colaboradores/{uid}
+     * REMOVIDO: Schema antigo (empresas/{empresaId}/entidades/colaboradores/items)
+     */
+    private fun getColaboradoresCollectionReference(): CollectionReference {
+        val companyId = currentCompanyId
+        Timber.tag(TAG).d("getColaboradoresCollectionRef: empresas/$companyId/colaboradores")
+        return firestore
+            .collection("empresas")
+            .document(companyId)
+            .collection(COLLECTION_COLABORADORES)
+    }
 
     override suspend fun pull(timestampOverride: Long?): Result<Int> {
         val startTime = System.currentTimeMillis()
         
         return try {
             Timber.tag(TAG).d("?? Iniciando pull de colaboradores...")
-            val collectionRef = getCollectionReference(COLLECTION_COLABORADORES)
+            val collectionRef = getColaboradoresCollectionReference()
 
             val lastSyncTimestamp = getLastSyncTimestamp(entityType)
             val canUseIncremental = lastSyncTimestamp > 0L
@@ -112,8 +126,9 @@ class ColaboradorSyncHandler @javax.inject.Inject constructor(
         timestampOverride: Long?
     ): Result<Int>? {
         return try {
+            // ✅ PADRONIZAÇÃO: Usar last_modified (snake_case) no novo schema
             val documents = collectionRef
-                .whereGreaterThan("lastModified", Timestamp(Date(lastSyncTimestamp)))
+                .whereGreaterThan("last_modified", Timestamp(Date(lastSyncTimestamp)))
                 .get()
                 .await()
                 .documents
@@ -178,36 +193,36 @@ class ColaboradorSyncHandler @javax.inject.Inject constructor(
         val colaboradorData = doc.data ?: return ProcessResult.Skipped
         
         val colaboradorEmail = (colaboradorData["email"] as? String) ?: ""
-        val docIdIsNumeric = doc.id.toLongOrNull() != null
+        val firebaseUid = doc.id // ✅ NOVO SCHEMA: Document ID é o Firebase UID
         
-        val colaboradorId = if (!docIdIsNumeric && colaboradorEmail.isNotEmpty()) {
-            val colaboradorExistente = appRepository.obterColaboradorPorEmail(colaboradorEmail)
-            if (colaboradorExistente != null) {
-                colaboradorExistente.id
-            } else {
+        // ✅ PADRONIZAÇÃO: Buscar colaborador por Firebase UID primeiro (novo schema)
+        val colaboradorExistentePorUid = appRepository.obterColaboradorPorFirebaseUid(firebaseUid)
+        val colaboradorExistentePorEmail = if (colaboradorEmail.isNotEmpty()) {
+            appRepository.obterColaboradorPorEmail(colaboradorEmail)
+        } else null
+        
+        val colaboradorId = colaboradorExistentePorUid?.id
+            ?: colaboradorExistentePorEmail?.id
+            ?: (colaboradorData["room_id"] as? Number)?.toLong()
+            ?: (colaboradorData["id"] as? Number)?.toLong()
+            ?: run {
+                // Se não encontrou, gerar novo ID
                 val todosColaboradores = appRepository.obterTodosColaboradores().first()
                 (todosColaboradores.maxOfOrNull { it.id } ?: 0L) + 1L
             }
-        } else {
-            doc.id.toLongOrNull()
-                ?: (colaboradorData["roomId"] as? Number)?.toLong()
-                ?: (colaboradorData["id"] as? Number)?.toLong()
-                ?: run {
-                    if (colaboradorEmail.isNotEmpty()) {
-                        val colaboradorExistente = appRepository.obterColaboradorPorEmail(colaboradorEmail)
-                        if (colaboradorExistente != null) return@run colaboradorExistente.id
-                    }
-                    return@run -1L
-                }
-        }
         
         if (colaboradorId <= 0L) return ProcessResult.Skipped
         
         val colaboradorJson = gson.toJson(colaboradorData)
-        val colaboradorFirestore = gson.fromJson(colaboradorJson, Colaborador::class.java)?.copy(id = colaboradorId)
-            ?: return ProcessResult.Error
+        val colaboradorFirestore = gson.fromJson(colaboradorJson, Colaborador::class.java)?.copy(
+            id = colaboradorId,
+            firebaseUid = firebaseUid // ✅ PADRONIZAÇÃO: Garantir que firebaseUid está preenchido
+        ) ?: return ProcessResult.Error
         
-        val serverTimestamp = com.example.gestaobilhares.core.utils.DateUtils.convertToLong(colaboradorData["lastModified"])
+        // ✅ PADRONIZAÇÃO: Tentar ambos os formatos (last_modified e lastModified)
+        val serverTimestamp = com.example.gestaobilhares.core.utils.DateUtils.convertToLong(colaboradorData["last_modified"])
+            ?: com.example.gestaobilhares.core.utils.DateUtils.convertToLong(colaboradorData["lastModified"])
+            ?: com.example.gestaobilhares.core.utils.DateUtils.convertToLong(colaboradorData["data_ultima_atualizacao"])
             ?: com.example.gestaobilhares.core.utils.DateUtils.convertToLong(colaboradorData["dataUltimaAtualizacao"])
             ?: colaboradorFirestore.dataUltimaAtualizacao
         
@@ -261,10 +276,17 @@ class ColaboradorSyncHandler @javax.inject.Inject constructor(
             var errorCount = 0
             var bytesUploaded = 0L
             
-            val collectionRef = getCollectionReference(COLLECTION_COLABORADORES)
+            val collectionRef = getColaboradoresCollectionReference()
             
             paraEnviar.forEach { colab ->
                 try {
+                    // ✅ PADRONIZAÇÃO: Usar Firebase UID como document ID no novo schema
+                    val documentId = colab.firebaseUid
+                    if (documentId.isNullOrBlank()) {
+                        Timber.tag(TAG).w("⚠️ Colaborador ${colab.id} (${colab.email}) não tem Firebase UID, pulando push")
+                        return@forEach
+                    }
+                    
                     var colabParaEnviar = colab
                     
                     // Se o colaborador tem foto e ela é um caminho local (não URL do Firebase), faz o upload
@@ -283,12 +305,14 @@ class ColaboradorSyncHandler @javax.inject.Inject constructor(
                     }
 
                     val colabMap = entityToMap(colabParaEnviar)
-                    colabMap["roomId"] = colabParaEnviar.id
+                    colabMap["room_id"] = colabParaEnviar.id
                     colabMap["id"] = colabParaEnviar.id
-                    colabMap["lastModified"] = FieldValue.serverTimestamp()
-                    colabMap["syncTimestamp"] = FieldValue.serverTimestamp()
+                    colabMap["last_modified"] = FieldValue.serverTimestamp()
+                    colabMap["sync_timestamp"] = FieldValue.serverTimestamp()
+                    colabMap["empresa_id"] = currentCompanyId
                     
-                    collectionRef.document(colabParaEnviar.id.toString()).set(colabMap).await()
+                    // ✅ PADRONIZAÇÃO: Usar UID como document ID no novo schema
+                    collectionRef.document(documentId).set(colabMap).await()
                     
                     syncCount++
                     bytesUploaded += colabMap.toString().length.toLong()
