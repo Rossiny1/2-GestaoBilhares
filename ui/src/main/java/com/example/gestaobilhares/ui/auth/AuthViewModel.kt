@@ -434,10 +434,18 @@ class AuthViewModel @Inject constructor(
                                 return@launch
                             }
                             
-                            // Salvar colaborador localmente para próximos logins offline
+                            // ✅ CORREÇÃO: Verificar se já existe antes de salvar localmente (evita duplicação)
                             try {
-                                appRepository.inserirColaborador(colaborador)
-                                Timber.d("AuthViewModel", "✅ Colaborador salvo localmente")
+                                val colaboradorExistente = colaborador.firebaseUid?.let { 
+                                    appRepository.obterColaboradorPorFirebaseUid(it) 
+                                } ?: appRepository.obterColaboradorPorEmail(colaborador.email)
+                                
+                                if (colaboradorExistente == null) {
+                                    appRepository.inserirColaborador(colaborador)
+                                    Timber.d("AuthViewModel", "✅ Colaborador salvo localmente")
+                                } else {
+                                    Timber.d("AuthViewModel", "✅ Colaborador já existe localmente (ID: ${colaboradorExistente.id}), não duplicando")
+                                }
                             } catch (e: Exception) {
                                 Timber.w("AuthViewModel", "⚠️ Erro ao salvar colaborador localmente: ${e.message}")
                                 // Continuar mesmo com erro - o colaborador foi encontrado na nuvem
@@ -780,8 +788,17 @@ class AuthViewModel @Inject constructor(
                             Timber.d("AuthViewModel", "✅ Colaborador encontrado na nuvem: ${colaboradorNuvem.nome}")
                             Timber.d("AuthViewModel", "   Aprovado: ${colaboradorNuvem.aprovado}")
                             
-                            // Salvar colaborador localmente para próximos logins offline
-                            appRepository.inserirColaborador(colaboradorNuvem)
+                            // ✅ CORREÇÃO: Verificar se já existe antes de salvar localmente (evita duplicação)
+                            val colaboradorExistente = colaboradorNuvem.firebaseUid?.let { 
+                                appRepository.obterColaboradorPorFirebaseUid(it) 
+                            } ?: appRepository.obterColaboradorPorEmail(colaboradorNuvem.email)
+                            
+                            if (colaboradorExistente == null) {
+                                appRepository.inserirColaborador(colaboradorNuvem)
+                                Timber.d("AuthViewModel", "✅ Colaborador salvo localmente")
+                            } else {
+                                Timber.d("AuthViewModel", "✅ Colaborador já existe localmente (ID: ${colaboradorExistente.id}), não duplicando")
+                            }
                             
                             // Verificar se está aprovado
                             if (colaboradorNuvem.aprovado) {
@@ -1186,8 +1203,17 @@ class AuthViewModel @Inject constructor(
                                 userSessionManager.startSession(colaboradorMesclado, detectedCompanyId)
                                 return colaboradorMesclado
                             } else {
-                                Timber.d("AuthViewModel", "Colaborador não existe localmente, inserindo...")
-                                appRepository.inserirColaborador(colaboradorFinal)
+                                // ✅ CORREÇÃO: Verificar se já existe antes de inserir (evita duplicação)
+                                val colaboradorExistente = colaboradorFinal.firebaseUid?.let { 
+                                    appRepository.obterColaboradorPorFirebaseUid(it) 
+                                } ?: appRepository.obterColaboradorPorEmail(colaboradorFinal.email)
+                                
+                                if (colaboradorExistente == null) {
+                                    Timber.d("AuthViewModel", "Colaborador não existe localmente, inserindo...")
+                                    appRepository.inserirColaborador(colaboradorFinal)
+                                } else {
+                                    Timber.d("AuthViewModel", "✅ Colaborador já existe localmente (ID: ${colaboradorExistente.id}), não duplicando")
+                                }
                             }
                         }
                         
@@ -1832,15 +1858,24 @@ class AuthViewModel @Inject constructor(
                 )
             }
             
-            // ✅ CORREÇÃO: Salvar localmente primeiro
-            val idLocal = appRepository.inserirColaborador(colaborador)
-            val colaboradorComId = colaborador.copy(id = idLocal)
+            // ✅ CORREÇÃO: Verificar se já existe antes de salvar localmente (evita duplicação)
+            val colaboradorExistente = colaborador.firebaseUid?.let { 
+                appRepository.obterColaboradorPorFirebaseUid(it) 
+            } ?: appRepository.obterColaboradorPorEmail(colaborador.email)
+            
+            val colaboradorComId = if (colaboradorExistente != null) {
+                Timber.d("AuthViewModel", "✅ Colaborador já existe localmente (ID: ${colaboradorExistente.id}), não duplicando")
+                colaboradorExistente
+            } else {
+                val idLocal = appRepository.inserirColaborador(colaborador)
+                colaborador.copy(id = idLocal)
+            }
             
             // ✅ CORREÇÃO: Criar no Firestore e AGUARDAR (await)
             Timber.d("AuthViewModel", "🔧 [CRIAR_AUTO] Criando no Firestore (novo schema)...")
             criarColaboradorNoNovoSchema(colaboradorComId, empresaId)
             
-            Timber.d("AuthViewModel", "✅ [CRIAR_AUTO] Colaborador criado: ${colaboradorComId.nome} (ID: $idLocal, Aprovado: ${colaboradorComId.aprovado})")
+            Timber.d("AuthViewModel", "✅ [CRIAR_AUTO] Colaborador criado: ${colaboradorComId.nome} (ID: ${colaboradorComId.id}, Aprovado: ${colaboradorComId.aprovado})")
             colaboradorComId
             
         } catch (e: Exception) {
@@ -2271,8 +2306,18 @@ class AuthViewModel @Inject constructor(
                 aprovadoPor = "Sistema (Superadmin Automático)"
             )
             
-            val colaboradorId = appRepository.inserirColaborador(novoColaborador)
-            val colaboradorComId = novoColaborador.copy(id = colaboradorId)
+            // ✅ CORREÇÃO: Verificar se já existe antes de inserir (evita duplicação)
+            val colaboradorExistente = firebaseUid?.let { 
+                appRepository.obterColaboradorPorFirebaseUid(it) 
+            } ?: appRepository.obterColaboradorPorEmail("rossinys@gmail.com")
+            
+            val colaboradorComId = if (colaboradorExistente != null) {
+                Timber.d("AuthViewModel", "✅ SUPERADMIN já existe localmente (ID: ${colaboradorExistente.id}), não duplicando")
+                colaboradorExistente
+            } else {
+                val colaboradorId = appRepository.inserirColaborador(novoColaborador)
+                novoColaborador.copy(id = colaboradorId)
+            }
             
             Timber.d("AuthViewModel", "✅ SUPERADMIN criado: ${colaboradorComId.nome}")
             

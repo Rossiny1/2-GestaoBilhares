@@ -1020,12 +1020,36 @@ class AppRepository @Inject constructor(
         uid: String,
         email: String
     ): Colaborador {
-        // ✅ Verificar se já existe
+        // ✅ CORREÇÃO CRÍTICA: Verificar PRIMEIRO se já existe localmente (evita duplicação)
+        val colaboradorExistenteLocal = obterColaboradorPorFirebaseUid(uid) 
+            ?: obterColaboradorPorEmail(email)
+        
+        if (colaboradorExistenteLocal != null) {
+            Timber.d("AppRepository", "✅ [CRIAR_PENDENTE] Colaborador já existe localmente (ID: ${colaboradorExistenteLocal.id}, UID: $uid)")
+            // Atualizar firebaseUid se não tiver
+            if (colaboradorExistenteLocal.firebaseUid == null || colaboradorExistenteLocal.firebaseUid != uid) {
+                Timber.d("AppRepository", "🔧 [CRIAR_PENDENTE] Atualizando firebaseUid do colaborador existente")
+                val colaboradorAtualizado = colaboradorExistenteLocal.copy(firebaseUid = uid)
+                atualizarColaborador(colaboradorAtualizado)
+                return colaboradorAtualizado
+            }
+            return colaboradorExistenteLocal
+        }
+        
+        // ✅ Verificar se já existe no Firestore
         val doc = getColaboradorDoc(empresaId, uid)
         if (doc.exists()) {
-            Timber.d("AppRepository", "✅ [CRIAR_PENDENTE] Colaborador já existe: ${doc.reference.path}")
+            Timber.d("AppRepository", "✅ [CRIAR_PENDENTE] Colaborador já existe no Firestore: ${doc.reference.path}")
             val colaboradorExistente = getColaboradorByUid(empresaId, uid)
-            if (colaboradorExistente == null) {
+            if (colaboradorExistente != null) {
+                // ✅ CORREÇÃO: Salvar localmente se não existir
+                val colaboradorLocal = obterColaboradorPorFirebaseUid(uid) ?: obterColaboradorPorEmail(email)
+                if (colaboradorLocal == null) {
+                    Timber.d("AppRepository", "🔧 [CRIAR_PENDENTE] Colaborador existe no Firestore mas não localmente, salvando localmente...")
+                    inserirColaborador(colaboradorExistente)
+                }
+                return colaboradorExistente
+            } else {
                 Timber.e("AppRepository", "❌ [CRIAR_PENDENTE] Colaborador existe no Firestore mas conversão falhou")
                 Timber.e("AppRepository", "   Path: ${doc.reference.path}")
                 Timber.e("AppRepository", "   Data keys: ${doc.data?.keys?.joinToString(", ") ?: "null"}")
@@ -1033,7 +1057,6 @@ class AppRepository @Inject constructor(
                 // Tentar recriar o documento com dados corretos
                 return createPendingColaborador(empresaId, uid, email, null)
             }
-            return colaboradorExistente
         }
         
         // ✅ Criar novo colaborador pendente
@@ -1058,6 +1081,22 @@ class AppRepository @Inject constructor(
         nome: String? = null
     ): Colaborador {
         Timber.d("AppRepository", "🔧 [FIRESTORE] Criando colaborador pendente: empresas/$empresaId/colaboradores/$uid")
+        
+        // ✅ CORREÇÃO CRÍTICA: Verificar se já existe localmente ANTES de criar
+        val colaboradorExistenteLocal = obterColaboradorPorFirebaseUid(uid) 
+            ?: obterColaboradorPorEmail(email)
+        
+        if (colaboradorExistenteLocal != null) {
+            Timber.d("AppRepository", "✅ [CRIAR_PENDENTE] Colaborador já existe localmente (ID: ${colaboradorExistenteLocal.id}, UID: $uid)")
+            // Atualizar firebaseUid se não tiver
+            if (colaboradorExistenteLocal.firebaseUid == null || colaboradorExistenteLocal.firebaseUid != uid) {
+                Timber.d("AppRepository", "🔧 [CRIAR_PENDENTE] Atualizando firebaseUid do colaborador existente")
+                val colaboradorAtualizado = colaboradorExistenteLocal.copy(firebaseUid = uid)
+                atualizarColaborador(colaboradorAtualizado)
+                return colaboradorAtualizado
+            }
+            return colaboradorExistenteLocal
+        }
         
         val agora = System.currentTimeMillis()
         val nomeFinal = nome ?: email.split("@")[0]
@@ -1096,7 +1135,8 @@ class AppRepository @Inject constructor(
             )
         }
         
-        // Salvar localmente primeiro
+        // ✅ CORREÇÃO: Salvar localmente APENAS se não existir
+        Timber.d("AppRepository", "🔧 [CRIAR_PENDENTE] Inserindo colaborador localmente (não existe)")
         val idLocal = inserirColaborador(colaborador)
         val colaboradorComId = colaborador.copy(id = idLocal)
         
@@ -1166,6 +1206,18 @@ class AppRepository @Inject constructor(
     suspend fun inserirColaborador(colaborador: Colaborador): Long {
         logDbInsertStart("COLABORADOR", "ID=${colaborador.id}, Nivel=${colaborador.nivelAcesso} [PII REDACTED]")
         return try {
+            // ✅ CORREÇÃO CRÍTICA: Verificar se já existe ANTES de inserir (evita duplicação)
+            val colaboradorExistente = colaborador.firebaseUid?.let { 
+                obterColaboradorPorFirebaseUid(it) 
+            } ?: obterColaboradorPorEmail(colaborador.email)
+            
+            if (colaboradorExistente != null) {
+                Timber.d("AppRepository", "⚠️ [INSERIR] Colaborador já existe localmente (ID: ${colaboradorExistente.id})")
+                Timber.d("AppRepository", "   Email: ${colaborador.email}, UID: ${colaborador.firebaseUid}")
+                logDbInsertSuccess("COLABORADOR", "ID=${colaboradorExistente.id} [JÁ EXISTIA - NÃO DUPLICADO]")
+                return colaboradorExistente.id
+            }
+            
             val id = colaboradorDao.inserir(colaborador)
             logDbInsertSuccess("COLABORADOR", "ID=$id [PII REDACTED]")
             id
