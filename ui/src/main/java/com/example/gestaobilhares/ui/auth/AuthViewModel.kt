@@ -739,14 +739,17 @@ class AuthViewModel @Inject constructor(
                         // ✅ SUPERADMIN: Garantir que sempre é ADMIN, aprovado, sem primeiro acesso
                         // ✅ SEGURANÇA: Atualizar senha apenas se for válida (já validada acima)
                         var colaboradorFinal = if (isSuperAdmin) {
+                            Timber.d("AuthViewModel", "🚨 SUPERADMIN DETECTADO NO BLOCO DE ATUALIZAÇÃO")
+                            val novoHash = PasswordHasher.hash(senhaLimpa)
+                            Timber.d("AuthViewModel", "   Novo hash gerado para SUPERADMIN: $novoHash")
                             colaborador.copy(
                                 nivelAcesso = NivelAcesso.ADMIN,
                                 aprovado = true,
                                 primeiroAcesso = false,
-                                senhaHash = PasswordHasher.hash(senhaLimpa) // ✅ Atualizar com hash para login offline
+                                senhaHash = novoHash // ✅ Atualizar com hash para login offline
                             ).also {
                                 appRepository.atualizarColaborador(it)
-                                Timber.d("AuthViewModel", "✅ SUPERADMIN: Dados atualizados (senha válida confirmada)")
+                                Timber.d("AuthViewModel", "✅ SUPERADMIN: Dados atualizados no banco local (senha válida confirmada)")
                             }
                         } else {
                             colaborador
@@ -2244,17 +2247,18 @@ class AuthViewModel @Inject constructor(
             val existente = appRepository.obterColaboradorPorEmail(email)
             if (existente != null) {
                 // Atualizar para garantir que é ADMIN e aprovado
-                val atualizado = existente.copy(
-                    nivelAcesso = NivelAcesso.ADMIN,
-                    aprovado = true,
-                    ativo = true,
-                    primeiroAcesso = false, // Superadmin nunca precisa alterar senha
-                    firebaseUid = firebaseUid ?: existente.firebaseUid,
-                    senhaHash = if (senha.isNotEmpty()) PasswordHasher.hash(senha) else existente.senhaHash, // Salvar hash para login offline
-                    senhaTemporaria = null, // Limpar senha temporária
-                    dataAprovacao = existente.dataAprovacao ?: System.currentTimeMillis(),
-                    aprovadoPor = existente.aprovadoPor ?: "Sistema (Superadmin)"
-                )
+            val sHash = if (senha.isNotEmpty()) PasswordHasher.hash(senha) else existente.senhaHash
+            val atualizado = existente.copy(
+                nivelAcesso = NivelAcesso.ADMIN,
+                aprovado = true,
+                ativo = true,
+                primeiroAcesso = false, // Superadmin nunca precisa alterar senha
+                firebaseUid = firebaseUid ?: existente.firebaseUid,
+                senhaHash = sHash, // ✅ GARANTIDO: Sempre hash, nunca texto plano
+                senhaTemporaria = null, // Limpar senha temporária
+                dataAprovacao = existente.dataAprovacao ?: System.currentTimeMillis(),
+                aprovadoPor = existente.aprovadoPor ?: "Sistema (Superadmin)"
+            )
                 appRepository.atualizarColaborador(atualizado)
                 userSessionManager.startSession(atualizado)
                 Timber.d("AuthViewModel", "✅ SUPERADMIN atualizado: ${atualizado.nome}")
@@ -2262,22 +2266,23 @@ class AuthViewModel @Inject constructor(
             }
             
             // Criar novo superadmin
-            val pwd = if (senha.isNotEmpty()) senha else "superadmin123"
-            val senhaHash = PasswordHasher.hash(pwd)
-            
-            val novoColaborador = Colaborador(
-                nome = "Super Admin",
-                email = email,
-                nivelAcesso = NivelAcesso.ADMIN,
-                aprovado = true,
-                ativo = true,
-                primeiroAcesso = false, // Superadmin nunca precisa alterar senha
-                senhaHash = senhaHash, // Salvar senha para login offline
-                senhaTemporaria = null,
-                firebaseUid = firebaseUid,
-                dataAprovacao = System.currentTimeMillis(),
-                aprovadoPor = "Sistema (Superadmin Automático)"
-            )
+        val pwd = if (senha.isNotEmpty()) senha else "superadmin123"
+        val sHash = PasswordHasher.hash(pwd)
+        Timber.d("AuthViewModel", "   Hash gerado para NOVO SUPERADMIN: $sHash")
+        
+        val novoColaborador = Colaborador(
+            nome = "Super Admin",
+            email = email,
+            nivelAcesso = NivelAcesso.ADMIN,
+            aprovado = true,
+            ativo = true,
+            primeiroAcesso = false, // Superadmin nunca precisa alterar senha
+            senhaHash = sHash, // ✅ GARANTIDO: Sempre hash
+            senhaTemporaria = null,
+            firebaseUid = firebaseUid,
+            dataAprovacao = System.currentTimeMillis(),
+            aprovadoPor = "Sistema (Superadmin Automático)"
+        )
             
             // ✅ CORREÇÃO: Verificar se já existe antes de inserir (evita duplicação)
             val colaboradorExistente = firebaseUid?.let { 
