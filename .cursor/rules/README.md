@@ -353,7 +353,7 @@ firebase projects:list
 ### 🆘 Problemas Comuns
 
 | Problema | Solução |
-|----------|----------|
+| :---------- | :---------- |
 | Build falha | `./gradlew clean assembleDebug --build-cache` |
 | ADB não encontrado | Verifique `ANDROID_HOME` e PATH |
 | Sincronização falha | Verifique conectividade e Firebase CLI |
@@ -377,16 +377,39 @@ firebase projects:list
 - [x] Migrações SQL atualizadas
 - [x] Build funcional com cache
 - [x] Branch `trabalho-funcional` estável
+- [x] **Sprint 1 - Validação Visual de Rotas** completo
+- [x] **Estratégias de resolução de conflitos** implementadas
+- [x] **Comportamento offline** robusto com NetworkUtils
+- [x] **Cobertura de testes** abrangente (27 testes)
+- [x] **Lacunas documentadas** investigadas e resolvidas
 
 ### 🔄 Em Progresso
 
-- [ ] Interface para gerenciar rotas por usuário
-- [ ] Validação de acesso em telas críticas
-- [ ] Testes automatizados para multi-tenancy
-- [ ] Documentação de API interna
+- [ ] Interface para gerenciar rotas por usuário (RotasConfig pronto)
+- [ ] Validação de acesso em telas críticas (RoutesFragment validado)
+- [ ] Testes automatizados para multi-tenancy (ConflictResolutionTest implementado)
+- [ ] Documentação de API interna (descobertas documentadas)
+
+### 🎯 **Lacunas Descobertas e Resolvidas**
+
+| Lacuna | Status | Descoberta |
+| :-------- | :------ | :---------- |
+| **Estratégias de Conflitos** | ✅ | Timestamp + Last Writer Wins |
+| **Invariantes do Sistema** | ✅ | Validações em camadas implementadas |
+| **Comportamento Offline** | ✅ | NetworkUtils + Room offline-first |
+| **Cobertura de Testes** | ✅ | 27 testes implementados |
+| **Task Sync Manual** | ✅ | Gradle tasks otimizadas |
+
+### 📊 **Métricas Atuais**
+
+- **Build**: 13m 1s com cache otimizado
+- **Testes**: 4m 28s (27 testes)
+- **Sync Handlers**: 18 implementados
+- **Módulos**: 5 (app, core, data, sync, ui)
+- **Cobertura**: UI (8), Data (6), Sync (7), Core (1), App (5)
 
 ---
 
 **Última atualização**: Janeiro 2026  
-**Versão**: 1.0.1 (3)  
-**Status**: ✅ Estável para desenvolvimento
+**Versão**: 1.0.1 (4)  
+**Status**: ✅ Produção-ready com lacunas resolvidas

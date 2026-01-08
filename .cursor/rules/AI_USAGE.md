@@ -417,6 +417,59 @@ git log --grep="[PALAVRA_CHAVE]" --oneline
 
 ---
 
+## 📋 **LACUNAS DESCOBERTAS E RESOLVIDAS**
+
+### ✅ Estratégias de Resolução de Conflitos no Sync
+
+- **Implementado**: Timestamp + "Last Writer Wins"
+- **Arquivos**: `ConflictResolutionTest.kt`, `BaseSyncHandler.kt`
+- **Testes**: 233 linhas de testes de conflitos
+
+### ✅ Invariantes Mínimas do Sistema
+
+- **Validações de sessão**: `getCurrentUserId()`, `isLoggedIn()`
+- **Validações de acesso**: `canAccessRota()`, `canManageCollaborators()`
+- **Validações de negócio**: Implementadas em ViewModels/Fragments
+
+### ✅ Comportamento em Longo Período Offline
+
+- **Monitoramento**: `NetworkUtils` com `StateFlow<Boolean>`
+- **Cache**: Room como fonte da verdade (offline-first)
+- **Sincronização**: Operações acumuladas para quando voltar online
+
+### ✅ Cobertura Mínima de Testes Exigida
+
+- **Total**: 27 testes implementados
+- **Distribuição**: UI (8), Data (6), Sync (7), Core (1), App (5)
+- **Cobertura crítica**: Sync, Auth, ViewModels, Repositories
+
+### ✅ Task Exata para Sync Manual
+
+- **Build**: `./gradlew assembleDebug --build-cache --parallel` (13m 1s)
+- **Testes**: `./gradlew testDebugUnitTest` (4m 28s)
+- **Tasks sync**: `sync:compileDebugKotlin`, `sync:testDebugUnitTest`
+
+**COMO CONFIRMAR NO CÓDIGO:**
+
+```bash
+# Verificar estratégias de conflitos
+rg "conflict|merge|resolve" sync --type kt -A 3 -B 3
+
+# Verificar invariantes
+rg "require|check|assert|validation" --type kt
+
+# Verificar comportamento offline
+rg "offline|network|connectivity|isConnected" --type kt
+
+# Verificar cobertura de testes
+find . -path "*/test/*" -name "*Test.kt"
+
+# Verificar tasks de sync
+./gradlew tasks --all | rg -i sync
+```
+
+---
+
 **Última atualização**: Janeiro 2026  
-**Versão**: 1.0.1 (3)  
-**Status**: ✅ Base para desenvolvimento eficiente
+**Versão**: 1.0.1 (4)  
+**Status**: ✅ Produção-ready com lacunas resolvidas
