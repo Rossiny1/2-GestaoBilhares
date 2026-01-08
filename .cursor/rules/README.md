@@ -12,7 +12,7 @@
 - **Tipo**: App Android nativo para gestão de bilhares
 - **Stack**: Kotlin + Room + Hilt + Coroutines + Firebase
 - **Arquitetura**: MVVM com repositórios especializados
-- **Multi-tenancy**: Por rota (não por empresa)
+- **Fonte da verdade**: Room (offline-first) com sincronização Firebase
 
 ### 🚀 Setup para Novos Desenvolvedores
 
@@ -24,7 +24,7 @@ cd 2-GestaoBilhares
 # 2. Abrir no Cursor/VS Code
 cursor .  # ou code .
 
-# 3. Build inicial
+# 3. Build inicial (com cache)
 ./gradlew assembleDebug --build-cache --parallel
 
 # 4. Variáveis de ambiente necessárias
@@ -45,7 +45,7 @@ FIREBASE_CLI=./functions/node_modules/.bin/firebase-cli
 
 ### 📦 Módulos Gradle (5)
 
-```
+```text
 app/          # UI principal e Activities
 core/         # Utilidades, UserSessionManager, BluetoothPrinterHelper
 data/         # Entities, DAOs, Repositories, Database
@@ -55,7 +55,7 @@ ui/           # Componentes UI compartilhados
 
 ### 🔄 Fluxos Principais
 
-```
+```text
 Autenticação → UserSessionManager → Verificação Multi-tenancy
     ↓
 Rotas → Ciclos → Clientes → Mesas → Acertos
@@ -73,27 +73,87 @@ Sincronização → Firebase → Handlers → Repositórios
 
 ---
 
-## 🔐 SEGURANÇA E MULTI-TENANCY
+## 🔐 LEIS DO PROJETO (VERDADE ATUAL)
 
-### 🔑 Controle de Acesso
+### 🎯 Multi-tenancy e Segurança
 
-```kotlin
-// UserSessionManager - Gerencia rotas permitidas
-val rotasPermitidas = userSessionManager.getRotasPermitidas()
-val podeAcessar = userSessionManager.canAccessRota(rotaId)
+**IMPLEMENTADO HOJE:**
+
+- **Controle de acesso**: Baseado em `rotasPermitidas` (JSON) na entidade `Colaborador`
+- **Validação local**: `UserSessionManager.getRotasPermitidas()` e `canAccessRota()`
+- **Regra de negócio**: Admin tem `rotasPermitidas = null` (acesso total)
+- **Isolamento**: Por rota, não por empresa
+
+**COMO CONFIRMAR NO CÓDIGO:**
+
+```bash
+# Buscar implementação atual
+rg "rotasPermitidas" --type kt
+rg "getRotasPermitidas" --type kt
+rg "canAccessRota" --type kt
+
+# Verificar UserSessionManager
+rg -n "class UserSessionManager" --type kt
+# Alternativa se não encontrar: rg -n "UserSessionManager" core --type kt
+# Se ambos falharem: find . -name "*UserSessionManager*"
 ```
 
-### 📋 Regras de Negócio
+### 📱 Offline-First e Sync
 
-- **Admin**: `rotasPermitidas = null` (acesso total)
-- **Colaborador**: `rotasPermitidas = "[1,2,3]"` (JSON com IDs)
-- **Validação**: Sempre verificar antes de operações críticas
+**O QUE SABEMOS (VERIFICÁVEL):**
 
-### 🔥 Firestore Rules
+- **Fonte da verdade**: Room database local
+- **Sincronização**: Handlers especializados por entidade (18 handlers encontrados)
+- **Base**: BaseSyncHandler com metadados de sincronização
+- **Firestore**: Como backend de sincronização
 
-- Isolamento por `empresaId` no documento
-- Validação de claims customizados
-- Apenas usuários autenticados podem escrever
+**O QUE FALTA PREENCHER (PERGUNTAS OBJETIVAS):**
+
+- Estratégia de resolução de conflitos?
+- Invariantes mínimas do sistema?
+- Abordagem para sincronização incremental vs completa?
+- Tempo esperado para sincronização?
+- Comportamento em longo período offline?
+
+**COMO CONFIRMAR NO CÓDIGO:**
+
+```bash
+# Analisar estrutura de sincronização
+find . -path "*/sync/*/src/main/java" -name "*SyncHandler.kt" | head -5
+# Alternativa: find . -path "*sync*" -path "*src/main/java" -name "*Handler*.kt" | head -5
+# Verificar handler base
+rg -n "class BaseSyncHandler" --type kt
+# Alternativa: find . -name "*BaseSyncHandler*"
+
+# Verificar repositório principal
+rg -n "class SyncRepository" --type kt
+# Alternativa: find . -name "*SyncRepository*"
+
+# Verificar metadados de sync
+rg "SyncMetadata" --type kt -A 2 -B 2
+```
+
+---
+
+## 🚀 ROADMAP E FUTURO (NÃO IMPLEMENTADO)
+
+### 🔮 Multi-tenancy por Empresa (Planejado)
+
+**O QUE SERÁ MIGRADO:**
+
+- Isolamento por `empresaId` em todas as entidades
+- Claims Firebase: `companyId`, `role` (admin/manager/user)
+- Firestore rules baseadas em empresa
+
+**COMO CONFIRMAR SE IMPLEMENTADO:**
+
+```bash
+# Verificar se empresaId existe nas entidades
+rg "empresaId|companyId" --type kt
+
+# Verificar regras Firestore
+grep -A 5 -B 5 "belongsToCompany\|companyId" firestore.rules
+```
 
 ---
 
@@ -109,7 +169,9 @@ val podeAcessar = userSessionManager.canAccessRota(rotaId)
 ./gradlew installDebug  # requer dispositivo conectado
 
 # 3. Sincronização manual (se necessário)
-./gradlew :sync:runSyncManual
+# Como descobrir a task de sync:
+# ./gradlew tasks --all | rg -i sync
+# DESCONHECIDO: Task exata para sincronização manual não confirmada
 ```
 
 ### 🧪 Testes e Debug
@@ -121,38 +183,45 @@ val podeAcessar = userSessionManager.canAccessRota(rotaId)
 
 ---
 
-## 🤖 COMO TRABALHAR COM IA NESTE PROJETO
+## ⚡ BUILD RÁPIDO (COM CACHE)
 
-### 📋 Regras para IAs (Cursor, Claude, GPT)
-
-1. **Sempre anexar arquivos principais** ao pedir mudanças
-2. **Trabalhar por módulo**: evite alterações cruzadas desnecessárias
-3. **Commits pequenos**: uma feature por PR
-4. **Respeitar multi-tenancy**: não adicionar `empresaId` onde não existe
-
-### 🎯 Prompts Úteis
-
-```
-# Para criar nova feature:
-"Crie [FEATURE] seguindo a arquitetura MVVM existente, 
-utilizando Repository especializado e mantendo compatibilidade com multi-tenancy por rota."
-
-# Para corrigir bugs:
-"Analise o erro [ERRO] nos logs, verifique o arquivo [ARQUIVO] 
-e proponha solução seguindo os padrões do projeto."
-```
-
-### ⚡ Otimização de Build
+### 🎯 Comandos Otimizados
 
 ```bash
-# Com cache (recomendado)
+# Build rápido (recomendado)
 ./gradlew assembleDebug --build-cache --parallel
 
-# Sem cache (apenas para limpar)
-./gradlew clean assembleDebug
-
-# Apenas módulo específico
+# Build específico por módulo
 ./gradlew :app:assembleDebug
+./gradlew :data:assembleDebug
+./gradlew :sync:assembleDebug
+
+# Ignorar lint (desenvolvimento rápido)
+./gradlew assembleDebug --build-cache -x lint
+
+# Limpar e build (apenas quando necessário)
+./gradlew clean assembleDebug --build-cache
+```
+
+### 🗂️ Cache Incremental
+
+- **Gradle**: `--build-cache` acelera builds subsequentes
+- **Room**: KSP gera código incremental automaticamente
+- **Hilt**: Gera classes em tempo de compilação
+- **Paralelo**: `--parallel` processa múltiplos módulos
+
+**QUANDO EVITAR CLEAN:**
+
+- Apenas para resolver problemas de dependência
+- Após mudanças em configurações do Gradle
+- Quando solicitado explicitamente
+
+**COMO CONFIRMAR TASKS:**
+
+```bash
+# Listar tasks disponíveis
+./gradlew tasks --group=build
+./gradlew tasks --group=verification
 ```
 
 ---
@@ -161,7 +230,7 @@ e proponha solução seguindo os padrões do projeto."
 
 ### 👥 Entidades Principais
 
-```
+```text
 Colaborador (rotasPermitidas: String?)
 ├── Rota (id, nome, ativo)
 ├── Cliente (rotaId, latitude, longitude)
@@ -204,7 +273,7 @@ Colaborador (rotasPermitidas: String?)
 ### 🆘 Problemas Comuns
 
 | Problema | Solução |
-|-----------|----------|
+|----------|----------|
 | Build falha | `./gradlew clean assembleDebug --build-cache` |
 | ADB não encontrado | Verifique `ANDROID_HOME` e PATH |
 | Sincronização falha | Verifique conectividade e Firebase CLI |
@@ -219,7 +288,7 @@ Colaborador (rotasPermitidas: String?)
 
 ---
 
-## 📈 ROADMAP E STATUS
+## 📈 STATUS ATUAL
 
 ### ✅ Concluído (v1.0.1)
 
@@ -235,12 +304,6 @@ Colaborador (rotasPermitidas: String?)
 - [ ] Validação de acesso em telas críticas
 - [ ] Testes automatizados para multi-tenancy
 - [ ] Documentação de API interna
-
-### 🎯 Próximos Sprints
-
-1. **Sprint 1**: Implementar validação visual de rotas
-2. **Sprint 2**: Migrar telas existentes para validação
-3. **Sprint 3**: Testes de integração e performance
 
 ---
 

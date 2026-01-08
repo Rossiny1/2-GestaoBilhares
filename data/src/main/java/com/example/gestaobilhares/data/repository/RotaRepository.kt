@@ -17,7 +17,7 @@ class RotaRepository(
      * @return Flow com lista de rotas
      */
     fun obterTodasRotas(): Flow<List<Rota>> {
-        return rotaDao.listarTodas()
+        return rotaDao.getAllRotas()
     }
 
     /**
@@ -25,7 +25,7 @@ class RotaRepository(
      * @return Flow com lista de rotas ativas
      */
     fun obterRotasAtivas(): Flow<List<Rota>> {
-        return rotaDao.listarAtivas()
+        return rotaDao.getAllRotasAtivas()
     }
 
     /**
@@ -34,7 +34,7 @@ class RotaRepository(
      * @return Rota encontrada ou null
      */
     suspend fun buscarRotaPorId(id: Long): Rota? {
-        return rotaDao.buscarPorId(id)
+        return rotaDao.getRotaById(id)
     }
 
     /**

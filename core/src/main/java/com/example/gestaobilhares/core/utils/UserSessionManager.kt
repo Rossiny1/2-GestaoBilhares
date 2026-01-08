@@ -85,6 +85,10 @@ class UserSessionManager private constructor(context: Context) {
     private val _companyId = MutableStateFlow("empresa_001") // ✅ Default para compatibilidade
     val companyId: StateFlow<String> = _companyId.asStateFlow()
     
+    // ✅ NOVO: Estado para rotas permitidas (multi-tenancy por rota)
+    private val _rotasPermitidas = MutableStateFlow<String?>(null)
+    val rotasPermitidas: StateFlow<String?> = _rotasPermitidas.asStateFlow()
+    
     init {
         // Migrar dados antigos para EncryptedSharedPreferences (se necessário)
         migrateIfNeeded()
@@ -424,6 +428,52 @@ class UserSessionManager private constructor(context: Context) {
         } catch (e: Exception) {
             Timber.e(e, "Erro ao verificar rotas locais: %s", e.message)
             false
+        }
+    }
+
+    /**
+     * Verifica se o usuário atual tem acesso à rota especificada
+     * Implementa a validação de multi-tenancy por rota
+     */
+    suspend fun canAccessRota(rotaId: Long): Boolean {
+        return try {
+            if (getCurrentUserId() == 0L) {
+                return false
+            }
+            
+            val rotasPermitidas = getRotasPermitidas()
+            // Lista vazia = admin (acesso a todas)
+            rotasPermitidas.isEmpty() || rotasPermitidas.contains(rotaId)
+        } catch (e: Exception) {
+            Timber.e(e, "Erro ao verificar acesso à rota: %s", e.message)
+            false
+        }
+    }
+
+    /**
+     * Obtém a lista de rotas permitidas para o usuário atual
+     * @return Lista de IDs de rotas permitidas (vazia = admin)
+     */
+    suspend fun getRotasPermitidas(): List<Long> {
+        return try {
+            val userId = getCurrentUserId()
+            if (userId == 0L) {
+                return emptyList()
+            }
+            
+            // Buscar rotas permitidas do colaborador
+            val rotasJson = _rotasPermitidas.value
+            if (rotasJson.isNullOrEmpty()) {
+                emptyList() // Admin ou sem restrições
+            } else {
+                // Parse do JSON "[1,2,3]" para lista de Long
+                rotasJson.removePrefix("[").removeSuffix("]").split(",")
+                    .filter { it.isNotBlank() }
+                    .mapNotNull { it.trim().toLongOrNull() }
+            }
+        } catch (e: Exception) {
+            Timber.e(e, "Erro ao obter rotas permitidas: %s", e.message)
+            emptyList()
         }
     }
 }

@@ -12,7 +12,7 @@ import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import com.example.gestaobilhares.R
 import com.example.gestaobilhares.databinding.FragmentRotasConfigBinding
-import com.example.gestaobilhares.ui.routes.RotasConfigViewModel
+import com.example.gestaobilhares.data.entities.Rota
 import kotlinx.coroutines.launch
 
 /**
@@ -73,30 +73,38 @@ class RotasConfigFragment : Fragment() {
      */
     private fun setupObservers() {
         // Observer para rotas disponíveis
-        viewModel.rotasDisponiveis.observe(viewLifecycleOwner) { rotas ->
-            rotasAdapter.submitList(rotas)
+        viewLifecycleOwner.lifecycleScope.launch {
+            viewModel.rotasDisponiveis.collect { rotas ->
+                rotasAdapter.submitList(rotas)
+            }
         }
 
         // Observer para loading
-        viewModel.isLoading.observe(viewLifecycleOwner) { isLoading ->
-            binding.progressBar.visibility = if (isLoading) View.VISIBLE else View.GONE
+        viewLifecycleOwner.lifecycleScope.launch {
+            viewModel.isLoading.collect { isLoading ->
+                binding.progressBar.visibility = if (isLoading) View.VISIBLE else View.GONE
+            }
         }
 
         // Observer para mensagens de erro
-        viewModel.errorMessage.observe(viewLifecycleOwner) { errorMessage ->
-            if (errorMessage != null) {
-                binding.textViewError.text = errorMessage
-                binding.textViewError.visibility = View.VISIBLE
-            } else {
-                binding.textViewError.visibility = View.GONE
+        viewLifecycleOwner.lifecycleScope.launch {
+            viewModel.errorMessage.collect { errorMessage ->
+                if (errorMessage != null) {
+                    binding.textViewError.text = errorMessage
+                    binding.textViewError.visibility = View.VISIBLE
+                } else {
+                    binding.textViewError.visibility = View.GONE
+                }
             }
         }
 
         // Observer para mensagens de sucesso
-        viewModel.sucessoMessage.observe(viewLifecycleOwner) { sucessoMessage ->
-            if (sucessoMessage != null) {
-                Toast.makeText(requireContext(), sucessoMessage, Toast.LENGTH_LONG).show()
-                viewModel.limparMensagens()
+        viewLifecycleOwner.lifecycleScope.launch {
+            viewModel.sucessoMessage.collect { sucessoMessage ->
+                if (sucessoMessage != null) {
+                    Toast.makeText(requireContext(), sucessoMessage, Toast.LENGTH_LONG).show()
+                    viewModel.limparMensagens()
+                }
             }
         }
     }
@@ -137,11 +145,14 @@ class RotasConfigFragment : Fragment() {
         }
 
         class RotaViewHolder(itemView: View) : RecyclerView.ViewHolder(itemView) {
-            private val binding = ItemRotaConfigBinding.bind(itemView)
-
             fun bind(rota: Rota) {
-                binding.textViewRotaNome.text = rota.nome
-                binding.textViewRotaStatus.text = if (rota.ativo) "Ativa" else "Inativa"
+                // TODO: Implementar binding quando tiver o ItemRotaConfigBinding
+                // Por enquanto, usando findViewById como fallback
+                val nomeTextView = itemView.findViewById<android.widget.TextView>(R.id.textViewRotaNome)
+                val statusTextView = itemView.findViewById<android.widget.TextView>(R.id.textViewRotaStatus)
+                
+                nomeTextView?.text = rota.nome
+                statusTextView?.text = if (rota.ativa) "Ativa" else "Inativa"
                 
                 // Click listener
                 itemView.setOnClickListener {
