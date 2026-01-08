@@ -1,8 +1,11 @@
 package com.example.gestaobilhares.sync.di
 
 import android.content.Context
+import com.example.gestaobilhares.data.dao.SyncMetadataDao
 import com.example.gestaobilhares.data.repository.AppRepository
-import com.example.gestaobilhares.sync.SyncRepository
+import com.example.gestaobilhares.core.utils.FirebaseImageUploader
+import com.example.gestaobilhares.core.utils.UserSessionManager
+import com.example.gestaobilhares.sync.handlers.*
 import com.example.gestaobilhares.sync.utils.NetworkUtils
 import com.google.firebase.firestore.FirebaseFirestore
 import dagger.Module
@@ -18,53 +21,218 @@ object SyncModule {
 
     @Provides
     @Singleton
-    fun provideSyncRepository(
+    fun provideNetworkUtils(@ApplicationContext context: Context): NetworkUtils {
+        return NetworkUtils(context)
+    }
+
+    // Sync Handlers
+    @Provides
+    @Singleton
+    fun provideMesaSyncHandler(
         @ApplicationContext context: Context,
         appRepository: AppRepository,
         firestore: FirebaseFirestore,
         networkUtils: NetworkUtils,
-        mesaSyncHandler: com.example.gestaobilhares.sync.handlers.MesaSyncHandler,
-        clienteSyncHandler: com.example.gestaobilhares.sync.handlers.ClienteSyncHandler,
-        contratoSyncHandler: com.example.gestaobilhares.sync.handlers.ContratoSyncHandler,
-        acertoSyncHandler: com.example.gestaobilhares.sync.handlers.AcertoSyncHandler,
-        despesaSyncHandler: com.example.gestaobilhares.sync.handlers.DespesaSyncHandler,
-        rotaSyncHandler: com.example.gestaobilhares.sync.handlers.RotaSyncHandler,
-        cicloSyncHandler: com.example.gestaobilhares.sync.handlers.CicloSyncHandler,
-        colaboradorSyncHandler: com.example.gestaobilhares.sync.handlers.ColaboradorSyncHandler,
-        colaboradorRotaSyncHandler: com.example.gestaobilhares.sync.handlers.ColaboradorRotaSyncHandler,
-        metaColaboradorSyncHandler: com.example.gestaobilhares.sync.handlers.MetaColaboradorSyncHandler,
-        metaSyncHandler: com.example.gestaobilhares.sync.handlers.MetaSyncHandler,
-        assinaturaSyncHandler: com.example.gestaobilhares.sync.handlers.AssinaturaSyncHandler,
-        veiculoSyncHandler: com.example.gestaobilhares.sync.handlers.VeiculoSyncHandler,
-        equipamentoSyncHandler: com.example.gestaobilhares.sync.handlers.EquipamentoSyncHandler,
-        estoqueSyncHandler: com.example.gestaobilhares.sync.handlers.EstoqueSyncHandler
-    ): SyncRepository {
-        return SyncRepository(
-            context, 
-            appRepository, 
-            firestore, 
-            networkUtils, 
-            mesaSyncHandler = mesaSyncHandler,
-            clienteSyncHandler = clienteSyncHandler,
-            contratoSyncHandler = contratoSyncHandler,
-            acertoSyncHandler = acertoSyncHandler,
-            despesaSyncHandler = despesaSyncHandler,
-            rotaSyncHandler = rotaSyncHandler,
-            cicloSyncHandler = cicloSyncHandler,
-            colaboradorSyncHandler = colaboradorSyncHandler,
-            colaboradorRotaSyncHandler = colaboradorRotaSyncHandler,
-            metaColaboradorSyncHandler = metaColaboradorSyncHandler,
-            metaSyncHandler = metaSyncHandler,
-            assinaturaSyncHandler = assinaturaSyncHandler,
-            veiculoSyncHandler = veiculoSyncHandler,
-            equipamentoSyncHandler = equipamentoSyncHandler,
-            estoqueSyncHandler = estoqueSyncHandler
-        )
+        userSessionManager: UserSessionManager,
+        firebaseImageUploader: FirebaseImageUploader,
+        syncMetadataDao: SyncMetadataDao
+    ): MesaSyncHandler {
+        return MesaSyncHandler(context, appRepository, firestore, networkUtils, userSessionManager, firebaseImageUploader, syncMetadataDao)
     }
 
     @Provides
     @Singleton
-    fun provideNetworkUtils(@ApplicationContext context: Context): NetworkUtils {
-        return NetworkUtils(context)
+    fun provideClienteSyncHandler(
+        @ApplicationContext context: Context,
+        appRepository: AppRepository,
+        firestore: FirebaseFirestore,
+        networkUtils: NetworkUtils,
+        userSessionManager: UserSessionManager,
+        firebaseImageUploader: FirebaseImageUploader,
+        syncMetadataDao: SyncMetadataDao
+    ): ClienteSyncHandler {
+        return ClienteSyncHandler(context, appRepository, firestore, networkUtils, userSessionManager, firebaseImageUploader, syncMetadataDao)
+    }
+
+    @Provides
+    @Singleton
+    fun provideContratoSyncHandler(
+        @ApplicationContext context: Context,
+        appRepository: AppRepository,
+        firestore: FirebaseFirestore,
+        networkUtils: NetworkUtils,
+        userSessionManager: UserSessionManager,
+        firebaseImageUploader: FirebaseImageUploader,
+        syncMetadataDao: SyncMetadataDao
+    ): ContratoSyncHandler {
+        return ContratoSyncHandler(context, appRepository, firestore, networkUtils, userSessionManager, firebaseImageUploader, syncMetadataDao)
+    }
+
+    @Provides
+    @Singleton
+    fun provideAcertoSyncHandler(
+        @ApplicationContext context: Context,
+        appRepository: AppRepository,
+        firestore: FirebaseFirestore,
+        networkUtils: NetworkUtils,
+        userSessionManager: UserSessionManager,
+        firebaseImageUploader: FirebaseImageUploader,
+        syncMetadataDao: SyncMetadataDao
+    ): AcertoSyncHandler {
+        return AcertoSyncHandler(context, appRepository, firestore, networkUtils, userSessionManager, firebaseImageUploader, syncMetadataDao)
+    }
+
+    @Provides
+    @Singleton
+    fun provideDespesaSyncHandler(
+        @ApplicationContext context: Context,
+        appRepository: AppRepository,
+        firestore: FirebaseFirestore,
+        networkUtils: NetworkUtils,
+        userSessionManager: UserSessionManager,
+        firebaseImageUploader: FirebaseImageUploader,
+        syncMetadataDao: SyncMetadataDao
+    ): DespesaSyncHandler {
+        return DespesaSyncHandler(context, appRepository, firestore, networkUtils, userSessionManager, firebaseImageUploader, syncMetadataDao)
+    }
+
+    @Provides
+    @Singleton
+    fun provideRotaSyncHandler(
+        @ApplicationContext context: Context,
+        appRepository: AppRepository,
+        firestore: FirebaseFirestore,
+        networkUtils: NetworkUtils,
+        userSessionManager: UserSessionManager,
+        firebaseImageUploader: FirebaseImageUploader,
+        syncMetadataDao: SyncMetadataDao
+    ): RotaSyncHandler {
+        return RotaSyncHandler(context, appRepository, firestore, networkUtils, userSessionManager, firebaseImageUploader, syncMetadataDao)
+    }
+
+    @Provides
+    @Singleton
+    fun provideCicloSyncHandler(
+        @ApplicationContext context: Context,
+        appRepository: AppRepository,
+        firestore: FirebaseFirestore,
+        networkUtils: NetworkUtils,
+        userSessionManager: UserSessionManager,
+        firebaseImageUploader: FirebaseImageUploader,
+        syncMetadataDao: SyncMetadataDao
+    ): CicloSyncHandler {
+        return CicloSyncHandler(context, appRepository, firestore, networkUtils, userSessionManager, firebaseImageUploader, syncMetadataDao)
+    }
+
+    @Provides
+    @Singleton
+    fun provideColaboradorSyncHandler(
+        @ApplicationContext context: Context,
+        appRepository: AppRepository,
+        firestore: FirebaseFirestore,
+        networkUtils: NetworkUtils,
+        userSessionManager: UserSessionManager,
+        firebaseImageUploader: FirebaseImageUploader,
+        syncMetadataDao: SyncMetadataDao
+    ): ColaboradorSyncHandler {
+        return ColaboradorSyncHandler(context, appRepository, firestore, networkUtils, userSessionManager, firebaseImageUploader, syncMetadataDao)
+    }
+
+    @Provides
+    @Singleton
+    fun provideColaboradorRotaSyncHandler(
+        @ApplicationContext context: Context,
+        appRepository: AppRepository,
+        firestore: FirebaseFirestore,
+        networkUtils: NetworkUtils,
+        userSessionManager: UserSessionManager,
+        firebaseImageUploader: FirebaseImageUploader,
+        syncMetadataDao: SyncMetadataDao
+    ): ColaboradorRotaSyncHandler {
+        return ColaboradorRotaSyncHandler(context, appRepository, firestore, networkUtils, userSessionManager, firebaseImageUploader, syncMetadataDao)
+    }
+
+    @Provides
+    @Singleton
+    fun provideMetaColaboradorSyncHandler(
+        @ApplicationContext context: Context,
+        appRepository: AppRepository,
+        firestore: FirebaseFirestore,
+        networkUtils: NetworkUtils,
+        userSessionManager: UserSessionManager,
+        firebaseImageUploader: FirebaseImageUploader,
+        syncMetadataDao: SyncMetadataDao
+    ): MetaColaboradorSyncHandler {
+        return MetaColaboradorSyncHandler(context, appRepository, firestore, networkUtils, userSessionManager, firebaseImageUploader, syncMetadataDao)
+    }
+
+    @Provides
+    @Singleton
+    fun provideMetaSyncHandler(
+        @ApplicationContext context: Context,
+        appRepository: AppRepository,
+        firestore: FirebaseFirestore,
+        networkUtils: NetworkUtils,
+        userSessionManager: UserSessionManager,
+        firebaseImageUploader: FirebaseImageUploader,
+        syncMetadataDao: SyncMetadataDao
+    ): MetaSyncHandler {
+        return MetaSyncHandler(context, appRepository, firestore, networkUtils, userSessionManager, firebaseImageUploader, syncMetadataDao)
+    }
+
+    @Provides
+    @Singleton
+    fun provideAssinaturaSyncHandler(
+        @ApplicationContext context: Context,
+        appRepository: AppRepository,
+        firestore: FirebaseFirestore,
+        networkUtils: NetworkUtils,
+        userSessionManager: UserSessionManager,
+        firebaseImageUploader: FirebaseImageUploader,
+        syncMetadataDao: SyncMetadataDao
+    ): AssinaturaSyncHandler {
+        return AssinaturaSyncHandler(context, appRepository, firestore, networkUtils, userSessionManager, firebaseImageUploader, syncMetadataDao)
+    }
+
+    @Provides
+    @Singleton
+    fun provideVeiculoSyncHandler(
+        @ApplicationContext context: Context,
+        appRepository: AppRepository,
+        firestore: FirebaseFirestore,
+        networkUtils: NetworkUtils,
+        userSessionManager: UserSessionManager,
+        firebaseImageUploader: FirebaseImageUploader,
+        syncMetadataDao: SyncMetadataDao
+    ): VeiculoSyncHandler {
+        return VeiculoSyncHandler(context, appRepository, firestore, networkUtils, userSessionManager, firebaseImageUploader, syncMetadataDao)
+    }
+
+    @Provides
+    @Singleton
+    fun provideEquipamentoSyncHandler(
+        @ApplicationContext context: Context,
+        appRepository: AppRepository,
+        firestore: FirebaseFirestore,
+        networkUtils: NetworkUtils,
+        userSessionManager: UserSessionManager,
+        firebaseImageUploader: FirebaseImageUploader,
+        syncMetadataDao: SyncMetadataDao
+    ): EquipamentoSyncHandler {
+        return EquipamentoSyncHandler(context, appRepository, firestore, networkUtils, userSessionManager, firebaseImageUploader, syncMetadataDao)
+    }
+
+    @Provides
+    @Singleton
+    fun provideEstoqueSyncHandler(
+        @ApplicationContext context: Context,
+        appRepository: AppRepository,
+        firestore: FirebaseFirestore,
+        networkUtils: NetworkUtils,
+        userSessionManager: UserSessionManager,
+        firebaseImageUploader: FirebaseImageUploader,
+        syncMetadataDao: SyncMetadataDao
+    ): EstoqueSyncHandler {
+        return EstoqueSyncHandler(context, appRepository, firestore, networkUtils, userSessionManager, firebaseImageUploader, syncMetadataDao)
     }
 }
