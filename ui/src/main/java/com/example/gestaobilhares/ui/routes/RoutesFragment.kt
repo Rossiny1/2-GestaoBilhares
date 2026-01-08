@@ -734,7 +734,7 @@ class RoutesFragment : Fragment() {
                 }
                 
                 // Continuar com sincronização se tiver acesso
-                performSyncInternal()
+                performSyncInternal(progressDialog)
             }
             
         } catch (e: Exception) {
@@ -746,10 +746,11 @@ class RoutesFragment : Fragment() {
     /**
      * Executa a sincronização interna após validação de acesso
      */
-    private fun performSyncInternal() {
-        isSyncing = true
+    private fun performSyncInternal(progressDialog: androidx.appcompat.app.AlertDialog?) {
+        try {
+            isSyncing = true
 
-        // ✅ CORREÇÃO CRÍTICA: Verificar sessão local em vez de Firebase Auth
+            // ✅ CORREÇÃO CRÍTICA: Verificar sessão local em vez de Firebase Auth
             // O login híbrido pode funcionar offline sem autenticação Firebase
             val userId = userSessionManager.getCurrentUserId()
             if (userId == 0L) {
@@ -775,12 +776,12 @@ class RoutesFragment : Fragment() {
             progressPercent.text = "0%"
             progressStatus.text = getString(com.example.gestaobilhares.ui.R.string.sync_status_preparing)
 
-            progressDialog = MaterialAlertDialogBuilder(requireContext())
+            val dialog = MaterialAlertDialogBuilder(requireContext())
                 .setTitle(com.example.gestaobilhares.ui.R.string.sync_progress_title)
                 .setView(progressView)
                 .setCancelable(false)
                 .create()
-            progressDialog.show()
+            dialog.show()
 
             val uiScope = viewLifecycleOwner.lifecycleScope
 
@@ -856,7 +857,7 @@ class RoutesFragment : Fragment() {
                         progressStatus.text = "❌ Erro na sincronização: ${e.message ?: "Erro desconhecido"}"
                     }
                 } finally {
-                    progressDialog.dismiss()
+                    progressDialog?.dismiss()
                     // Restaurar UI - Use _binding? para evitar NPE se navegar durante o sync
                     _binding?.let { b ->
                         b.syncButton.isEnabled = true
@@ -880,6 +881,16 @@ class RoutesFragment : Fragment() {
             isSyncing = false
             // ✅ CORREÇÃO: Não verificar pendências após erro na sincronização
             // Isso evita que o diálogo reapareça em loop
+            
+        } catch (e: Exception) {
+            Timber.e("RoutesFragment", "Erro ao iniciar sincronização: ${e.message}", e)
+            Toast.makeText(requireContext(), "❌ Erro ao sincronizar: ${e.message}", Toast.LENGTH_LONG).show()
+            progressDialog?.dismiss()
+            _binding?.let { b ->
+                b.syncButton.isEnabled = true
+                b.syncButton.alpha = 1.0f
+            }
+            isSyncing = false
         }
     }
 

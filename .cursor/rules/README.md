@@ -115,6 +115,32 @@ rg -n "class UserSessionManager" --type kt
 - Tempo esperado para sincronização?
 - Comportamento em longo período offline?
 
+**COMO DESCOBRIR RESPOSTAS:**
+
+```bash
+# Estratégia de resolução de conflitos
+rg -i "conflict|merge|resolve" sync --type kt -A 3 -B 3
+rg -i "lastmodified|timestamp|version" sync --type kt -A 2 -B 2
+
+# Invariantes mínimas do sistema
+rg -i "invariant|constraint|rule" sync --type kt -A 2 -B 2
+rg -i "validation|requirement" sync --type kt -A 2 -B 2
+
+# Sincronização incremental vs completa
+rg -i "incremental|full|delta|batch" sync --type kt -A 3 -B 3
+rg -i "sync.*type|sync.*mode" sync --type kt -A 2 -B 2
+
+# Tempo esperado para sincronização
+rg -i "timeout|duration|performance|time" sync --type kt -A 2 -B 2
+rg -i "sync.*speed|sync.*time" sync --type kt -A 2 -B 2
+
+# Comportamento em longo período offline
+rg -i "offline|queue|pending|cache" sync --type kt -A 3 -B 3
+rg -i "long.*offline|extended.*offline" sync --type kt -A 2 -B 2
+
+# Status atual: DESCONHECIDO (aguardando investigação)
+```
+
 **COMO CONFIRMAR NO CÓDIGO:**
 
 ```bash
@@ -248,6 +274,41 @@ Colaborador (rotasPermitidas: String?)
 
 ---
 
+## 🧪 TESTES
+
+### Executar Testes
+
+```bash
+# Testes unitários
+./gradlew testDebugUnitTest
+
+# Testes instrumentados (requer dispositivo/emulador)
+./gradlew connectedDebugAndroidTest
+
+# Rodar todos os testes
+./gradlew test
+```
+
+### Como confirmar no código
+
+```bash
+# Listar arquivos de teste
+find . -path "*/test/*" -name "*Test.kt" | head -n 10
+
+# Verificar cobertura de testes (se configurado)
+./gradlew tasks --all | rg -i "coverage|jacoco"
+
+# DESCONHECIDO: Cobertura mínima esperada não definida
+```
+
+### Regras de testes
+
+- **DESCONHECIDO:** Cobertura mínima exigida
+- **DESCONHECIDO:** Quais módulos têm testes obrigatórios
+- Testes devem passar antes de merge na `main`
+
+---
+
 ## 🚀 DEPLOY E RELEASE
 
 ### 📦 Geração de APK
@@ -265,6 +326,25 @@ Colaborador (rotasPermitidas: String?)
 - **Keystore**: `gestaobilhares-release.jks`
 - **Properties**: `keystore.properties` (NÃO committed)
 - **Firebase**: Associado ao package `com.example.gestaobilhares`
+
+### Como confirmar configuração de release
+
+```bash
+# Verificar keystore (não deve estar commitado)
+find . -name "*.jks" -o -name "*.keystore"
+
+# Verificar se keystore.properties está no .gitignore
+cat .gitignore | grep -i keystore
+
+# Verificar configuração de assinatura no build.gradle
+rg "storeFile|storePassword|keyAlias" --type gradle
+
+# Verificar package do Firebase
+cat app/google-services.json | grep -i "package_name"
+
+# Confirmar Firebase CLI funcional
+firebase projects:list
+```
 
 ---
 
