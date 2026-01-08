@@ -8,10 +8,12 @@ import android.widget.Toast
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.viewModels
 import androidx.lifecycle.lifecycleScope
+import androidx.lifecycle.repeatOnLifecycle
+import androidx.lifecycle.Lifecycle
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
-import com.example.gestaobilhares.R
-import com.example.gestaobilhares.databinding.FragmentRotasConfigBinding
+import com.example.gestaobilhares.ui.R
+import com.example.gestaobilhares.ui.databinding.FragmentRotasConfigBinding
 import com.example.gestaobilhares.data.entities.Rota
 import kotlinx.coroutines.launch
 
@@ -129,7 +131,7 @@ class RotasConfigFragment : Fragment() {
         override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): RotaViewHolder {
             val view = LayoutInflater.from(parent.context)
                 .inflate(R.layout.item_rota_config, parent, false)
-            return RotaViewHolder(view)
+            return RotaViewHolder(view, onRotaClick)
         }
 
         override fun onBindViewHolder(holder: RotaViewHolder, position: Int) {
@@ -144,7 +146,7 @@ class RotasConfigFragment : Fragment() {
             notifyDataSetChanged()
         }
 
-        class RotaViewHolder(itemView: View) : RecyclerView.ViewHolder(itemView) {
+        class RotaViewHolder(itemView: View, private val onRotaClick: (Rota) -> Unit) : RecyclerView.ViewHolder(itemView) {
             fun bind(rota: Rota) {
                 // TODO: Implementar binding quando tiver o ItemRotaConfigBinding
                 // Por enquanto, usando findViewById como fallback

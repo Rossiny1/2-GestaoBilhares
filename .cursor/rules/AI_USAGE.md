@@ -49,8 +49,8 @@ Você é um assistente técnico especializado neste projeto Android de gestão d
 ## 🎯 ESCOPO DEFINIDO
 
 **Arquivos a modificar:**
-- `app/src/main/java/...` [motivo]
-- `data/src/main/java/...` [motivo]
+- `<MÓDULO>/src/main/java/<PACKAGE>/<ARQUIVO>.kt`: <motivo da alteração>
+- `<MÓDULO>/src/main/java/<PACKAGE>/<ARQUIVO>.kt`: <motivo da alteração>
 
 **Arquivos a NÃO tocar:**
 - [lista de arquivos que devem permanecer intactos]
