@@ -53,7 +53,7 @@ class RotasConfigViewModel(
     /**
      * Carrega rotas disponíveis e colaboradores existentes
      */
-    private fun carregarDadosIniciais() {
+    fun carregarDadosIniciais() {
         viewModelScope.launch {
             try {
                 _isLoading.value = true

@@ -27,7 +27,7 @@
             android:layout_height="wrap_content"
             android:text="Nome da Rota"
             android:textSize="16sp"
-            android:textColor="@color/colorOnSurface"
+            android:textColor="@color/text_on_surface"
             android:textStyle="bold" />
 
         <TextView
@@ -36,7 +36,7 @@
             android:layout_height="wrap_content"
             android:text="Status"
             android:textSize="14sp"
-            android:textColor="@color/colorOnSurfaceVariant"
+            android:textColor="@color/on_surface_variant"
             android:layout_marginTop="4dp" />
 
     </LinearLayout>

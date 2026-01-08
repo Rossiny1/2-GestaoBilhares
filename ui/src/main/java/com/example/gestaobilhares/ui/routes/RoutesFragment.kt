@@ -661,6 +661,59 @@ class RoutesFragment : Fragment() {
     }
 
     /**
+     * Verifica se o usuário atual tem acesso à rota especificada
+     * Implementa a validação de multi-tenancy por rota
+     */
+    private suspend fun verificarAcessoRota(rotaId: Long): Boolean {
+        val userId = userSessionManager.getCurrentUserId()
+        if (userId == 0L) {
+            Timber.w("RoutesFragment", "⚠️ Nenhum usuário logado - Acesso negado à rota $rotaId")
+            return false
+        }
+        
+        val temAcesso = userSessionManager.canAccessRota(rotaId)
+        if (!temAcesso) {
+            Timber.w("RoutesFragment", "🚫 Acesso negado: Usuário $userId não tem acesso à rota $rotaId")
+            Toast.makeText(
+                requireContext(),
+                "⚠️ Você não tem permissão para acessar esta rota",
+                Toast.LENGTH_LONG
+            ).show()
+        }
+        
+        return temAcesso
+    }
+
+    /**
+     * Verifica se o usuário tem acesso geral para operações administrativas
+     */
+    private suspend fun verificarAcessoGeral(): Boolean {
+        val userId = userSessionManager.getCurrentUserId()
+        if (userId == 0L) {
+            Toast.makeText(
+                requireContext(),
+                "⚠️ Faça login para realizar esta operação",
+                Toast.LENGTH_LONG
+            ).show()
+            return false
+        }
+        
+        // Verificar se usuário tem pelo menos uma rota permitida
+        val rotasPermitidas = userSessionManager.getRotasPermitidas()
+        val temAcesso = rotasPermitidas.isEmpty() // Admin (vazio) ou usuário com rotas
+        
+        if (!temAcesso) {
+            Toast.makeText(
+                requireContext(),
+                "⚠️ Você não tem permissão para realizar esta operação",
+                Toast.LENGTH_LONG
+            ).show()
+        }
+        
+        return temAcesso
+    }
+
+    /**
      * Executa sincronização manual dos dados com o Firestore.
      * Mostra feedback visual e status da operação.
      */
@@ -673,9 +726,30 @@ class RoutesFragment : Fragment() {
                 Toast.makeText(requireContext(), "Sincronização já em andamento.", Toast.LENGTH_SHORT).show()
                 return
             }
-            isSyncing = true
+            
+            // ✅ NOVO: Validar acesso antes de sincronizar
+            lifecycleScope.launch {
+                if (!verificarAcessoGeral()) {
+                    return@launch
+                }
+                
+                // Continuar com sincronização se tiver acesso
+                performSyncInternal()
+            }
+            
+        } catch (e: Exception) {
+            Timber.e(e, "Erro ao iniciar sincronização manual")
+            isSyncing = false
+        }
+    }
 
-            // ✅ CORREÇÃO CRÍTICA: Verificar sessão local em vez de Firebase Auth
+    /**
+     * Executa a sincronização interna após validação de acesso
+     */
+    private fun performSyncInternal() {
+        isSyncing = true
+
+        // ✅ CORREÇÃO CRÍTICA: Verificar sessão local em vez de Firebase Auth
             // O login híbrido pode funcionar offline sem autenticação Firebase
             val userId = userSessionManager.getCurrentUserId()
             if (userId == 0L) {
