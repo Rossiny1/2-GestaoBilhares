@@ -7,6 +7,7 @@ import androidx.work.WorkerParameters
 import androidx.work.testing.TestListenableWorkerBuilder
 import com.example.gestaobilhares.data.repository.AppRepository
 import com.example.gestaobilhares.sync.SyncRepository
+import com.example.gestaobilhares.sync.SyncResult
 import com.google.common.truth.Truth.assertThat
 import kotlinx.coroutines.runBlocking
 import org.junit.Before
@@ -36,11 +37,13 @@ class SyncWorkerTest {
     }
 
     @Test
-    fun doWork_whenSyncSucceeds_shouldReturnSuccess() = runBlocking {
+    fun `doWork when sync succeeds should return success`() = runBlocking {
         // Arrange
-        whenever(syncRepository.shouldRunBackgroundSync(0, 6L)).thenReturn(true)
-        whenever(syncRepository.processSyncQueue()).thenReturn(Result.success(Unit))
-        whenever(syncRepository.syncBidirectional()).thenReturn(Result.success(Unit))
+        whenever(syncRepository.hasPendingBackgroundSync()).thenReturn(true)
+        whenever(syncRepository.isOnline()).thenReturn(true)
+        whenever(syncRepository.syncAllEntities()).thenReturn(
+            SyncResult(success = true, syncedCount = 50, errors = emptyList(), durationMs = 5000L)
+        )
         
         val worker = TestListenableWorkerBuilder<SyncWorker>(context)
             .setWorkerFactory(object : androidx.work.WorkerFactory() {
@@ -48,8 +51,13 @@ class SyncWorkerTest {
                     appContext: Context,
                     workerClassName: String,
                     workerParameters: WorkerParameters
-                ): ListenableWorker? {
-                    return SyncWorker(appContext, workerParameters, appRepository, syncRepository)
+                ): ListenableWorker {
+                    return SyncWorker(
+                        appContext,
+                        workerParameters,
+                        appRepository,
+                        syncRepository
+                    )
                 }
             })
             .build()
@@ -62,9 +70,9 @@ class SyncWorkerTest {
     }
 
     @Test
-    fun doWork_whenShouldNotSync_shouldReturnSuccess() = runBlocking {
+    fun `doWork when no pending sync should return success`() = runBlocking {
         // Arrange
-        whenever(syncRepository.shouldRunBackgroundSync(0, 6L)).thenReturn(false)
+        whenever(syncRepository.hasPendingBackgroundSync()).thenReturn(false)
         
         val worker = TestListenableWorkerBuilder<SyncWorker>(context)
             .setWorkerFactory(object : androidx.work.WorkerFactory() {
@@ -72,8 +80,13 @@ class SyncWorkerTest {
                     appContext: Context,
                     workerClassName: String,
                     workerParameters: WorkerParameters
-                ): ListenableWorker? {
-                    return SyncWorker(appContext, workerParameters, appRepository, syncRepository)
+                ): ListenableWorker {
+                    return SyncWorker(
+                        appContext,
+                        workerParameters,
+                        appRepository,
+                        syncRepository
+                    )
                 }
             })
             .build()
@@ -86,10 +99,10 @@ class SyncWorkerTest {
     }
 
     @Test
-    fun doWork_whenSyncFails_shouldReturnRetry() = runBlocking {
+    fun `doWork when offline should return retry`() = runBlocking {
         // Arrange
-        whenever(syncRepository.shouldRunBackgroundSync(0, 6L)).thenReturn(true)
-        whenever(syncRepository.processSyncQueue()).thenReturn(Result.failure(Exception("Network error")))
+        whenever(syncRepository.hasPendingBackgroundSync()).thenReturn(true)
+        whenever(syncRepository.isOnline()).thenReturn(false)
         
         val worker = TestListenableWorkerBuilder<SyncWorker>(context)
             .setWorkerFactory(object : androidx.work.WorkerFactory() {
@@ -97,8 +110,13 @@ class SyncWorkerTest {
                     appContext: Context,
                     workerClassName: String,
                     workerParameters: WorkerParameters
-                ): ListenableWorker? {
-                    return SyncWorker(appContext, workerParameters, appRepository, syncRepository)
+                ): ListenableWorker {
+                    return SyncWorker(
+                        appContext,
+                        workerParameters,
+                        appRepository,
+                        syncRepository
+                    )
                 }
             })
             .build()
@@ -108,5 +126,137 @@ class SyncWorkerTest {
 
         // Assert
         assertThat(result).isEqualTo(ListenableWorker.Result.retry())
+    }
+
+    @Test
+    fun `doWork when sync fails should return retry`() = runBlocking {
+        // Arrange
+        whenever(syncRepository.hasPendingBackgroundSync()).thenReturn(true)
+        whenever(syncRepository.isOnline()).thenReturn(true)
+        whenever(syncRepository.syncAllEntities()).thenReturn(
+            SyncResult(success = false, syncedCount = 0, errors = listOf("Network error"), durationMs = 3000L)
+        )
+        
+        val worker = TestListenableWorkerBuilder<SyncWorker>(context)
+            .setWorkerFactory(object : androidx.work.WorkerFactory() {
+                override fun createWorker(
+                    appContext: Context,
+                    workerClassName: String,
+                    workerParameters: WorkerParameters
+                ): ListenableWorker {
+                    return SyncWorker(
+                        appContext,
+                        workerParameters,
+                        appRepository,
+                        syncRepository
+                    )
+                }
+            })
+            .build()
+
+        // Act
+        val result = worker.doWork()
+
+        // Assert
+        assertThat(result).isEqualTo(ListenableWorker.Result.retry())
+    }
+
+    @Test
+    fun `doWork when exception occurs should return failure`() = runBlocking {
+        // Arrange
+        whenever(syncRepository.hasPendingBackgroundSync()).thenReturn(true)
+        whenever(syncRepository.isOnline()).thenThrow(RuntimeException("Network error"))
+        
+        val worker = TestListenableWorkerBuilder<SyncWorker>(context)
+            .setWorkerFactory(object : androidx.work.WorkerFactory() {
+                override fun createWorker(
+                    appContext: Context,
+                    workerClassName: String,
+                    workerParameters: WorkerParameters
+                ): ListenableWorker {
+                    return SyncWorker(
+                        appContext,
+                        workerParameters,
+                        appRepository,
+                        syncRepository
+                    )
+                }
+            })
+            .build()
+
+        // Act
+        val result = worker.doWork()
+
+        // Assert
+        assertThat(result).isEqualTo(ListenableWorker.Result.failure())
+    }
+
+    @Test
+    fun `doWork should check connectivity before attempting sync`() = runBlocking {
+        // Arrange
+        whenever(syncRepository.hasPendingBackgroundSync()).thenReturn(true)
+        whenever(syncRepository.isOnline()).thenReturn(true)
+        whenever(syncRepository.syncAllEntities()).thenReturn(
+            SyncResult(success = true, syncedCount = 10, errors = emptyList(), durationMs = 2000L)
+        )
+        
+        val worker = TestListenableWorkerBuilder<SyncWorker>(context)
+            .setWorkerFactory(object : androidx.work.WorkerFactory() {
+                override fun createWorker(
+                    appContext: Context,
+                    workerClassName: String,
+                    workerParameters: WorkerParameters
+                ): ListenableWorker {
+                    return SyncWorker(
+                        appContext,
+                        workerParameters,
+                        appRepository,
+                        syncRepository
+                    )
+                }
+            })
+            .build()
+
+        // Act
+        worker.doWork()
+
+        // Assert
+        // Verify that isOnline was called before syncAllEntities
+        org.mockito.kotlin.verify(syncRepository).hasPendingBackgroundSync()
+        org.mockito.kotlin.verify(syncRepository).isOnline()
+        org.mockito.kotlin.verify(syncRepository).syncAllEntities()
+    }
+
+    @Test
+    fun `doWork should not attempt sync when offline`() = runBlocking {
+        // Arrange
+        whenever(syncRepository.hasPendingBackgroundSync()).thenReturn(true)
+        whenever(syncRepository.isOnline()).thenReturn(false)
+        
+        val worker = TestListenableWorkerBuilder<SyncWorker>(context)
+            .setWorkerFactory(object : androidx.work.WorkerFactory() {
+                override fun createWorker(
+                    appContext: Context,
+                    workerClassName: String,
+                    workerParameters: WorkerParameters
+                ): ListenableWorker {
+                    return SyncWorker(
+                        appContext,
+                        workerParameters,
+                        appRepository,
+                        syncRepository
+                    )
+                }
+            })
+            .build()
+
+        // Act
+        worker.doWork()
+
+        // Assert
+        // Verify that syncAllEntities was NOT called when offline
+        org.mockito.kotlin.verify(syncRepository).hasPendingBackgroundSync()
+        org.mockito.kotlin.verify(syncRepository).isOnline()
+        org.mockito.kotlin.verify(syncRepository, org.mockito.kotlin.never()).syncAllEntities()
     }
 }

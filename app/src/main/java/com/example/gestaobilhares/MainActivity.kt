@@ -181,18 +181,12 @@ class MainActivity : AppCompatActivity() {
                 
                 // Executar sincronização
                 val result = withContext(Dispatchers.IO) {
-                    syncRepository.syncBidirectional { progress ->
-                        lifecycleScope.launch {
-                            progressBar.progress = progress.percent
-                            progressPercent.text = "${progress.percent}%"
-                            progressStatus.text = progress.message
-                        }
-                    }
+                    syncRepository.syncAllEntities()
                 }
                 
                 progressDialog.dismiss()
                 
-                if (result.isSuccess) {
+                if (result.success) {
                     android.widget.Toast.makeText(
                         this@MainActivity,
                         "✅ Sincronização concluída!",
@@ -201,7 +195,7 @@ class MainActivity : AppCompatActivity() {
                 } else {
                     android.widget.Toast.makeText(
                         this@MainActivity,
-                        "⚠️ Sincronização falhou: ${result.exceptionOrNull()?.message}",
+                        "⚠️ Sincronização falhou: ${result.errors.joinToString(", ")}",
                         android.widget.Toast.LENGTH_LONG
                     ).show()
                 }

@@ -39,37 +39,32 @@ class SyncWorker(
             val appRepo = appRepositoryTest ?: AppRepository.create(database)
             val syncRepo = syncRepositoryTest ?: throw IllegalStateException("SyncRepository must be provided for background sync")
 
-
-            // Verificar se há necessidade real de sincronizar
-            if (!syncRepo.shouldRunBackgroundSync(maxIdleHours = MAX_IDLE_HOURS)) {
-                Timber.d("Nenhuma sincronização necessária no momento. Encerrando job em background.")
+            // Verificar se há sincronização pendente
+            if (!syncRepo.hasPendingBackgroundSync()) {
+                Timber.d("Nenhuma sincronização pendente no momento. Encerrando job em background.")
                 return Result.success()
             }
             
-            // 1. Processar fila primeiro (operações pendentes)
-            val queueResult = syncRepo.processSyncQueue()
-            if (queueResult.isFailure) {
-                Timber.w("Processamento da fila falhou: ${queueResult.exceptionOrNull()?.message}")
+            // Verificar conectividade
+            if (!syncRepo.isOnline()) {
+                Timber.d("Dispositivo offline. Agendando retry.")
                 return Result.retry()
             }
             
-            // 2. Executar sincronização bidirecional
-            val syncResult = syncRepo.syncBidirectional()
+            // Executar sincronização completa
+            val syncResult = syncRepo.syncAllEntities()
             
-            // 3. Limpar operações antigas completadas
-            syncRepo.limparOperacoesAntigas()
-            
-            return if (syncResult.isSuccess) {
-                Timber.d("Sincronização em background concluída com sucesso")
+            if (syncResult.success) {
+                Timber.i("Sincronização em background concluída com sucesso: ${syncResult.syncedCount} entidades")
                 Result.success()
             } else {
-                Timber.w("Sincronização em background falhou: ${syncResult.exceptionOrNull()?.message}")
-                Result.retry() // Tentar novamente mais tarde
+                Timber.w("Sincronização em background falhou: ${syncResult.errors.joinToString(", ")}")
+                Result.retry()
             }
             
         } catch (e: Exception) {
-            Timber.e(e, "Erro na sincronização em background")
-            Result.retry() // Tentar novamente mais tarde
+            Timber.e(e, "Erro crítico na sincronização em background")
+            Result.failure()
         }
     }
 }

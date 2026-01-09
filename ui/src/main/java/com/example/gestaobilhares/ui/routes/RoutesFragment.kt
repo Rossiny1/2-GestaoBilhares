@@ -791,34 +791,25 @@ class RoutesFragment : Fragment() {
                     // ✅ REFATORADO: Usar SyncRepository injetado
                     // O SyncRepository agora é injetado pelo Hilt no Fragment
                     
-                    // Executar sincronização bidirecional
-                    Timber.d("RoutesFragment", "🔄 Iniciando sincronização bidirecional...")
+                    // Executar sincronização completa
+                    Timber.d("RoutesFragment", "🔄 Iniciando sincronização completa...")
                     val result = withContext(Dispatchers.IO) {
-                        syncRepository.syncBidirectional { progress ->
-                            uiScope.launch {
-                                // Check if view is still available before updating UI
-                                if (_binding != null) {
-                                    progressBar.progress = progress.percent
-                                    progressPercent.text = "${progress.percent}%"
-                                    progressStatus.text = progress.message
-                                }
-                            }
-                        }
+                        syncRepository.syncAllEntities()
                     }
                     
-                    if (result.isSuccess) {
-                        val status = syncRepository.getSyncStatus()
+                    if (result.success) {
+                        val status = syncRepository.getSyncSummary()
                         Timber.d("RoutesFragment", "✅ Sincronização concluída com sucesso")
-                        Timber.d("RoutesFragment", "   Pendentes: ${status.pendingOperations}")
-                        Timber.d("RoutesFragment", "   Falhas: ${status.failedOperations}")
+                        Timber.d("RoutesFragment", "   Entidades sincronizadas: ${status.totalSynced}")
+                        Timber.d("RoutesFragment", "   Erros: ${status.errors.size}")
 
                         // Check if view is still available before updating UI
                         if (_binding != null) {
                             progressBar.progress = 100
                             progressPercent.text = "100%"
                             progressStatus.text = getString(com.example.gestaobilhares.ui.R.string.sync_status_completed) + 
-                                "\nPendentes: ${status.pendingOperations}\n" +
-                                "Falhas: ${status.failedOperations}"
+                                "\nEntidades: ${status.totalSynced}\n" +
+                                "Erros: ${status.errors.size}"
                         }
                         
                         // ✅ CORREÇÃO: Forçar atualização completa dos dados das rotas após sincronização
@@ -841,11 +832,11 @@ class RoutesFragment : Fragment() {
                         
                         Timber.d("RoutesFragment", "✅ Refresh concluído - Pendências devem estar atualizadas")
                     } else {
-                        val status = syncRepository.getSyncStatus()
-                        Timber.e("RoutesFragment", "❌ Sincronização falhou: ${status.error ?: "Erro desconhecido"}")
+                        val status = syncRepository.getSyncSummary()
+                        Timber.e("RoutesFragment", "❌ Sincronização falhou: ${result.errors.joinToString(", ")}")
                         // Check if view is still available before updating UI
                         if (_binding != null) {
-                            progressStatus.text = "⚠️ Sincronização falhou: ${status.error ?: "Erro desconhecido"}\n" +
+                            progressStatus.text = "⚠️ Sincronização falhou: ${result.errors.joinToString(", ")}\n" +
                                 "Verifique os logs para mais detalhes"
                         }
                     }

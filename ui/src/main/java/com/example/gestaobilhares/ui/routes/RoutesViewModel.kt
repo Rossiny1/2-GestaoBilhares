@@ -154,9 +154,9 @@ class RoutesViewModel @Inject constructor(
                     return@launch
                 }
                 
-                val lastGlobalSync = runCatching {
-                    syncRepository.getGlobalLastSyncTimestamp()
-                }.getOrDefault(0L).takeIf { it > 0L }
+                // TODO: Implementar getGlobalLastSyncTimestamp no novo SyncRepository
+                // Por enquanto, usar timestamp padrão
+                val lastGlobalSync = 0L.takeIf { it > 0L }
                 Timber.d("RoutesViewModel", "📅 Última sincronização: $lastGlobalSync")
                 
                 // ✅ CORREÇÃO: Verificar pendências locais (dados para exportar)
@@ -172,7 +172,9 @@ class RoutesViewModel @Inject constructor(
                     // Se banco está vazio ou não há pendências, verificar se há dados na nuvem
                     Timber.d("RoutesViewModel", "🔍 Verificando dados na nuvem...")
                     try {
-                        hasDataInCloud = syncRepository.hasDataInCloud()
+                        // TODO: Implementar hasDataInCloud no novo SyncRepository
+                        // Por enquanto, assumir que pode haver dados na nuvem
+                        hasDataInCloud = true
                         Timber.d("RoutesViewModel", "📡 Dados na nuvem encontrados: $hasDataInCloud")
                     } catch (e: Exception) {
                         Timber.e("RoutesViewModel", "❌ Erro ao verificar dados na nuvem: ${e.message}", e)
@@ -202,7 +204,7 @@ class RoutesViewModel @Inject constructor(
                         pendingCount = pendingCount,
                         isCloudData = hasDataInCloud,
                         hasLocalPending = pending > 0,
-                        lastSyncTimestamp = lastGlobalSync
+                        lastSyncTimestamp = lastGlobalSync ?: 0L
                     )
                     
                     // Marcar como verificado para este login

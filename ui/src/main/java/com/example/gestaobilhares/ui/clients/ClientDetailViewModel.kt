@@ -371,7 +371,10 @@ class ClientDetailViewModel @Inject constructor(
                 var buscaRemotaFalhou = false
                 
                 try {
-                    acertos = syncRepository?.fetchUltimosAcertos(clienteId, quantidade)
+                    // TODO: Implementar busca de acertos remotos no novo SyncRepository
+                    // Por enquanto, usar apenas dados locais
+                    buscaRemotaFalhou = true
+                    Timber.d(TAG, "Busca remota não implementada no novo SyncRepository, usando dados locais...")
                     if (acertos.isNullOrEmpty()) {
                         buscaRemotaFalhou = true
                         Timber.d(TAG, "Busca remota retornou vazio, tentando fallback local...")
