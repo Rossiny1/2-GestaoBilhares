@@ -7,6 +7,9 @@ import com.example.gestaobilhares.core.utils.FirebaseImageUploader
 import com.example.gestaobilhares.core.utils.UserSessionManager
 import com.example.gestaobilhares.sync.handlers.*
 import com.example.gestaobilhares.sync.utils.NetworkUtils
+import com.example.gestaobilhares.sync.utils.SyncUtils
+import com.example.gestaobilhares.sync.core.SyncCore
+import com.example.gestaobilhares.sync.orchestration.SyncOrchestration
 import com.google.firebase.firestore.FirebaseFirestore
 import dagger.Module
 import dagger.Provides
@@ -234,5 +237,66 @@ object SyncModule {
         syncMetadataDao: SyncMetadataDao
     ): EstoqueSyncHandler {
         return EstoqueSyncHandler(context, appRepository, firestore, networkUtils, userSessionManager, firebaseImageUploader, syncMetadataDao)
+    }
+    
+    // Providers para classes de refatoração
+    @Provides
+    @Singleton
+    fun provideSyncUtils(): SyncUtils {
+        return SyncUtils()
+    }
+    
+    @Provides
+    @Singleton
+    fun provideSyncCore(
+        syncMetadataDao: SyncMetadataDao,
+        userSessionManager: UserSessionManager,
+        appRepository: AppRepository
+    ): SyncCore {
+        return SyncCore(syncMetadataDao, userSessionManager, appRepository)
+    }
+    
+    @Provides
+    @Singleton
+    fun provideSyncOrchestration(
+        mesaSyncHandler: MesaSyncHandler,
+        clienteSyncHandler: ClienteSyncHandler,
+        contratoSyncHandler: ContratoSyncHandler,
+        acertoSyncHandler: AcertoSyncHandler,
+        despesaSyncHandler: DespesaSyncHandler,
+        rotaSyncHandler: RotaSyncHandler,
+        cicloSyncHandler: CicloSyncHandler,
+        colaboradorSyncHandler: ColaboradorSyncHandler,
+        colaboradorRotaSyncHandler: ColaboradorRotaSyncHandler,
+        metaColaboradorSyncHandler: MetaColaboradorSyncHandler,
+        metaSyncHandler: MetaSyncHandler,
+        assinaturaSyncHandler: AssinaturaSyncHandler,
+        veiculoSyncHandler: VeiculoSyncHandler,
+        equipamentoSyncHandler: EquipamentoSyncHandler,
+        estoqueSyncHandler: EstoqueSyncHandler,
+        syncCore: SyncCore,
+        appRepository: AppRepository,
+        firestore: FirebaseFirestore
+    ): SyncOrchestration {
+        return SyncOrchestration(
+            mesaSyncHandler,
+            clienteSyncHandler,
+            contratoSyncHandler,
+            acertoSyncHandler,
+            despesaSyncHandler,
+            rotaSyncHandler,
+            cicloSyncHandler,
+            colaboradorSyncHandler,
+            colaboradorRotaSyncHandler,
+            metaColaboradorSyncHandler,
+            metaSyncHandler,
+            assinaturaSyncHandler,
+            veiculoSyncHandler,
+            equipamentoSyncHandler,
+            estoqueSyncHandler,
+            syncCore,
+            appRepository,
+            firestore
+        )
     }
 }
