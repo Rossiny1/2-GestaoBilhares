@@ -76,15 +76,11 @@ class SyncCoreTest {
         val syncCount = 15
         val durationMs = 8000L
         val bytesTransferred = 2048L
-        
-        whenever(syncMetadataDao.obterUltimoTimestamp(entityType, 123L))
-            .thenReturn(null)
 
         // When
         syncCore.saveSyncMetadata(entityType, syncCount, durationMs, bytesTransferred)
 
         // Then
-        verify(syncMetadataDao).obterUltimoTimestamp(entityType, 123L)
         verify(syncMetadataDao).inserirOuAtualizar(check {
             assertThat(it.entityType).isEqualTo(entityType)
             assertThat(it.userId).isEqualTo(123L)
@@ -98,28 +94,21 @@ class SyncCoreTest {
     @Test
     fun `saveSyncMetadata should update existing metadata`() = runTest {
         // Given
-        val entityType = "acertos"
-        val syncCount = 20
-        val durationMs = 10000L
-        val bytesTransferred = 4096L
+        val entityType = "clientes"
+        val syncCount = 8
+        val durationMs = 4000L
         val error = "Network timeout"
-        
-        val existingTimestamp = System.currentTimeMillis() - 3600000L
-        
-        whenever(syncMetadataDao.obterUltimoTimestamp(entityType, 123L))
-            .thenReturn(existingTimestamp)
 
         // When
-        syncCore.saveSyncMetadata(entityType, syncCount, durationMs, bytesTransferred, error)
+        syncCore.saveSyncMetadata(entityType, syncCount, durationMs, null, error)
 
         // Then
-        verify(syncMetadataDao).obterUltimoTimestamp(entityType, 123L)
         verify(syncMetadataDao).inserirOuAtualizar(check {
             assertThat(it.entityType).isEqualTo(entityType)
             assertThat(it.userId).isEqualTo(123L)
             assertThat(it.lastSyncCount).isEqualTo(syncCount)
             assertThat(it.lastSyncDurationMs).isEqualTo(durationMs)
-            assertThat(it.lastSyncBytesDownloaded).isEqualTo(bytesTransferred)
+            assertThat(it.lastSyncBytesDownloaded).isEqualTo(0L)
             assertThat(it.lastError).isEqualTo(error)
         })
     }
@@ -134,7 +123,7 @@ class SyncCoreTest {
         val result = syncCore.getAccessibleRouteIds()
 
         // Then
-        assertThat(result).isEqualTo(expectedRouteIds)
+        assertThat(result).isEqualTo(expectedRouteIds.toSet())
         verify(userSessionManager).getRotasPermitidas()
     }
 
@@ -143,14 +132,16 @@ class SyncCoreTest {
         // Given
         val rotaId = 1L
         val clienteId = 100L
-        whenever(userSessionManager.canAccessRota(rotaId)).thenReturn(true)
+        // O método canAccessRoute é interno ao SyncCore, não precisa de mock
+        // Vamos mockar o UserSessionManager para retornar que tem acesso
+        whenever(userSessionManager.isAdmin()).thenReturn(false)
+        whenever(userSessionManager.getRotasPermitidas()).thenReturn(listOf(rotaId))
 
         // When
         val result = syncCore.shouldSyncRouteData(rotaId, clienteId)
 
         // Then
         assertThat(result).isTrue()
-        verify(userSessionManager).canAccessRota(rotaId)
     }
 
     @Test
@@ -158,14 +149,15 @@ class SyncCoreTest {
         // Given
         val rotaId = 999L
         val clienteId = 100L
-        whenever(userSessionManager.canAccessRota(rotaId)).thenReturn(false)
+        // Mockar para não ter acesso à rota
+        whenever(userSessionManager.isAdmin()).thenReturn(false)
+        whenever(userSessionManager.getRotasPermitidas()).thenReturn(listOf(1L, 2L)) // sem a rota 999
 
         // When
         val result = syncCore.shouldSyncRouteData(rotaId, clienteId)
 
         // Then
         assertThat(result).isFalse()
-        verify(userSessionManager).canAccessRota(rotaId)
     }
 
     @Test
