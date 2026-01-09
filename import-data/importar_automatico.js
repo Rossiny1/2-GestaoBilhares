@@ -55,22 +55,37 @@ function converterData(dataStr) {
 }
 
 /**
+ * Normaliza texto mantendo acentos do português brasileiro
+ */
+function normalizarTexto(texto) {
+    if (!texto) return texto;
+
+    return texto
+        // Manter caracteres UTF-8 do português
+        .replace(/["""''''``]/g, '"') // Normalizar aspas
+        .replace(/[–—]/g, '-') // Normalizar travessões
+        .replace(/[…]/g, '...') // Normalizar reticências
+        .replace(/\r\n/g, '\n') // Normalizar quebras de linha
+        .trim();
+}
+
+/**
  * Mapeia linha do CSV para documento Firebase
  */
-function mapearLinhaParaCliente(linha, rotaId) {
+function mapearLinhaParaCliente(linha, rotaId, clienteId) {
     const campos = linha.split(';');
 
-    const nome = campos[1] ? campos[1].replace(/"/g, '').trim() : '';
-    const cpfCnpj = campos[2] ? campos[2].replace(/"/g, '').trim() : null;
-    const endereco = campos[3] ? campos[3].replace(/"/g, '').trim() : '';
-    const cidade = campos[4] ? campos[4].replace(/"/g, '').trim() : '';
-    const estado = campos[5] ? campos[5].replace(/"/g, '').trim() : '';
-    const telefone = campos[6] ? campos[6].replace(/"/g, '').trim() : null;
-    const telefone2 = campos[7] ? campos[7].replace(/"/g, '').trim() : null;
-    const dataCadastroStr = campos[9] ? campos[9].trim() : '';
-    const debitoAtualStr = campos[11] ? campos[11].trim() : '';
-    const observacoes = campos[12] ? campos[12].replace(/"/g, '').trim() : '';
-    const valorFichaStr = campos[13] ? campos[13].trim() : '';
+    const nome = normalizarTexto(campos[1] ? campos[1].replace(/"/g, '').trim() : '');
+    const cpfCnpj = normalizarTexto(campos[2] ? campos[2].replace(/"/g, '').trim() : '');
+    const endereco = normalizarTexto(campos[3] ? campos[3].replace(/"/g, '').trim() : '');
+    const cidade = normalizarTexto(campos[4] ? campos[4].replace(/"/g, '').trim() : '');
+    const estado = normalizarTexto(campos[5] ? campos[5].replace(/"/g, '').trim() : '');
+    const telefone = normalizarTexto(campos[6] ? campos[6].replace(/"/g, '').trim() : '');
+    const telefone2 = normalizarTexto(campos[7] ? campos[7].replace(/"/g, '').trim() : '');
+    const dataCadastroStr = normalizarTexto(campos[9] ? campos[9].trim() : '');
+    const debitoAtualStr = normalizarTexto(campos[11] ? campos[11].trim() : '');
+    const observacoes = normalizarTexto(campos[12] ? campos[12].replace(/"/g, '').trim() : '');
+    const valorFichaStr = normalizarTexto(campos[13] ? campos[13].trim() : '');
 
     if (!nome) {
         throw new Error('Nome do cliente é obrigatório');
@@ -79,9 +94,10 @@ function mapearLinhaParaCliente(linha, rotaId) {
     const ativo = !observacoes.toLowerCase().includes('mesa retirada');
 
     return {
+        id: parseInt(clienteId), // ID numérico como o app usa
         nome: nome,
-        nomeFantasia: null,
-        cpfCnpj: cpfCnpj || null,
+        nome_fantasia: null,
+        cpf_cnpj: cpfCnpj || null,
         telefone: telefone || null,
         telefone2: telefone2 || null,
         email: null,
@@ -92,18 +108,18 @@ function mapearLinhaParaCliente(linha, rotaId) {
         cep: null,
         latitude: null,
         longitude: null,
-        precisaoGps: null,
-        dataCapturaGps: null,
-        rotaId: rotaId,
-        valorFicha: converterValorMonetario(valorFichaStr),
-        comissaoFicha: 0.0,
-        numeroContrato: null,
-        debitoAnterior: 0.0,
-        debitoAtual: converterValorMonetario(debitoAtualStr),
+        precisao_gps: null,
+        data_captura_gps: null,
+        rota_id: parseInt(rotaId), // ID numérico da rota
+        valor_ficha: converterValorMonetario(valorFichaStr),
+        comissao_ficha: 0.0,
+        numero_contrato: null,
+        debito_anterior: 0.0,
+        debito_atual: converterValorMonetario(debitoAtualStr),
         ativo: ativo,
         observacoes: observacoes,
-        dataCadastro: converterData(dataCadastroStr),
-        dataUltimaAtualizacao: admin.firestore.FieldValue.serverTimestamp()
+        data_cadastro: Date.now(), // Timestamp numérico como o app usa
+        data_ultima_atualizacao: Date.now()
     };
 }
 
@@ -198,7 +214,26 @@ async function processarArquivoCSV(caminhoArquivo, nomeRota, descricaoRota) {
         // Obter próximo ID para clientes
         let proximoClienteId = await getNextId(clientesCollectionPath);
 
-        const conteudo = fs.readFileSync(caminhoArquivo, 'utf8');
+        // Detectar e usar codificação correta
+        let conteudo;
+        try {
+            // Tentar ler como UTF-8 primeiro
+            conteudo = fs.readFileSync(caminhoArquivo, 'utf8');
+            console.log('📝 Arquivo lido como UTF-8');
+        } catch (error) {
+            try {
+                // Se falhar, tentar Latin1
+                conteudo = fs.readFileSync(caminhoArquivo, 'latin1');
+                conteudo = Buffer.from(conteudo, 'latin1').toString('utf8');
+                console.log('📝 Arquivo lido como Latin1 e convertido para UTF-8');
+            } catch (error2) {
+                // Última tentativa: binary para UTF-8
+                const buffer = fs.readFileSync(caminhoArquivo);
+                conteudo = buffer.toString('utf8');
+                console.log('📝 Arquivo lido como Binary e convertido para UTF-8');
+            }
+        }
+
         const linhas = conteudo.split('\n');
 
         console.log(`📊 Encontradas ${linhas.length} linhas no CSV`);
@@ -213,19 +248,19 @@ async function processarArquivoCSV(caminhoArquivo, nomeRota, descricaoRota) {
             if (!linha || Object.keys(linha).length === 0) continue;
 
             try {
-                const cliente = mapearLinhaParaCliente(linha, rotaId);
+                const cliente = mapearLinhaParaCliente(linha, rotaId, proximoClienteId);
                 const clienteId = proximoClienteId.toString();
-                
+
                 // Validar que o ID não está vazio
                 if (!clienteId || clienteId.trim() === '') {
                     throw new Error('ID do cliente está vazio');
                 }
-                
+
                 // Usar ID numérico sequencial como o app
                 await db.collection(clientesCollectionPath)
                     .doc(clienteId)
                     .set(cliente);
-                
+
                 resultados.sucesso++;
                 proximoClienteId++;
 

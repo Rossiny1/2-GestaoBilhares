@@ -8,6 +8,7 @@ import com.example.gestaobilhares.sync.utils.NetworkUtils
 import com.example.gestaobilhares.sync.utils.SyncUtils
 import com.example.gestaobilhares.sync.core.SyncCore
 import com.example.gestaobilhares.sync.orchestration.SyncOrchestration
+import com.example.gestaobilhares.sync.SyncResult
 import com.google.common.truth.Truth.assertThat
 import com.google.firebase.firestore.FirebaseFirestore
 import com.google.firebase.firestore.DocumentSnapshot
@@ -73,13 +74,19 @@ class SyncRepositoryTest {
     @Test
     fun `syncAllEntities should delegate to SyncOrchestration`() = runTest {
         // Given
-        val expectedResult = SyncOrchestration.SyncResult(
+        val expectedResult = SyncResult(
             success = true,
             syncedCount = 50,
             durationMs = 5000L,
             errors = emptyList()
         )
-        whenever(syncOrchestration.syncAll()).thenReturn(expectedResult)
+        val orchestrationResult = SyncOrchestration.SyncResult(
+            success = true,
+            syncedCount = 50,
+            durationMs = 5000L,
+            errors = emptyList()
+        )
+        whenever(syncOrchestration.syncAll()).thenReturn(orchestrationResult)
 
         // When
         val result = syncRepository.syncAllEntities()
@@ -92,13 +99,19 @@ class SyncRepositoryTest {
     @Test
     fun `pushAllEntities should delegate to SyncOrchestration`() = runTest {
         // Given
-        val expectedResult = SyncOrchestration.SyncResult(
+        val expectedResult = SyncResult(
             success = true,
             syncedCount = 25,
             durationMs = 3000L,
             errors = emptyList()
         )
-        whenever(syncOrchestration.pushAll()).thenReturn(expectedResult)
+        val orchestrationResult = SyncOrchestration.SyncResult(
+            success = true,
+            syncedCount = 25,
+            durationMs = 3000L,
+            errors = emptyList()
+        )
+        whenever(syncOrchestration.pushAll()).thenReturn(orchestrationResult)
 
         // When
         val result = syncRepository.pushAllEntities()
