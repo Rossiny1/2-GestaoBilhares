@@ -8,6 +8,7 @@ import com.google.firebase.Timestamp
 import com.google.gson.Gson
 import com.google.gson.GsonBuilder
 import com.example.gestaobilhares.data.entities.Acerto
+import com.example.gestaobilhares.data.entities.StatusAcerto
 import timber.log.Timber
 import java.text.ParseException
 import java.text.SimpleDateFormat
@@ -220,13 +221,32 @@ class SyncUtils {
             id = documentId.toLongOrNull() ?: 0L,
             dataAcerto = extrairDataAcertoMillisFromMap(data),
             clienteId = extrairClienteId(data) ?: 0L,
+            colaboradorId = data["colaborador_id"] as? Long,
+            rotaId = data["rota_id"] as? Long,
+            cicloId = data["ciclo_id"] as? Long,
             periodoInicio = extrairDataAcertoMillisFromMap(data),
             periodoFim = extrairDataAcertoMillisFromMap(data),
-            totalMesas = 0.0,
-            debitoAnterior = 0.0,
-            valorTotal = 0.0,
-            desconto = 0.0,
-            valorComDesconto = 0.0
+            totalMesas = data["total_mesas"] as? Double ?: 0.0,
+            debitoAnterior = data["debito_anterior"] as? Double ?: 0.0,
+            valorTotal = data["valor_total"] as? Double ?: 0.0,
+            desconto = data["desconto"] as? Double ?: 0.0,
+            valorComDesconto = data["valor_com_desconto"] as? Double ?: 0.0,
+            valorRecebido = data["valor_recebido"] as? Double ?: 0.0,
+            debitoAtual = data["debito_atual"] as? Double ?: 0.0,
+            status = when (val status = data["status"] as? String) {
+                "PENDENTE" -> StatusAcerto.PENDENTE
+                "FINALIZADO" -> StatusAcerto.FINALIZADO
+                "CANCELADO" -> StatusAcerto.CANCELADO
+                else -> StatusAcerto.PENDENTE
+            },
+            observacoes = data["observacoes"] as? String,
+            dataCriacao = extrairDataAcertoMillisFromMap(data),
+            dataFinalizacao = null,
+            representante = null,
+            tipoAcerto = null,
+            panoTrocado = false,
+            numeroPano = null,
+            dadosExtrasJson = null
         )
     }
     

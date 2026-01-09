@@ -2,188 +2,250 @@
 
 ## 🎯 **Objetivo**
 
-Importar dados de clientes de múltiplos arquivos CSV para o Firebase Firestore do app Gestão Bilhares.
+Importar dados de clientes de arquivos CSV para o Firebase Firestore, garantindo compatibilidade total com o aplicativo Android Gestão Bilhares.
 
 ---
 
-## 📁 **Arquivos e Estrutura**
+## 📁 **Estrutura da Pasta Import-Data**
 
-### **Pasta de Trabalho:**
+A pasta `import-data/` contém apenas os arquivos essenciais:
 
 ```
 import-data/
-├── README_IMPORTACAO.md          # Guia completo
-├── csv_analysis.md               # Análise do CSV
-├── teste_simples.js              # Script de teste
-├── dados_teste_3_clientes.json   # JSON gerado para teste
-└── ../anexos/                   # Pasta com arquivos CSV
-    └── Cadastro Clientes- Rota Bahia.csv
+├── importar_automatico.js          # Script principal de importação
+├── service-account.json             # Chave de acesso ao Firebase
+├── package.json                   # Dependências Node.js
+├── node_modules/                  # Dependências instaladas
+└── INSTRUCAO_SERVICE_ACCOUNT.md   # Instruções da chave
 ```
 
-### **Arquivo de Teste:**
-
-- **Localização**: `dados_teste_3_clientes.json` (raiz do projeto)
-- **Conteúdo**: 3 clientes + 1 rota (037-Salinas)
-- **Formato**: JSON compatível com Firestore
+**Nota**: `package-lock.json` pode ser deletado e regenerado com `npm install`
 
 ---
 
-## 🚀 **Método 1: Importação Manual (Recomendado)**
+## 🚀 **Metodologia Atual**
 
-### **Passo 1: Acessar Firebase Console**
+### **1. Arquivo Principal: `importar_automatico.js`**
 
-1. Abra: <https://console.firebase.google.com/project/gestaobilhares/firestore>
-2. Faça login com `rossinys@gmail.com`
+Script robusto que:
 
-### **Passo 2: Importar Dados**
+- ✅ **Lê CSV com codificação UTF-8** (preserva acentos)
+- ✅ **Gera IDs numéricos sequenciais** (compatível com app)
+- ✅ **Usa estrutura snake_case** (rota_id, cpf_cnpj, etc.)
+- ✅ **Cria rotas automaticamente** se não existirem
+- ✅ **Importa para caminho correto**: `empresas/empresa_001/entidades/clientes/items`
 
-1. Clique em **"Importar documento"** (botão no topo)
-2. Selecione o arquivo: `dados_teste_3_clientes.json`
-3. Mantenha as opções padrão
-4. Clique em **"Importar"**
+### **2. Estrutura de Dados Esperada**
 
-### **Passo 3: Verificar Resultado**
-
-No Firebase Console, você deve ver:
-
+```javascript
+{
+  id: 123456,                    // ID numérico sequencial
+  nome: "JOÃO DA SILVA",          // UTF-8 com acentos
+  nome_fantasia: null,             // snake_case
+  cpf_cnpj: "123.456.789-01",    // snake_case
+  telefone: "(11) 98765-4321",
+  endereco: "RUA DAS ÁRVORES, 123",
+  cidade: "SÃO PAULO",
+  estado: "SP",
+  rota_id: 789012,               // ID numérico da rota
+  debito_atual: 150.00,           // snake_case, número
+  ativo: true,                    // booleano
+  data_cadastro: 1704214134000,    // timestamp numérico
+  data_ultima_atualizacao: 1704214134000
+}
 ```
-📁 Collections
-├── rotas (1 documento)
-│   └── 037-Salinas
-└── clientes (3 documentos)
-    ├── Angela Ramos Cruz
-    ├── Mauro Luiz Batista
-    └── Sinvaldo Ribeiro da Silva
-```
+
+### **3. Caminhos no Firestore**
+
+- **Rotas**: `empresas/empresa_001/entidades/rotas/items`
+- **Clientes**: `empresas/empresa_001/entidades/clientes/items`
 
 ---
 
-## 📱 **Método 2: Validação no App Android**
+## ⚙️ **Configuração**
 
-### **Após Importar no Firebase:**
+### **Pré-requisitos**
 
-#### **1. Abrir App**
+1. **Node.js** instalado
+2. **Chave do Firebase** em `service-account.json`
+3. **Arquivo CSV** na pasta `../anexos/`
 
-1. Abra o app Android Gestão Bilhares
-2. Faça login (se necessário)
-
-#### **2. Verificar Rotas**
-
-1. Navegue para a tela de **"Rotas"**
-2. Procure por **"037-Salinas"** na lista
-3. Deve aparecer como nova rota criada
-
-#### **3. Verificar Clientes**
-
-1. Clique na rota **"037-Salinas"**
-2. Verifique se os 3 clientes aparecem:
-   - Angela Ramos Cruz (Débito: R$ 132,00)
-   - Mauro Luiz Batista (Débito: R$ 115,80)
-   - Sinvaldo Ribeiro da Silva (Débito: R$ 182,00)
-
----
-
-## 🔧 **Método 3: Script Completo (Futuro)**
-
-### **Para Importar Todos os 8 Arquivos:**
+### **Instalação de Dependências**
 
 ```bash
 cd import-data
-node importar_clientes.js
+npm install
 ```
 
-### **Arquivos Esperados:**
+---
 
-1. `Cadastro Clientes- Rota Bahia.csv` → 037-Salinas
-2. `Cadastro Clientes- 033-Montes Claros.csv` → 033-Montes Claros
-3. `Cadastro Clientes- 08-Chapada Gaucha.csv` → 08-Chapada Gaucha
-4. `Cadastro Clientes- 035-Coração de Jesus.csv` → 035-Coração de Jesus
-5. `Cadastro Clientes- 034-Bonito de Minas.csv` → 034-Bonito de Minas
-6. `Cadastro Clientes- 03-Januária.csv` → 03-Januária
-7. `Cadastro Clientes- 036-Bahia.csv` → 036-Bahia
+## 🚀 **Execução**
+
+### **Comando Único**
+
+```bash
+node importar_automatico.js
+```
+
+### **O que o script faz:**
+
+1. **Conecta ao Firebase** usando a chave
+2. **Lê o arquivo CSV** com codificação UTF-8
+3. **Cria ou encontra a rota** especificada
+4. **Importa clientes** com IDs numéricos sequenciais
+5. **Preserva acentos** e caracteres especiais
+6. **Mostra progresso** em tempo real
 
 ---
 
-## 📊 **Mapeamento de Campos**
+## 📊 **Resultados Esperados**
 
-### **CSV → Firestore:**
+### **Exemplo de Saída**
 
-| Campo CSV | Campo Firestore | Tipo | Observações |
-|-----------|----------------|-------|-------------|
-| Coluna 2 | nome | string | Nome do cliente |
-| Coluna 3 | cpfCnpj | string | CPF/CNPJ |
-| Coluna 4 | endereco | string | Endereço |
-| Coluna 5 | cidade | string | Cidade |
-| Coluna 6 | estado | string | Estado |
-| Coluna 7 | telefone | string | Telefone |
-| Coluna 10 | dataCadastro | timestamp | Data cadastro |
-| Coluna 12 | debitoAtual | double | Débito atual |
-| Coluna 13 | observacoes | string | Observações |
-
-### **Conversões Automáticas:**
-
-- **Valores monetários**: R$ 132,00 → 132.0
-- **Datas**: 19/7/2018 → timestamp
-- **Status**: "mesa retirada" → ativo: false
-
----
-
-## 🔍 **Validação de Dados**
-
-### **Regras Aplicadas:**
-
-- ✅ **Nome obrigatório** (não pode ser vazio)
-- ✅ **CPF formatado** (se presente)
-- ✅ **Valores monetários** convertidos
-- ✅ **Datas padronizadas**
-- ✅ **Status ativo/inativo** detectado
-
-### **Erros Comuns:**
-
-- Linhas vazias são ignoradas
-- Campos faltantes recebem `null`
-- Datas inválidas usam timestamp atual
+```bash
+✅ Firebase Admin configurado com sua chave!
+🚀 IMPORTAÇÃO AUTOMÁTICA - FIREBASE ADMIN SDK
+============================================================
+📁 Processando arquivo: ../anexos/Cadastro Clientes- Rota Bahia.csv
+🎯 Rota destino: 037-Salinas
+🆕 Rota criada: 037-Salinas (ID: 500287)
+📝 Arquivo lido como UTF-8 (simples)
+📊 Encontradas 114 linhas no CSV
+⏳ Progresso: 50/113 clientes processados
+✅ Importação concluída!
+📊 Resultados:
+   👥 Clientes importados: 112
+   ❌ Erros: 0
+   ⏱️  Tempo total: 15.47s
+   🚀 Média: 138ms/cliente
+```
 
 ---
 
-## 🚨 **Troubleshooting**
+## 🔧 **Configuração de Arquivos**
 
-### **Se a Importação Falhar:**
+### **Mapeamento de Arquivos**
 
-#### **1. Erro no Firebase Console:**
+No script `importar_automatico.js`, configure o array `arquivosParaRotas`:
 
-- Verifique se o arquivo JSON está válido
-- Confirme se está logado corretamente
-- Tente importar collection por collection
-
-#### **2. Dados Não Aparecem no App:**
-
-- Force refresh no app (pull to refresh)
-- Verifique conexão com internet
-- Limpe cache do app se necessário
-
-#### **3. Formato de Data:**
-
-- Se datas aparecerem erradas, ajuste o mapeamento
-- Verifique fuso horário no Firebase Console
+```javascript
+const arquivosParaRotas = [
+    {
+        arquivo: '../anexos/Cadastro Clientes- Rota Bahia.csv',
+        rota: '037-Salinas',
+        descricao: 'Rota Salinas - Importação CSV'
+    },
+    // Adicione outros arquivos aqui:
+    // {
+    //     arquivo: '../anexos/Cadastro Clientes- OutraRota.csv',
+    //     rota: 'XXX-NomeRota',
+    //     descricao: 'Descrição da rota'
+    // }
+];
+```
 
 ---
 
-## 📈 **Performance e Escalabilidade**
+## 🇧🇷 **Suporte a Caracteres**
 
-### **Métricas do Teste:**
+### **Codificação**
 
-- **3 clientes**: < 1 segundo
-- **114 clientes (arquivo completo)**: ~3 segundos
-- **8 arquivos (~900 clientes)**: ~5 minutos
+- **Leitura**: UTF-8 (preserva acentos brasileiros)
+- **Caracteres suportados**: á, é, í, ó, ú, ã, õ, ç, ñ, ü, etc.
+- **Sem conversões forçadas** (evita caracteres especiais)
 
-### **Limites Firestore:**
+### **Se caracteres aparecerem errados:**
+
+1. Abra o CSV em um editor
+2. **Salve como UTF-8** explicitamente
+3. Execute a importação novamente
+
+---
+
+## 📱 **Validação no App**
+
+### **Passos para Verificar:**
+
+1. **Abra o app** Gestão Bilhares
+2. **Vá em "Rotas"**
+3. **Procure a rota** importada (ex: "037-Salinas")
+4. **Clique na rota** para ver clientes
+5. **Verifique se:**
+   - ✅ Nomes aparecem com acentos corretos
+   - ✅ Quantidade de clientes corresponde
+   - ✅ Dados estão completos
+
+---
+
+## 🚨 **Solução de Problemas**
+
+### **Problema: Clientes não aparecem no app**
+
+**Causa**: Dados no Firestore mas app não sincroniza
+
+**Solução**:
+
+1. **Limpe cache do app** (configurações > armazenamento > limpar cache)
+2. **Force sincronização** (pull-to-refresh na tela de rotas)
+3. **Reinicie o app** completamente
+
+### **Problema: Caracteres especiais**
+
+**Causa**: Codificação incorreta do CSV
+
+**Solução**:
+
+1. Abra o CSV no Excel/Google Sheets
+2. **Salve como CSV UTF-8**
+3. Execute importação novamente
+
+### **Problema: Erro de importação**
+
+**Causa**: Arquivo não encontrado ou permissões
+
+**Solução**:
+
+1. Verifique se o arquivo existe em `../anexos/`
+2. Confirme a chave `service-account.json` está correta
+3. Execute com `node importar_automatico.js` na pasta `import-data/`
+
+---
+
+## 📋 **Checklist Final**
+
+Antes de executar:
+
+- [ ] Node.js instalado
+- [ ] Chave `service-account.json` configurada
+- [ ] Arquivo CSV na pasta `../anexos/`
+- [ ] Dependências instaladas (`npm install`)
+
+Após executar:
+
+- [ ] Importação concluída sem erros
+- [ ] Rota criada/encontrada
+- [ ] Clientes importados com IDs numéricos
+- [ ] Acentos preservados corretamente
+- [ ] Dados visíveis no app Android
+
+---
+
+## 🎯 **Resumo**
+
+**Metodologia atual:**
+
+- ✅ **Um script principal** (`importar_automatico.js`)
+- ✅ **Leitura UTF-8 simples** (preserva acentos)
+- ✅ **Estrutura compatível** com app Android
+- ✅ **IDs numéricos** sequenciais
+- ✅ **Caminhos corretos** no Firestore
+- ✅ **Zero dependências desnecessárias**
+
+**Resultado:** Importação 100% funcional e compatível! 🎉
 
 - **Documentos por segundo**: 10,000
 - **Tamanho documento**: 1MB
 - **Batch writes**: 500 operações
-
----
 
 ## 🎯 **Próximos Passos**
 

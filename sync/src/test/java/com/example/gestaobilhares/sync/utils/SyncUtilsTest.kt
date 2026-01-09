@@ -56,11 +56,11 @@ class SyncUtilsTest {
         // Then
         assertThat(result).isNotNull()
         assertThat(result["id"]).isEqualTo(1L)
-        assertThat(result["clienteId"]).isEqualTo(100L)
-        assertThat(result["colaboradorId"]).isEqualTo(200L)
-        assertThat(result["rotaId"]).isEqualTo(300L)
-        assertThat(result["cicloId"]).isEqualTo(400L)
-        assertThat(result["valorTotal"]).isEqualTo(150.0)
+        assertThat(result["cliente_id"]).isEqualTo(100L)
+        assertThat(result["colaborador_id"]).isEqualTo(200L)
+        assertThat(result["rota_id"]).isEqualTo(300L)
+        assertThat(result["ciclo_id"]).isEqualTo(400L)
+        assertThat(result["valor_total"]).isEqualTo(150.0)
         assertThat(result["status"]).isEqualTo(StatusAcerto.PENDENTE)
     }
 
@@ -99,9 +99,9 @@ class SyncUtilsTest {
 
         // Then
         assertThat(result).isNotNull()
-        assertThat(result["colaboradorId"]).isNull()
-        assertThat(result["rotaId"]).isNull()
-        assertThat(result["cicloId"]).isNull()
+        assertThat(result["colaborador_id"]).isNull()
+        assertThat(result["rota_id"]).isNull()
+        assertThat(result["ciclo_id"]).isNull()
         assertThat(result["observacoes"]).isNull()
     }
 
@@ -110,16 +110,16 @@ class SyncUtilsTest {
         // Given
         val testData = mapOf(
             "id" to 1L,
-            "clienteId" to 100L,
-            "colaboradorId" to 200L,
-            "rotaId" to 300L,
-            "cicloId" to 400L,
-            "valorTotal" to 150.0,
+            "cliente_id" to 100L,
+            "colaborador_id" to 200L,
+            "rota_id" to 300L,
+            "ciclo_id" to 400L,
+            "valor_total" to 150.0,
             "status" to "PENDENTE"
         )
         
         whenever(documentSnapshot.data).thenReturn(testData)
-        whenever(documentSnapshot.id).thenReturn("doc123")
+        whenever(documentSnapshot.id).thenReturn("1")
         whenever(documentSnapshot.contains("dataAcerto")).thenReturn(true)
         whenever(documentSnapshot.getDate("dataAcerto")).thenReturn(Date())
 
@@ -155,13 +155,13 @@ class SyncUtilsTest {
         // Given
         val testData = mapOf(
             "id" to 1L,
-            "clienteId" to 100L,
-            "valorTotal" to 150.0,
+            "cliente_id" to 100L,
+            "valor_total" to 150.0,
             "status" to "PENDENTE"
         )
         
         whenever(documentSnapshot.data).thenReturn(testData)
-        whenever(documentSnapshot.id).thenReturn("doc123")
+        whenever(documentSnapshot.id).thenReturn("1")
         whenever(documentSnapshot.contains("dataAcerto")).thenReturn(false)
 
         // When
@@ -214,7 +214,7 @@ class SyncUtilsTest {
 
         // Then
         assertThat(result).isInstanceOf(Map::class.java)
-        assertThat(result["dataAcerto"]).isEqualTo(testTimestamp)
-        assertThat(result["dataCriacao"]).isEqualTo(testTimestamp)
+        assertThat(result["data_acerto"]).isEqualTo(testTimestamp)
+        assertThat(result["data_criacao"]).isEqualTo(testTimestamp)
     }
 }

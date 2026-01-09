@@ -214,50 +214,9 @@ async function processarArquivoCSV(caminhoArquivo, nomeRota, descricaoRota) {
         // Obter próximo ID para clientes
         let proximoClienteId = await getNextId(clientesCollectionPath);
 
-        // Detectar e usar codificação correta
-        let conteudo;
-        let codificacaoDetectada = 'desconhecida';
-
-        try {
-            // Tentativa 1: UTF-8 (ideal)
-            conteudo = fs.readFileSync(caminhoArquivo, 'utf8');
-            codificacaoDetectada = 'UTF-8';
-            console.log('📝 Arquivo lido como UTF-8');
-        } catch (error) {
-            try {
-                // Tentativa 2: Latin1 (ISO-8859-1)
-                const buffer = fs.readFileSync(caminhoArquivo);
-                conteudo = buffer.toString('latin1');
-                codificacaoDetectada = 'Latin1';
-                console.log('📝 Arquivo lido como Latin1');
-            } catch (error2) {
-                try {
-                    // Tentativa 3: Windows-1252 (comum no Windows)
-                    const buffer = fs.readFileSync(caminhoArquivo);
-                    conteudo = buffer.toString('win1252');
-                    codificacaoDetectada = 'Windows-1252';
-                    console.log('📝 Arquivo lido como Windows-1252');
-                } catch (error3) {
-                    // Tentativa 4: Binary para UTF-8 (último recurso)
-                    const buffer = fs.readFileSync(caminhoArquivo);
-                    conteudo = buffer.toString('utf8');
-                    codificacaoDetectada = 'Binary→UTF-8';
-                    console.log('📝 Arquivo lido como Binary e convertido para UTF-8');
-                }
-            }
-        }
-
-        // Garantir que está em UTF-8 para processamento
-        if (codificacaoDetectada !== 'UTF-8') {
-            try {
-                const buffer = Buffer.from(conteudo, 'utf8');
-                conteudo = buffer.toString('utf8');
-                console.log(`🔄 Convertendo de ${codificacaoDetectada} para UTF-8`);
-            } catch (e) {
-                console.warn('⚠️ Erro na conversão para UTF-8, usando conteúdo original');
-            }
-        }
-
+        // Ler arquivo como UTF-8 simples (sem conversões)
+        const conteudo = fs.readFileSync(caminhoArquivo, 'utf8');
+        console.log('📝 Arquivo lido como UTF-8 (simples)');
         const linhas = conteudo.split('\n');
 
         console.log(`📊 Encontradas ${linhas.length} linhas no CSV`);
