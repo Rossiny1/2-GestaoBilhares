@@ -9,8 +9,6 @@ import com.example.gestaobilhares.data.entities.CicloAcertoEntity
 import com.example.gestaobilhares.data.entities.StatusCicloAcerto
 import com.example.gestaobilhares.data.entities.Despesa
 import com.example.gestaobilhares.data.repository.AppRepository
-// TODO: PaginationManager não existe - comentar referências temporariamente
-// import com.example.gestaobilhares.core.utils.PaginationManager
 import timber.log.Timber
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -61,8 +59,6 @@ class ClientListViewModel @Inject constructor(
     
     // ✅ FASE 4B: Pagination Manager para lazy loading
     // ✅ FASE 12.10: Paginação mais agressiva (reduzido de 20 para 15 para melhor performance)
-    // TODO: PaginationManager não existe - comentar temporariamente
-    // private val paginationManager = PaginationManager<Cliente>(pageSize = 15, preloadThreshold = 3)
 
     private val _rotaInfo = MutableStateFlow<Rota?>(null)
     val rotaInfo: StateFlow<Rota?> = _rotaInfo.asStateFlow()
