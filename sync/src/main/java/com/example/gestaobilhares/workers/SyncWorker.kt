@@ -20,8 +20,8 @@ import timber.log.Timber
 class SyncWorker(
     context: Context,
     params: WorkerParameters,
-    private val appRepositoryTest: AppRepository? = null,
-    private val syncRepositoryTest: SyncRepository? = null
+    private val appRepository: AppRepository,
+    private val syncRepository: SyncRepository
 ) : CoroutineWorker(context, params) {
     
     companion object {
@@ -34,10 +34,9 @@ class SyncWorker(
         return try {
             Timber.d("Iniciando sincronização em background...")
             
-            // Usar repositories injetados (testes) ou criar novos (produção)
-            val database = AppDatabase.getDatabase(applicationContext)
-            val appRepo = appRepositoryTest ?: AppRepository.create(database)
-            val syncRepo = syncRepositoryTest ?: throw IllegalStateException("SyncRepository must be provided for background sync")
+            // Usar repositories injetados
+            val appRepo = appRepository
+            val syncRepo = syncRepository
 
             // Verificar se há sincronização pendente
             if (!syncRepo.hasPendingBackgroundSync()) {

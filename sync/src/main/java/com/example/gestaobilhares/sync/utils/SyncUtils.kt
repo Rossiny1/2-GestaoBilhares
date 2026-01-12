@@ -25,11 +25,11 @@ class SyncUtils {
     companion object {
         private const val TAG = "SyncUtils"
         
-        // ✅ CORREÇÃO CRÍTICA: Mover inicialização estática para evitar ExceptionInInitializerError
+        // ✅ CORREÇÃO CRÍTICA: Usar IDENTITY para manter camelCase dos campos
         val gson: Gson by lazy { 
             GsonBuilder()
                 .setDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSS'Z'")
-                .setFieldNamingPolicy(com.google.gson.FieldNamingPolicy.LOWER_CASE_WITH_UNDERSCORES)
+                .setFieldNamingPolicy(com.google.gson.FieldNamingPolicy.IDENTITY)
                 .create() 
         }
         
@@ -53,8 +53,8 @@ class SyncUtils {
         @Suppress("UNCHECKED_CAST")
         val map = gson.fromJson(json, Map::class.java) as? Map<String, Any> ?: emptyMap()
         
-        return map.mapKeys { it.key.toString() }.mapValues { entry ->
-            val key = entry.key.lowercase()
+        return map.mapValues { entry ->
+            val key = entry.key
             val value = entry.value
             
             when {
@@ -62,7 +62,7 @@ class SyncUtils {
                 value is Date -> com.google.firebase.Timestamp(value)
                 
                 // 2. É uma String que pode ser uma Data
-                value is String && (key.contains("data") || key.contains("timestamp") || key.contains("time")) -> {
+                value is String && (key.lowercase().contains("data") || key.lowercase().contains("timestamp") || key.lowercase().contains("time")) -> {
                     try {
                         if (value.contains("T")) {
                             val ldt = java.time.LocalDateTime.parse(value, java.time.format.DateTimeFormatter.ISO_LOCAL_DATE_TIME)
@@ -82,9 +82,9 @@ class SyncUtils {
                 }
                 
                 // 3. É um Long que representa um timestamp
-                value is Long || (value is Double && value % 1 == 0.0) -> {
+                (value is Long || (value is Double && value % 1 == 0.0)) -> {
                     val longValue = if (value is Double) value.toLong() else value as Long
-                    if (key.contains("data") || key.contains("timestamp") || key.contains("time")) {
+                    if (key.lowercase().contains("data") || key.lowercase().contains("timestamp") || key.lowercase().contains("time")) {
                         val seconds = longValue / 1000
                         val nanoseconds = ((longValue % 1000) * 1000000).toInt()
                         com.google.firebase.Timestamp(seconds, nanoseconds)

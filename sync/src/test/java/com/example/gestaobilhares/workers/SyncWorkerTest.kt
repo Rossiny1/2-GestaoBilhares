@@ -9,7 +9,7 @@ import com.example.gestaobilhares.data.repository.AppRepository
 import com.example.gestaobilhares.sync.SyncRepository
 import com.example.gestaobilhares.sync.SyncResult
 import com.google.common.truth.Truth.assertThat
-import kotlinx.coroutines.runBlocking
+import kotlinx.coroutines.test.runTest
 import org.junit.Before
 import org.junit.Test
 import org.junit.runner.RunWith
@@ -37,7 +37,7 @@ class SyncWorkerTest {
     }
 
     @Test
-    fun `doWork when sync succeeds should return success`() = runBlocking {
+    fun `doWork when sync succeeds should return success`() = runTest {
         // Arrange
         whenever(syncRepository.hasPendingBackgroundSync()).thenReturn(true)
         whenever(syncRepository.isOnline()).thenReturn(true)
@@ -74,7 +74,7 @@ class SyncWorkerTest {
     }
 
     @Test
-    fun `doWork when no pending sync should return success`() = runBlocking {
+    fun `doWork when no pending sync should return success`() = runTest {
         // Arrange
         whenever(syncRepository.hasPendingBackgroundSync()).thenReturn(false)
         
@@ -107,7 +107,7 @@ class SyncWorkerTest {
     }
 
     @Test
-    fun `doWork when offline should return retry`() = runBlocking {
+    fun `doWork when offline should return retry`() = runTest {
         // Arrange
         whenever(syncRepository.hasPendingBackgroundSync()).thenReturn(true)
         whenever(syncRepository.isOnline()).thenReturn(false)
@@ -141,7 +141,7 @@ class SyncWorkerTest {
     }
 
     @Test
-    fun `doWork when sync fails should return retry`() = runBlocking {
+    fun `doWork when sync fails should return retry`() = runTest {
         // Arrange
         whenever(syncRepository.hasPendingBackgroundSync()).thenReturn(true)
         whenever(syncRepository.isOnline()).thenReturn(true)
@@ -178,7 +178,7 @@ class SyncWorkerTest {
     }
 
     @Test
-    fun `doWork when exception occurs should return failure`() = runBlocking {
+    fun `doWork when exception occurs should return failure`() = runTest {
         // Arrange
         whenever(syncRepository.hasPendingBackgroundSync()).thenReturn(true)
         whenever(syncRepository.isOnline()).thenThrow(RuntimeException("Network error"))
@@ -212,7 +212,7 @@ class SyncWorkerTest {
     }
 
     @Test
-    fun `doWork should check connectivity before attempting sync`() = runBlocking {
+    fun `doWork should check connectivity before attempting sync`() = runTest {
         // Arrange
         whenever(syncRepository.hasPendingBackgroundSync()).thenReturn(true)
         whenever(syncRepository.isOnline()).thenReturn(true)
@@ -252,7 +252,7 @@ class SyncWorkerTest {
     }
 
     @Test
-    fun `doWork should not attempt sync when offline`() = runBlocking {
+    fun `doWork should not attempt sync when offline`() = runTest {
         // Arrange
         whenever(syncRepository.hasPendingBackgroundSync()).thenReturn(true)
         whenever(syncRepository.isOnline()).thenReturn(false)

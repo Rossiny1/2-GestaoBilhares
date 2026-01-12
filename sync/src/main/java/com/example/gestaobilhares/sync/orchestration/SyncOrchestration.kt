@@ -90,11 +90,21 @@ class SyncOrchestration(
             for (handlerEntry in handlers) {
                 try {
                     Timber.tag(TAG).d("📥 Sincronizando ${handlerEntry.name}...")
-                    val result = syncHandler(handlerEntry.name, handlerEntry.handler)
-                    totalSynced += result.syncedCount
                     
-                    if (result.error != null) {
-                        errors.add("${handlerEntry.name}: ${result.error}")
+                    // Pull: buscar dados do servidor
+                    val pullResult = syncHandler(handlerEntry.name, handlerEntry.handler)
+                    totalSynced += pullResult.syncedCount
+                    
+                    // Push: enviar dados locais para o servidor
+                    val pushResult = pushHandler(handlerEntry.name, handlerEntry.handler)
+                    totalSynced += pushResult.pushedCount
+                    
+                    if (pullResult.error != null) {
+                        errors.add("${handlerEntry.name} (pull): ${pullResult.error}")
+                    }
+                    
+                    if (pushResult.error != null) {
+                        errors.add("${handlerEntry.name} (push): ${pushResult.error}")
                     }
                     
                 } catch (e: Exception) {
@@ -115,6 +125,11 @@ class SyncOrchestration(
             )
             
             Timber.tag(TAG).d("✅ Sincronização completa: $totalSynced registros em ${duration}ms")
+            
+            // Se houver erros, log detalhado
+            if (errors.isNotEmpty()) {
+                Timber.tag(TAG).e("Erros na sincronização: ${errors.joinToString("; ")}")
+            }
             
             return SyncResult(
                 success = errors.isEmpty(),

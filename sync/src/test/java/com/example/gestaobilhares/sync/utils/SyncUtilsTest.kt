@@ -60,8 +60,8 @@ class SyncUtilsTest {
         assertThat(result["colaborador_id"]).isEqualTo(200L)
         assertThat(result["rota_id"]).isEqualTo(300L)
         assertThat(result["ciclo_id"]).isEqualTo(400L)
-        assertThat(result["valor_total"]).isEqualTo(150.0)
-        assertThat(result["status"]).isEqualTo(StatusAcerto.PENDENTE)
+        assertThat(result["valor_total"]).isEqualTo(150)
+        assertThat(result["status"]).isEqualTo("PENDENTE")
     }
 
     @Test

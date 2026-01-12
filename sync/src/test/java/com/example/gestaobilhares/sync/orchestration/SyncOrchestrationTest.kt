@@ -120,7 +120,7 @@ class SyncOrchestrationTest {
         )
 
         handlers.forEach { handler ->
-            whenever(handler.pull()).thenReturn(Result.success(5))
+            whenever(handler.pull(null)).thenReturn(Result.success(5))
             whenever(handler.push()).thenReturn(Result.success(3))
         }
 
@@ -134,7 +134,7 @@ class SyncOrchestrationTest {
 
         // Verify all handlers were called
         handlers.forEach { handler ->
-            verify(handler).pull()
+            verify(handler).pull(null)
             verify(handler).push()
         }
     }
@@ -142,13 +142,13 @@ class SyncOrchestrationTest {
     @Test
     fun `syncAllEntities should handle partial failures gracefully`() = runTest {
         // Given
-        whenever(mesaSyncHandler.pull()).thenReturn(Result.success(5))
+        whenever(mesaSyncHandler.pull(null)).thenReturn(Result.success(5))
         whenever(mesaSyncHandler.push()).thenReturn(Result.success(3))
         
-        whenever(clienteSyncHandler.pull()).thenReturn(Result.failure(Exception("Network error")))
+        whenever(clienteSyncHandler.pull(null)).thenReturn(Result.failure(Exception("Network error")))
         whenever(clienteSyncHandler.push()).thenReturn(Result.success(2))
         
-        whenever(acertoSyncHandler.pull()).thenReturn(Result.success(8))
+        whenever(acertoSyncHandler.pull(null)).thenReturn(Result.success(8))
         whenever(acertoSyncHandler.push()).thenReturn(Result.failure(Exception("Firebase timeout")))
 
         // Other handlers succeed
@@ -159,7 +159,7 @@ class SyncOrchestrationTest {
             equipamentoSyncHandler, estoqueSyncHandler
         )
         otherHandlers.forEach { handler ->
-            whenever(handler.pull()).thenReturn(Result.success(4))
+            whenever(handler.pull(null)).thenReturn(Result.success(4))
             whenever(handler.push()).thenReturn(Result.success(2))
         }
 
@@ -234,7 +234,7 @@ class SyncOrchestrationTest {
     @Test
     fun `error handling should not stop other handlers`() = runTest {
         // Given - First handler fails, others succeed
-        whenever(mesaSyncHandler.pull()).thenReturn(Result.failure(Exception("First error")))
+        whenever(mesaSyncHandler.pull(null)).thenReturn(Result.failure(Exception("First error")))
         whenever(mesaSyncHandler.push()).thenReturn(Result.failure(Exception("Push error")))
         
         val otherHandlers = listOf(
@@ -244,7 +244,7 @@ class SyncOrchestrationTest {
             equipamentoSyncHandler, estoqueSyncHandler
         )
         otherHandlers.forEach { handler ->
-            whenever(handler.pull()).thenReturn(Result.success(4))
+            whenever(handler.pull(null)).thenReturn(Result.success(4))
             whenever(handler.push()).thenReturn(Result.success(2))
         }
 
@@ -259,10 +259,10 @@ class SyncOrchestrationTest {
         assertThat(result.errors).contains("Push error")
 
         // Verify all handlers were called despite errors
-        verify(mesaSyncHandler).pull()
+        verify(mesaSyncHandler).pull(null)
         verify(mesaSyncHandler).push()
         otherHandlers.forEach { handler ->
-            verify(handler).pull()
+            verify(handler).pull(null)
             verify(handler).push()
         }
     }
