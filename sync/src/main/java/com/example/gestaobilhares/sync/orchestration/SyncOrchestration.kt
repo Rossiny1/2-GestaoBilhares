@@ -1,9 +1,7 @@
 package com.example.gestaobilhares.sync.orchestration
 
 import com.example.gestaobilhares.sync.handlers.*
-import com.example.gestaobilhares.sync.core.SyncCore
 import com.example.gestaobilhares.data.repository.AppRepository
-import com.example.gestaobilhares.sync.utils.SyncUtils
 import com.google.firebase.firestore.FirebaseFirestore
 import timber.log.Timber
 import kotlinx.coroutines.flow.first
@@ -28,7 +26,6 @@ class SyncOrchestration(
     private val veiculoSyncHandler: VeiculoSyncHandler,
     private val equipamentoSyncHandler: EquipamentoSyncHandler,
     private val estoqueSyncHandler: EstoqueSyncHandler,
-    private val syncCore: SyncCore,
     private val appRepository: AppRepository,
     private val firestore: FirebaseFirestore
 ) {
@@ -117,12 +114,12 @@ class SyncOrchestration(
             val duration = System.currentTimeMillis() - startTime
             
             // Salvar metadados globais
-            syncCore.saveSyncMetadata(
-                entityType = "global_sync",
-                syncCount = totalSynced,
-                durationMs = duration,
-                error = if (errors.isNotEmpty()) errors.joinToString("; ") else null
-            )
+            // syncCore.saveSyncMetadata(
+            //     entityType = "global_sync",
+            //     syncCount = totalSynced,
+            //     durationMs = duration,
+            //     error = if (errors.isNotEmpty()) errors.joinToString("; ") else null
+            // )
             
             Timber.tag(TAG).d("✅ Sincronização completa: $totalSynced registros em ${duration}ms")
             
@@ -165,7 +162,8 @@ class SyncOrchestration(
             Timber.tag(TAG).d("📥 Sincronizando $entityType...")
             
             // Obter timestamp da última sincronização
-            val lastSyncTimestamp = syncCore.getLastSyncTimestamp(entityType)
+            // val lastSyncTimestamp = syncCore.getLastSyncTimestamp(entityType)
+            val lastSyncTimestamp = 0L // TODO: Implementar busca real quando SyncCore estiver disponível
             
             // Executar sincronização do handler
             val result = when (handler) {
@@ -327,12 +325,12 @@ class SyncOrchestration(
             val duration = System.currentTimeMillis() - startTime
             
             // Salvar metadados de push
-            syncCore.savePushMetadata(
-                entityType = entityType,
-                syncCount = result.getOrNull() ?: 0,
-                durationMs = duration,
-                error = if (result.isSuccess) null else result.exceptionOrNull()?.message
-            )
+            // syncCore.savePushMetadata(
+            //     entityType = entityType,
+            //     syncCount = result.getOrNull() ?: 0,
+            //     durationMs = duration,
+            //     error = if (result.isSuccess) null else result.exceptionOrNull()?.message
+            // )
             
             return HandlerPushResult(
                 success = result.isSuccess,

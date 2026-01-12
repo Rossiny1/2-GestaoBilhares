@@ -320,8 +320,8 @@ class AppRepository @Inject constructor(
         
         // TODO: Implementar lógica de vínculo quando SyncRepository estiver disponível
         // Por enquanto, apenas log
-        val pano = buscarPorNumeroPano(panoId)
-        val mesa = buscarPorNumeroMesa(numeroMesa) // ✅ MÉTODO IMPLEMENTADO
+        val pano = panoRepository.buscarPorNumero(panoId.toString())
+        val mesa = mesaDao?.obterPorNumeroENullCliente(numeroMesa) // ✅ MÉTODO IMPLEMENTADO
         
         if (pano != null && mesa != null) {
             // Criar registro de vinculação
@@ -332,7 +332,7 @@ class AppRepository @Inject constructor(
         }
     }
     
-    suspend fun buscarPorNumeroPano(numero: String) = panoDao.buscarPorNumero(numero)
+    suspend fun buscarPorNumeroPano(numero: String) = panoRepository.buscarPorNumero(numero)
     // ✅ DELEGAÇÃO: Usa MesaRepository especializado
     
     suspend fun obterMesaPorId(id: Long) = mesaRepository.obterPorId(id)
@@ -2436,7 +2436,6 @@ class AppRepository @Inject constructor(
     // TODO: SyncRepository será integrado via delegação quando implementado
     // Por enquanto, métodos mantidos para compatibilidade
     
-    @Suppress("UNUSED_PARAMETER")
     suspend fun adicionarAcertoComMesasParaSync(_acerto: Acerto, _mesas: List<com.example.gestaobilhares.data.entities.AcertoMesa>) {
         // ✅ IMPLEMENTADO: Adicionar acerto com mesas à fila de sincronização
         Timber.d("AppRepository", "Adicionando acerto ${_acerto.id} com ${_mesas.size} mesas à fila de sync")
@@ -2446,16 +2445,26 @@ class AppRepository @Inject constructor(
             com.example.gestaobilhares.data.entities.AcertoMesa(
                 acertoId = _acerto.id,
                 mesaId = mesa.id,
-                valorRecebido = mesa.valorRecebido,
-                dataPagamento = mesa.dataPagamento,
-                observacao = mesa.observacao
+                relogioInicial = mesa.relogioInicial,
+                relogioFinal = mesa.relogioFinal,
+                fichasJogadas = mesa.fichasJogadas,
+                valorFixo = mesa.valorFixo,
+                valorFicha = mesa.valorFicha,
+                comissaoFicha = mesa.comissaoFicha,
+                subtotal = mesa.subtotal,
+                comDefeito = mesa.comDefeito,
+                relogioReiniciou = mesa.relogioReiniciou,
+                observacoes = mesa.observacoes,
+                fotoRelogioFinal = mesa.fotoRelogioFinal,
+                dataFoto = mesa.dataFoto
             )
         }
         
         // TODO: Implementar enfileiramento real quando SyncRepository estiver disponível
         // syncRepository.enqueueOperation(SyncOperation(...))
         
-        return acertoMesaEntities
+        // Log das entidades criadas para debug
+        Timber.d("AppRepository", "Criadas ${acertoMesaEntities.size} entidades AcertoMesa para sync")
     }
     
     // ==================== CÁLCULOS ====================
