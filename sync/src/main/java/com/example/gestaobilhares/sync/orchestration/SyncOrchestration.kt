@@ -190,12 +190,12 @@ class SyncOrchestration(
             val duration = System.currentTimeMillis() - startTime
             
             // Salvar metadados
-            syncCore.saveSyncMetadata(
-                entityType = entityType,
-                syncCount = result.getOrNull() ?: 0,
-                durationMs = duration,
-                error = if (result.isSuccess) null else result.exceptionOrNull()?.message
-            )
+            // syncCore.saveSyncMetadata(
+            //     entityType = entityType,
+            //     syncCount = result.getOrNull() ?: 0,
+            //     durationMs = duration,
+            //     error = if (result.isSuccess) null else result.exceptionOrNull()?.message
+            // )
             
             return HandlerSyncResult(
                 success = result.isSuccess,

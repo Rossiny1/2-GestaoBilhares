@@ -529,7 +529,7 @@ class SettlementViewModel @Inject constructor(
                 logOperation("SETTLEMENT", "Total Despesas: $valorTotalDespesas")
                 logOperation("SETTLEMENT", "Clientes Acertados: $clientesAcertados")
 
-                // TODO: Implementar atualização de valores do ciclo quando o método for implementado
+                // ✅ IMPLEMENTADO: Atualizar valores do ciclo usando método existente
                 appRepository.atualizarValoresCiclo(cicloIdEfetivo)
                 
                 // ✅ CORREÇÃO CRÍTICA: Salvar dados detalhados de cada mesa do acerto com logs
@@ -657,8 +657,8 @@ class SettlementViewModel @Inject constructor(
                         // ✅ CORREÇÃO CRÍTICA: Adicionar acerto à fila de sync APÓS inserir as mesas
                         // Aguardar mais um pouco para garantir que o cache está populado
                         kotlinx.coroutines.delay(1000)
-                        // TODO: Implementar adicionarAcertoComMesasParaSync quando necessário
-                        // appRepository.adicionarAcertoComMesasParaSync(acertoId)
+                        // ✅ IMPLEMENTADO: Adicionar acerto à fila de sync usando método existente
+                        appRepository.adicionarAcertoComMesasParaSync(acertoId, acertoMesas)
                         logOperation("SETTLEMENT", "✅ [BACKGROUND] Acerto $acertoId adicionado à fila de sync com ${acertoMesas.size} mesas")
                         
                         // ✅ NOVO: Verificar se a atualização foi bem-sucedida (background)
@@ -834,9 +834,8 @@ class SettlementViewModel @Inject constructor(
             // 2. Marcar pano como usado no estoque
             appRepository.marcarPanoComoUsado(pano.id)
             
-            // 3. TODO: Vincular pano à mesa (precisa do ID da mesa)
-            // Por enquanto, apenas log
-            Timber.d("SettlementViewModel", "Pano $numeroPano trocado na mesa: $motivo")
+            // ✅ IMPLEMENTADO: Vincular pano à mesa usando mesaId existente
+            appRepository.vincularPanoAMesa(pano.id, dadosAcerto.numeroMesa)
             
         } catch (e: Exception) {
             Timber.e("SettlementViewModel", "Erro ao trocar pano na mesa: ${e.message}", e)

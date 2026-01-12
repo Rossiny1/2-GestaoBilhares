@@ -133,10 +133,19 @@ class SyncOrchestrationTest {
         whenever(estoqueSyncHandler.push()).thenReturn(Result.success(3))
 
         // When
-        val result = syncOrchestration.syncAll()
+        val result = try {
+            syncOrchestration.syncAll()
+        } catch (e: Exception) {
+            println("DEBUG: Exception caught: ${e.message}")
+            throw e
+        }
 
         // Then
         println("DEBUG: result.success=${result.success}, syncedCount=${result.syncedCount}, errors=${result.errors}")
+        println("DEBUG: errors.size=${result.errors.size}")
+        result.errors.forEachIndexed { index, error ->
+            println("DEBUG: error[$index]=$error")
+        }
         assertThat(result.success).isTrue()
         assertThat(result.syncedCount).isEqualTo(120) // 5 pull + 3 push per handler * 15 handlers = 120
         assertThat(result.errors).isEmpty()
