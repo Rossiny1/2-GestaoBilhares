@@ -437,7 +437,8 @@ firebase projects:list
 
 **🔥 Prioridade Alta:**
 
-- **Dívida técnica**: 778 ocorrências de TODO/FIXME/XXX/HACK
+- **Dívida técnica**: 125+ ocorrências de TODO/FIXME/XXX/HACK (sem contar temp_sync_backup.kt)
+- **Arquivo temporário crítico**: temp_sync_backup.kt com 287 TODOs
 - **Code duplication**: Validações e adapters repetidos
 
 **🟡 Prioridade Média:**
@@ -456,8 +457,9 @@ firebase projects:list
 
 #### 🎯 **Recomendações Imediatas**
 
-1. **Reduzir dívida técnica**: Meta 50% dos TODOs críticos em 2 sprints
-2. **Modernização UI**: Migrar gradual para Jetpack Compose
+1. **Remover arquivo temporário crítico**: `temp_sync_backup.kt` (287 TODOs)
+2. **Reduzir dívida técnica**: Meta 50% dos TODOs críticos em 2 sprints
+3. **Modernização UI**: Migrar gradual para Jetpack Compose
 
 #### ✅ **Refatorações Concluídas (100%):**
 

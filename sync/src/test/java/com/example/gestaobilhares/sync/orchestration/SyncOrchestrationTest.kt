@@ -101,39 +101,54 @@ class SyncOrchestrationTest {
     @Test
     fun `syncAllEntities should call all handlers and return success`() = runTest {
         // Given - Setup all handlers to return success
-        val handlers = listOf(
-            mesaSyncHandler,
-            clienteSyncHandler,
-            contratoSyncHandler,
-            acertoSyncHandler,
-            despesaSyncHandler,
-            rotaSyncHandler,
-            cicloSyncHandler,
-            colaboradorSyncHandler,
-            colaboradorRotaSyncHandler,
-            metaColaboradorSyncHandler,
-            metaSyncHandler,
-            assinaturaSyncHandler,
-            veiculoSyncHandler,
-            equipamentoSyncHandler,
-            estoqueSyncHandler
-        )
-
-        handlers.forEach { handler ->
-            whenever(handler.pull(null)).thenReturn(Result.success(5))
-            whenever(handler.push()).thenReturn(Result.success(3))
-        }
+        whenever(mesaSyncHandler.pull(null)).thenReturn(Result.success(5))
+        whenever(mesaSyncHandler.push()).thenReturn(Result.success(3))
+        whenever(clienteSyncHandler.pull(null)).thenReturn(Result.success(5))
+        whenever(clienteSyncHandler.push()).thenReturn(Result.success(3))
+        whenever(contratoSyncHandler.pull(null)).thenReturn(Result.success(5))
+        whenever(contratoSyncHandler.push()).thenReturn(Result.success(3))
+        whenever(acertoSyncHandler.pull(null)).thenReturn(Result.success(5))
+        whenever(acertoSyncHandler.push()).thenReturn(Result.success(3))
+        whenever(despesaSyncHandler.pull(null)).thenReturn(Result.success(5))
+        whenever(despesaSyncHandler.push()).thenReturn(Result.success(3))
+        whenever(rotaSyncHandler.pull(null)).thenReturn(Result.success(5))
+        whenever(rotaSyncHandler.push()).thenReturn(Result.success(3))
+        whenever(cicloSyncHandler.pull(null)).thenReturn(Result.success(5))
+        whenever(cicloSyncHandler.push()).thenReturn(Result.success(3))
+        whenever(colaboradorSyncHandler.pull(null)).thenReturn(Result.success(5))
+        whenever(colaboradorSyncHandler.push()).thenReturn(Result.success(3))
+        whenever(colaboradorRotaSyncHandler.pull(null)).thenReturn(Result.success(5))
+        whenever(colaboradorRotaSyncHandler.push()).thenReturn(Result.success(3))
+        whenever(metaColaboradorSyncHandler.pull(null)).thenReturn(Result.success(5))
+        whenever(metaColaboradorSyncHandler.push()).thenReturn(Result.success(3))
+        whenever(metaSyncHandler.pull(null)).thenReturn(Result.success(5))
+        whenever(metaSyncHandler.push()).thenReturn(Result.success(3))
+        whenever(assinaturaSyncHandler.pull(null)).thenReturn(Result.success(5))
+        whenever(assinaturaSyncHandler.push()).thenReturn(Result.success(3))
+        whenever(veiculoSyncHandler.pull(null)).thenReturn(Result.success(5))
+        whenever(veiculoSyncHandler.push()).thenReturn(Result.success(3))
+        whenever(equipamentoSyncHandler.pull(null)).thenReturn(Result.success(5))
+        whenever(equipamentoSyncHandler.push()).thenReturn(Result.success(3))
+        whenever(estoqueSyncHandler.pull(null)).thenReturn(Result.success(5))
+        whenever(estoqueSyncHandler.push()).thenReturn(Result.success(3))
 
         // When
         val result = syncOrchestration.syncAll()
 
         // Then
+        println("DEBUG: result.success=${result.success}, syncedCount=${result.syncedCount}, errors=${result.errors}")
         assertThat(result.success).isTrue()
         assertThat(result.syncedCount).isEqualTo(120) // 5 pull + 3 push per handler * 15 handlers = 120
         assertThat(result.errors).isEmpty()
 
         // Verify all handlers were called
-        handlers.forEach { handler ->
+        val allHandlers = listOf(
+            mesaSyncHandler, clienteSyncHandler, contratoSyncHandler, acertoSyncHandler,
+            despesaSyncHandler, rotaSyncHandler, cicloSyncHandler, colaboradorSyncHandler,
+            colaboradorRotaSyncHandler, metaColaboradorSyncHandler, metaSyncHandler,
+            assinaturaSyncHandler, veiculoSyncHandler, equipamentoSyncHandler, estoqueSyncHandler
+        )
+        allHandlers.forEach { handler ->
             verify(handler).pull(null)
             verify(handler).push()
         }
@@ -177,16 +192,21 @@ class SyncOrchestrationTest {
     @Test
     fun `pushAllEntities should call push on all handlers`() = runTest {
         // Given
-        val handlers = listOf(
-            mesaSyncHandler, clienteSyncHandler, contratoSyncHandler, acertoSyncHandler,
-            despesaSyncHandler, rotaSyncHandler, cicloSyncHandler, colaboradorSyncHandler,
-            colaboradorRotaSyncHandler, metaColaboradorSyncHandler, metaSyncHandler,
-            assinaturaSyncHandler, veiculoSyncHandler, equipamentoSyncHandler, estoqueSyncHandler
-        )
-
-        handlers.forEach { handler ->
-            whenever(handler.push()).thenReturn(Result.success(3))
-        }
+        whenever(mesaSyncHandler.push()).thenReturn(Result.success(3))
+        whenever(clienteSyncHandler.push()).thenReturn(Result.success(3))
+        whenever(contratoSyncHandler.push()).thenReturn(Result.success(3))
+        whenever(acertoSyncHandler.push()).thenReturn(Result.success(3))
+        whenever(despesaSyncHandler.push()).thenReturn(Result.success(3))
+        whenever(rotaSyncHandler.push()).thenReturn(Result.success(3))
+        whenever(cicloSyncHandler.push()).thenReturn(Result.success(3))
+        whenever(colaboradorSyncHandler.push()).thenReturn(Result.success(3))
+        whenever(colaboradorRotaSyncHandler.push()).thenReturn(Result.success(3))
+        whenever(metaColaboradorSyncHandler.push()).thenReturn(Result.success(3))
+        whenever(metaSyncHandler.push()).thenReturn(Result.success(3))
+        whenever(assinaturaSyncHandler.push()).thenReturn(Result.success(3))
+        whenever(veiculoSyncHandler.push()).thenReturn(Result.success(3))
+        whenever(equipamentoSyncHandler.push()).thenReturn(Result.success(3))
+        whenever(estoqueSyncHandler.push()).thenReturn(Result.success(3))
 
         // When
         val result = syncOrchestration.pushAll()
@@ -197,7 +217,13 @@ class SyncOrchestrationTest {
         assertThat(result.errors).isEmpty()
 
         // Verify all handlers were called for push only
-        handlers.forEach { handler ->
+        val allHandlers = listOf(
+            mesaSyncHandler, clienteSyncHandler, contratoSyncHandler, acertoSyncHandler,
+            despesaSyncHandler, rotaSyncHandler, cicloSyncHandler, colaboradorSyncHandler,
+            colaboradorRotaSyncHandler, metaColaboradorSyncHandler, metaSyncHandler,
+            assinaturaSyncHandler, veiculoSyncHandler, equipamentoSyncHandler, estoqueSyncHandler
+        )
+        allHandlers.forEach { handler ->
             verify(handler).push()
             verify(handler, never()).pull()
         }
