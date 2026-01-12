@@ -158,9 +158,9 @@ class RoutesViewModelTest {
         whenever(appRepository.obterTodasRotas()).thenReturn(flowOf(emptyList()))
         whenever(appRepository.contarOperacoesSyncPendentes()).thenReturn(0)
         
-        // Mock syncRepository.hasDataInCloud()
-        whenever(syncRepository.hasDataInCloud()).thenReturn(true)
-        whenever(syncRepository.getGlobalLastSyncTimestamp()).thenReturn(0L)
+        // Mock syncRepository - remover métodos que não existem
+        // whenever(syncRepository.hasDataInCloud()).thenReturn(true)
+        // whenever(syncRepository.getGlobalLastSyncTimestamp()).thenReturn(0L)
 
         // Act
         viewModel.checkSyncPendencies(context)
@@ -181,7 +181,7 @@ class RoutesViewModelTest {
         
         whenever(appRepository.obterTodasRotas()).thenReturn(flowOf(listOf(Rota(1, "R1"))))
         whenever(appRepository.contarOperacoesSyncPendentes()).thenReturn(5)
-        whenever(syncRepository.getGlobalLastSyncTimestamp()).thenReturn(1000L)
+        // whenever(syncRepository.getGlobalLastSyncTimestamp()).thenReturn(1000L)
 
         // Act
         viewModel.checkSyncPendencies(context)

@@ -129,7 +129,7 @@ class SyncOrchestrationTest {
 
         // Then
         assertThat(result.success).isTrue()
-        assertThat(result.syncedCount).isEqualTo(120) // 5 pull + 3 push per handler * 15 handlers
+        assertThat(result.syncedCount).isEqualTo(120) // 5 pull + 3 push per handler * 15 handlers = 120
         assertThat(result.errors).isEmpty()
 
         // Verify all handlers were called
@@ -168,7 +168,7 @@ class SyncOrchestrationTest {
 
         // Then
         assertThat(result.success).isFalse()
-        assertThat(result.syncedCount).isEqualTo(107) // Count only successful operations
+        assertThat(result.syncedCount).isEqualTo(84) // mesa:8 + cliente:2 + acerto:8 + 11*6 = 8+2+8+66 = 84
         assertThat(result.errors).hasSize(2)
         assertThat(result.errors).contains("Network error")
         assertThat(result.errors).contains("Firebase timeout")
@@ -226,7 +226,7 @@ class SyncOrchestrationTest {
 
         // Then
         assertThat(result.success).isFalse()
-        assertThat(result.syncedCount).isEqualTo(37) // Count only successful pushes
+        assertThat(result.syncedCount).isEqualTo(30) // mesa:3 + acerto:5 + 11*2 = 3+5+22 = 30
         assertThat(result.errors).hasSize(1)
         assertThat(result.errors).contains("Push failed")
     }

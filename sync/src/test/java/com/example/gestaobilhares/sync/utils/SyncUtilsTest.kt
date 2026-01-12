@@ -214,7 +214,7 @@ class SyncUtilsTest {
 
         // Then
         assertThat(result).isInstanceOf(Map::class.java)
-        assertThat(result["data_acerto"]).isEqualTo(testTimestamp)
-        assertThat(result["data_criacao"]).isEqualTo(testTimestamp)
+        assertThat(result["data_acerto"]).isEqualTo(com.google.firebase.Timestamp(testTimestamp / 1000, ((testTimestamp % 1000) * 1000000).toInt()))
+        assertThat(result["data_criacao"]).isEqualTo(com.google.firebase.Timestamp(testTimestamp / 1000, ((testTimestamp % 1000) * 1000000).toInt()))
     }
 }

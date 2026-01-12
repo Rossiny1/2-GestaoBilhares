@@ -51,13 +51,17 @@ class SyncWorkerTest {
                     appContext: Context,
                     workerClassName: String,
                     workerParameters: WorkerParameters
-                ): ListenableWorker {
-                    return SyncWorker(
-                        appContext,
-                        workerParameters,
-                        appRepository,
-                        syncRepository
-                    )
+                ): ListenableWorker? {
+                    return if (workerClassName == SyncWorker::class.java.name) {
+                        SyncWorker(
+                            appContext,
+                            workerParameters,
+                            appRepository,
+                            syncRepository
+                        )
+                    } else {
+                        null
+                    }
                 }
             })
             .build()
@@ -80,13 +84,17 @@ class SyncWorkerTest {
                     appContext: Context,
                     workerClassName: String,
                     workerParameters: WorkerParameters
-                ): ListenableWorker {
-                    return SyncWorker(
-                        appContext,
-                        workerParameters,
-                        appRepository,
-                        syncRepository
-                    )
+                ): ListenableWorker? {
+                    return if (workerClassName == SyncWorker::class.java.name) {
+                        SyncWorker(
+                            appContext,
+                            workerParameters,
+                            appRepository,
+                            syncRepository
+                        )
+                    } else {
+                        null
+                    }
                 }
             })
             .build()
@@ -110,13 +118,17 @@ class SyncWorkerTest {
                     appContext: Context,
                     workerClassName: String,
                     workerParameters: WorkerParameters
-                ): ListenableWorker {
-                    return SyncWorker(
-                        appContext,
-                        workerParameters,
-                        appRepository,
-                        syncRepository
-                    )
+                ): ListenableWorker? {
+                    return if (workerClassName == SyncWorker::class.java.name) {
+                        SyncWorker(
+                            appContext,
+                            workerParameters,
+                            appRepository,
+                            syncRepository
+                        )
+                    } else {
+                        null
+                    }
                 }
             })
             .build()
@@ -143,13 +155,17 @@ class SyncWorkerTest {
                     appContext: Context,
                     workerClassName: String,
                     workerParameters: WorkerParameters
-                ): ListenableWorker {
-                    return SyncWorker(
-                        appContext,
-                        workerParameters,
-                        appRepository,
-                        syncRepository
-                    )
+                ): ListenableWorker? {
+                    return if (workerClassName == SyncWorker::class.java.name) {
+                        SyncWorker(
+                            appContext,
+                            workerParameters,
+                            appRepository,
+                            syncRepository
+                        )
+                    } else {
+                        null
+                    }
                 }
             })
             .build()
@@ -173,13 +189,17 @@ class SyncWorkerTest {
                     appContext: Context,
                     workerClassName: String,
                     workerParameters: WorkerParameters
-                ): ListenableWorker {
-                    return SyncWorker(
-                        appContext,
-                        workerParameters,
-                        appRepository,
-                        syncRepository
-                    )
+                ): ListenableWorker? {
+                    return if (workerClassName == SyncWorker::class.java.name) {
+                        SyncWorker(
+                            appContext,
+                            workerParameters,
+                            appRepository,
+                            syncRepository
+                        )
+                    } else {
+                        null
+                    }
                 }
             })
             .build()
@@ -206,13 +226,17 @@ class SyncWorkerTest {
                     appContext: Context,
                     workerClassName: String,
                     workerParameters: WorkerParameters
-                ): ListenableWorker {
-                    return SyncWorker(
-                        appContext,
-                        workerParameters,
-                        appRepository,
-                        syncRepository
-                    )
+                ): ListenableWorker? {
+                    return if (workerClassName == SyncWorker::class.java.name) {
+                        SyncWorker(
+                            appContext,
+                            workerParameters,
+                            appRepository,
+                            syncRepository
+                        )
+                    } else {
+                        null
+                    }
                 }
             })
             .build()
@@ -239,13 +263,17 @@ class SyncWorkerTest {
                     appContext: Context,
                     workerClassName: String,
                     workerParameters: WorkerParameters
-                ): ListenableWorker {
-                    return SyncWorker(
-                        appContext,
-                        workerParameters,
-                        appRepository,
-                        syncRepository
-                    )
+                ): ListenableWorker? {
+                    return if (workerClassName == SyncWorker::class.java.name) {
+                        SyncWorker(
+                            appContext,
+                            workerParameters,
+                            appRepository,
+                            syncRepository
+                        )
+                    } else {
+                        null
+                    }
                 }
             })
             .build()
