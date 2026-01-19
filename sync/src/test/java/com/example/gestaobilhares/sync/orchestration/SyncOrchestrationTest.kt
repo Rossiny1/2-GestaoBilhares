@@ -6,11 +6,13 @@ import com.example.gestaobilhares.sync.handlers.*
 import com.example.gestaobilhares.sync.SyncResult
 import com.google.common.truth.Truth.assertThat
 import com.google.firebase.firestore.FirebaseFirestore
+import kotlinx.coroutines.runBlocking
 import kotlinx.coroutines.test.runTest
 import org.junit.Before
 import org.junit.Test
 import org.mockito.Mock
 import org.mockito.MockitoAnnotations
+import org.mockito.kotlin.any
 import org.mockito.kotlin.verify
 import org.mockito.kotlin.whenever
 import org.mockito.kotlin.never
@@ -76,6 +78,9 @@ class SyncOrchestrationTest {
     @Before
     fun setup() {
         MockitoAnnotations.openMocks(this)
+        runBlocking {
+            whenever(syncCore.getLastSyncTimestamp(any())).thenReturn(0L)
+        }
         syncOrchestration = SyncOrchestration(
             mesaSyncHandler,
             clienteSyncHandler,
@@ -101,35 +106,35 @@ class SyncOrchestrationTest {
     @Test
     fun `syncAllEntities should call all handlers and return success`() = runTest {
         // Given - Setup all handlers to return success
-        whenever(mesaSyncHandler.pull(null)).thenReturn(Result.success(5))
+        whenever(mesaSyncHandler.pull(any())).thenReturn(Result.success(5))
         whenever(mesaSyncHandler.push()).thenReturn(Result.success(3))
-        whenever(clienteSyncHandler.pull(null)).thenReturn(Result.success(5))
+        whenever(clienteSyncHandler.pull(any())).thenReturn(Result.success(5))
         whenever(clienteSyncHandler.push()).thenReturn(Result.success(3))
-        whenever(contratoSyncHandler.pull(null)).thenReturn(Result.success(5))
+        whenever(contratoSyncHandler.pull(any())).thenReturn(Result.success(5))
         whenever(contratoSyncHandler.push()).thenReturn(Result.success(3))
-        whenever(acertoSyncHandler.pull(null)).thenReturn(Result.success(5))
+        whenever(acertoSyncHandler.pull(any())).thenReturn(Result.success(5))
         whenever(acertoSyncHandler.push()).thenReturn(Result.success(3))
-        whenever(despesaSyncHandler.pull(null)).thenReturn(Result.success(5))
+        whenever(despesaSyncHandler.pull(any())).thenReturn(Result.success(5))
         whenever(despesaSyncHandler.push()).thenReturn(Result.success(3))
-        whenever(rotaSyncHandler.pull(null)).thenReturn(Result.success(5))
+        whenever(rotaSyncHandler.pull(any())).thenReturn(Result.success(5))
         whenever(rotaSyncHandler.push()).thenReturn(Result.success(3))
-        whenever(cicloSyncHandler.pull(null)).thenReturn(Result.success(5))
+        whenever(cicloSyncHandler.pull(any())).thenReturn(Result.success(5))
         whenever(cicloSyncHandler.push()).thenReturn(Result.success(3))
-        whenever(colaboradorSyncHandler.pull(null)).thenReturn(Result.success(5))
+        whenever(colaboradorSyncHandler.pull(any())).thenReturn(Result.success(5))
         whenever(colaboradorSyncHandler.push()).thenReturn(Result.success(3))
-        whenever(colaboradorRotaSyncHandler.pull(null)).thenReturn(Result.success(5))
+        whenever(colaboradorRotaSyncHandler.pull(any())).thenReturn(Result.success(5))
         whenever(colaboradorRotaSyncHandler.push()).thenReturn(Result.success(3))
-        whenever(metaColaboradorSyncHandler.pull(null)).thenReturn(Result.success(5))
+        whenever(metaColaboradorSyncHandler.pull(any())).thenReturn(Result.success(5))
         whenever(metaColaboradorSyncHandler.push()).thenReturn(Result.success(3))
-        whenever(metaSyncHandler.pull(null)).thenReturn(Result.success(5))
+        whenever(metaSyncHandler.pull(any())).thenReturn(Result.success(5))
         whenever(metaSyncHandler.push()).thenReturn(Result.success(3))
-        whenever(assinaturaSyncHandler.pull(null)).thenReturn(Result.success(5))
+        whenever(assinaturaSyncHandler.pull(any())).thenReturn(Result.success(5))
         whenever(assinaturaSyncHandler.push()).thenReturn(Result.success(3))
-        whenever(veiculoSyncHandler.pull(null)).thenReturn(Result.success(5))
+        whenever(veiculoSyncHandler.pull(any())).thenReturn(Result.success(5))
         whenever(veiculoSyncHandler.push()).thenReturn(Result.success(3))
-        whenever(equipamentoSyncHandler.pull(null)).thenReturn(Result.success(5))
+        whenever(equipamentoSyncHandler.pull(any())).thenReturn(Result.success(5))
         whenever(equipamentoSyncHandler.push()).thenReturn(Result.success(3))
-        whenever(estoqueSyncHandler.pull(null)).thenReturn(Result.success(5))
+        whenever(estoqueSyncHandler.pull(any())).thenReturn(Result.success(5))
         whenever(estoqueSyncHandler.push()).thenReturn(Result.success(3))
 
         // When
@@ -158,7 +163,7 @@ class SyncOrchestrationTest {
             assinaturaSyncHandler, veiculoSyncHandler, equipamentoSyncHandler, estoqueSyncHandler
         )
         allHandlers.forEach { handler ->
-            verify(handler).pull(null)
+            verify(handler).pull(any())
             verify(handler).push()
         }
     }
@@ -166,13 +171,13 @@ class SyncOrchestrationTest {
     @Test
     fun `syncAllEntities should handle partial failures gracefully`() = runTest {
         // Given
-        whenever(mesaSyncHandler.pull(null)).thenReturn(Result.success(5))
+        whenever(mesaSyncHandler.pull(any())).thenReturn(Result.success(5))
         whenever(mesaSyncHandler.push()).thenReturn(Result.success(3))
         
-        whenever(clienteSyncHandler.pull(null)).thenReturn(Result.failure(Exception("Network error")))
+        whenever(clienteSyncHandler.pull(any())).thenReturn(Result.failure(Exception("Network error")))
         whenever(clienteSyncHandler.push()).thenReturn(Result.success(2))
         
-        whenever(acertoSyncHandler.pull(null)).thenReturn(Result.success(8))
+        whenever(acertoSyncHandler.pull(any())).thenReturn(Result.success(8))
         whenever(acertoSyncHandler.push()).thenReturn(Result.failure(Exception("Firebase timeout")))
 
         // Other handlers succeed
@@ -183,7 +188,7 @@ class SyncOrchestrationTest {
             equipamentoSyncHandler, estoqueSyncHandler
         )
         otherHandlers.forEach { handler ->
-            whenever(handler.pull(null)).thenReturn(Result.success(4))
+            whenever(handler.pull(any())).thenReturn(Result.success(4))
             whenever(handler.push()).thenReturn(Result.success(2))
         }
 
@@ -192,10 +197,10 @@ class SyncOrchestrationTest {
 
         // Then
         assertThat(result.success).isFalse()
-        assertThat(result.syncedCount).isEqualTo(84) // mesa:8 + cliente:2 + acerto:8 + 11*6 = 8+2+8+66 = 84
+        assertThat(result.syncedCount).isEqualTo(90) // mesa:8 + cliente:2 + acerto:8 + 12*6 = 8+2+8+72 = 90
         assertThat(result.errors).hasSize(2)
-        assertThat(result.errors).contains("Network error")
-        assertThat(result.errors).contains("Firebase timeout")
+        assertThat(result.errors).contains("clientes (pull): Network error")
+        assertThat(result.errors).contains("acertos (push): Firebase timeout")
     }
 
     @Test
@@ -261,15 +266,15 @@ class SyncOrchestrationTest {
 
         // Then
         assertThat(result.success).isFalse()
-        assertThat(result.syncedCount).isEqualTo(30) // mesa:3 + acerto:5 + 11*2 = 3+5+22 = 30
+        assertThat(result.syncedCount).isEqualTo(32) // mesa:3 + acerto:5 + 12*2 = 3+5+24 = 32
         assertThat(result.errors).hasSize(1)
-        assertThat(result.errors).contains("Push failed")
+        assertThat(result.errors).contains("clientes: Push failed")
     }
 
     @Test
     fun `error handling should not stop other handlers`() = runTest {
         // Given - First handler fails, others succeed
-        whenever(mesaSyncHandler.pull(null)).thenReturn(Result.failure(Exception("First error")))
+        whenever(mesaSyncHandler.pull(any())).thenReturn(Result.failure(Exception("First error")))
         whenever(mesaSyncHandler.push()).thenReturn(Result.failure(Exception("Push error")))
         
         val otherHandlers = listOf(
@@ -279,7 +284,7 @@ class SyncOrchestrationTest {
             equipamentoSyncHandler, estoqueSyncHandler
         )
         otherHandlers.forEach { handler ->
-            whenever(handler.pull(null)).thenReturn(Result.success(4))
+            whenever(handler.pull(any())).thenReturn(Result.success(4))
             whenever(handler.push()).thenReturn(Result.success(2))
         }
 
@@ -290,14 +295,14 @@ class SyncOrchestrationTest {
         assertThat(result.success).isFalse() // Overall fails due to errors
         assertThat(result.syncedCount).isEqualTo(84) // 14 handlers * (4 pull + 2 push) = 84
         assertThat(result.errors).hasSize(2)
-        assertThat(result.errors).contains("First error")
-        assertThat(result.errors).contains("Push error")
+        assertThat(result.errors).contains("mesas (pull): First error")
+        assertThat(result.errors).contains("mesas (push): Push error")
 
         // Verify all handlers were called despite errors
-        verify(mesaSyncHandler).pull(null)
+        verify(mesaSyncHandler).pull(any())
         verify(mesaSyncHandler).push()
         otherHandlers.forEach { handler ->
-            verify(handler).pull(null)
+            verify(handler).pull(any())
             verify(handler).push()
         }
     }

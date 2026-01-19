@@ -330,8 +330,8 @@ class AppRepository @Inject constructor(
         
         // TODO: Implementar lógica de vínculo quando SyncRepository estiver disponível
         // Por enquanto, apenas log
-        val pano = buscarPorNumeroPano(panoId)
-        val mesa = buscarPorNumeroMesa(numeroMesa) // ✅ MÉTODO IMPLEMENTADO
+        val pano = panoRepository.obterPorId(panoId)
+        val mesa = mesaRepository.obterPorNumero(numeroMesa)
         
         if (pano != null && mesa != null) {
             // Criar registro de vinculação
@@ -342,7 +342,7 @@ class AppRepository @Inject constructor(
         }
     }
     
-    suspend fun buscarPorNumeroPano(numero: String) = panoDao.buscarPorNumero(numero)
+    suspend fun buscarPorNumeroPano(numero: String) = panoRepository.buscarPorNumero(numero)
     // ✅ DELEGAÇÃO: Usa MesaRepository especializado
     
     suspend fun obterMesaPorId(id: Long) = mesaRepository.obterPorId(id)
@@ -2187,21 +2187,8 @@ class AppRepository @Inject constructor(
         // ✅ IMPLEMENTADO: Adicionar acerto com mesas à fila de sincronização
         Timber.d("AppRepository", "Adicionando acerto ${_acerto.id} com ${_mesas.size} mesas à fila de sync")
         
-        // Por enquanto, apenas log - implementação futura com SyncRepository
-        val acertoMesaEntities = _mesas.map { mesa ->
-            com.example.gestaobilhares.data.entities.AcertoMesa(
-                acertoId = _acerto.id,
-                mesaId = mesa.id,
-                valorRecebido = mesa.valorRecebido,
-                dataPagamento = mesa.dataPagamento,
-                observacao = mesa.observacao
-            )
-        }
-        
         // TODO: Implementar enfileiramento real quando SyncRepository estiver disponível
         // syncRepository.enqueueOperation(SyncOperation(...))
-        
-        return acertoMesaEntities
     }
     
     // ==================== CÁLCULOS ====================

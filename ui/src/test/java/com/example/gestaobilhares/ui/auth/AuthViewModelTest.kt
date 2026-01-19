@@ -7,6 +7,9 @@ import com.example.gestaobilhares.data.entities.NivelAcesso
 import com.example.gestaobilhares.data.repository.AppRepository
 import com.example.gestaobilhares.core.utils.UserSessionManager
 import com.example.gestaobilhares.core.utils.NetworkUtils
+import com.example.gestaobilhares.ui.auth.usecases.CheckAuthStatusUseCase
+import com.example.gestaobilhares.ui.auth.usecases.LoginUseCase
+import com.example.gestaobilhares.ui.auth.usecases.LogoutUseCase
 import com.google.common.truth.Truth.assertThat
 import com.google.firebase.auth.AuthResult
 import com.google.firebase.auth.FirebaseAuth
@@ -48,6 +51,18 @@ class AuthViewModelTest {
 
     @Mock
     private lateinit var networkUtils: NetworkUtils
+
+    @Mock
+    private lateinit var authValidator: AuthValidator
+
+    @Mock
+    private lateinit var loginUseCase: LoginUseCase
+
+    @Mock
+    private lateinit var logoutUseCase: LogoutUseCase
+
+    @Mock
+    private lateinit var checkAuthStatusUseCase: CheckAuthStatusUseCase
 
     @Mock
     private lateinit var firebaseAuth: FirebaseAuth
@@ -124,7 +139,15 @@ class AuthViewModelTest {
         }
 
         // CORRECT INSTANTIATION for Hilt @Inject constructor
-        viewModel = AuthViewModel(appRepository, networkUtils, userSessionManager)
+        viewModel = AuthViewModel(
+            appRepository,
+            networkUtils,
+            userSessionManager,
+            authValidator,
+            loginUseCase,
+            logoutUseCase,
+            checkAuthStatusUseCase
+        )
     }
     
     
@@ -139,6 +162,7 @@ class AuthViewModelTest {
 
     @Test
     fun `login falha com email vazio`() = runTest {
+        whenever(loginUseCase.validateInput("", "123456")).thenReturn("Email e senha são obrigatórios")
         viewModel.login("", "123456")
         advanceUntilIdle()
         

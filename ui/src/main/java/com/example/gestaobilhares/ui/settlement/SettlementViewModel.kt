@@ -626,7 +626,7 @@ class SettlementViewModel @Inject constructor(
                 
                 // ✅ NOVO: Processar uploads e sync em background (sem bloquear UI)
                 // Isso permite que o diálogo apareça imediatamente enquanto o sync acontece em background
-                viewModelScope.launch {
+                viewModelScope.launch sync@{
                     try {
                         // ✅ NOVO: Registrar troca de pano no histórico de manutenção (background)
                         if (dadosAcerto.panoTrocado && com.example.gestaobilhares.core.utils.StringUtils.isNaoVazia(dadosAcerto.numeroPano)) {
@@ -658,7 +658,8 @@ class SettlementViewModel @Inject constructor(
                         // Aguardar mais um pouco para garantir que o cache está populado
                         kotlinx.coroutines.delay(1000)
                         // ✅ IMPLEMENTADO: Adicionar acerto à fila de sync usando método existente
-                        appRepository.adicionarAcertoComMesasParaSync(acertoId, acertoMesas)
+                        val acertoSync = acertoSalvo ?: return@sync
+                        appRepository.adicionarAcertoComMesasParaSync(acertoSync, acertoMesas)
                         logOperation("SETTLEMENT", "✅ [BACKGROUND] Acerto $acertoId adicionado à fila de sync com ${acertoMesas.size} mesas")
                         
                         // ✅ NOVO: Verificar se a atualização foi bem-sucedida (background)
@@ -834,8 +835,14 @@ class SettlementViewModel @Inject constructor(
             // 2. Marcar pano como usado no estoque
             appRepository.marcarPanoComoUsado(pano.id)
             
-            // ✅ IMPLEMENTADO: Vincular pano à mesa usando mesaId existente
-            appRepository.vincularPanoAMesa(pano.id, dadosAcerto.numeroMesa)
+            val mesaAtual = _mesasCliente.value.firstOrNull()
+            if (mesaAtual == null) {
+                logError("SETTLEMENT", "Nenhuma mesa disponível para vincular pano")
+                return
+            }
+
+            // ✅ IMPLEMENTADO: Vincular pano à mesa usando número disponível
+            appRepository.vincularPanoAMesa(pano.id, mesaAtual.numero)
             
         } catch (e: Exception) {
             Timber.e("SettlementViewModel", "Erro ao trocar pano na mesa: ${e.message}", e)

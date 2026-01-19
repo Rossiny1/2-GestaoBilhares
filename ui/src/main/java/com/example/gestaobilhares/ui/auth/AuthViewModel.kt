@@ -14,6 +14,9 @@ import com.example.gestaobilhares.ui.common.BaseViewModel
 import com.example.gestaobilhares.core.utils.NetworkUtils
 import com.example.gestaobilhares.core.utils.UserSessionManager
 import com.example.gestaobilhares.core.utils.PasswordHasher
+import com.example.gestaobilhares.ui.auth.usecases.CheckAuthStatusUseCase
+import com.example.gestaobilhares.ui.auth.usecases.LoginUseCase
+import com.example.gestaobilhares.ui.auth.usecases.LogoutUseCase
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.auth.FirebaseUser
 import com.google.firebase.firestore.FirebaseFirestore
@@ -41,7 +44,11 @@ import timber.log.Timber
 class AuthViewModel @Inject constructor(
     private val appRepository: AppRepository,
     private val networkUtils: NetworkUtils,
-    private val userSessionManager: UserSessionManager
+    private val userSessionManager: UserSessionManager,
+    private val authValidator: AuthValidator,
+    private val loginUseCase: LoginUseCase,
+    private val logoutUseCase: LogoutUseCase,
+    private val checkAuthStatusUseCase: CheckAuthStatusUseCase
 ) : BaseViewModel() {
     
     // Instância do Firebase Auth
@@ -102,7 +109,7 @@ class AuthViewModel @Inject constructor(
      * Verifica se há conexão com internet
      */
     private fun isNetworkAvailable(): Boolean {
-        return networkUtils.isConnected()
+        return loginUseCase.isNetworkAvailable()
     }
     
     /**
@@ -138,27 +145,18 @@ class AuthViewModel @Inject constructor(
         Timber.d("AuthViewModel", "Senha: ${senha.length} caracteres")
         
         // Validação básica
-        if (email.isBlank() || senha.isBlank()) {
-            crashlytics.setCustomKey("login_error", "email_ou_senha_em_branco")
-            crashlytics.log("[LOGIN_FLOW] Erro: Email ou senha em branco")
-            Timber.e("Email ou senha em branco")
-            _errorMessage.value = "Email e senha são obrigatórios"
-            return
-        }
-        
-        if (!android.util.Patterns.EMAIL_ADDRESS.matcher(email).matches()) {
-            crashlytics.setCustomKey("login_error", "email_invalido")
-            crashlytics.log("[LOGIN_FLOW] Erro: Email inválido: $email")
-            Timber.e("Email inválido: %s", email)
-            _errorMessage.value = "Email inválido"
-            return
-        }
-        
-        if (senha.length < 6) {
-            crashlytics.setCustomKey("login_error", "senha_muito_curta")
-            crashlytics.log("[LOGIN_FLOW] Erro: Senha muito curta: ${senha.length} caracteres")
-            Timber.e("Senha muito curta: %d caracteres", senha.length)
-            _errorMessage.value = "Senha deve ter pelo menos 6 caracteres"
+        val validationError = loginUseCase.validateInput(email, senha)
+        if (validationError != null) {
+            val errorKey = when (validationError) {
+                "Email e senha são obrigatórios" -> "email_ou_senha_em_branco"
+                "Email inválido" -> "email_invalido"
+                "Senha deve ter pelo menos 6 caracteres" -> "senha_muito_curta"
+                else -> "login_validacao"
+            }
+            crashlytics.setCustomKey("login_error", errorKey)
+            crashlytics.log("[LOGIN_FLOW] Erro: $validationError")
+            Timber.e("%s", validationError)
+            _errorMessage.value = validationError
             return
         }
         
@@ -1033,7 +1031,7 @@ class AuthViewModel @Inject constructor(
      * Função para logout
      */
     fun logout() {
-        firebaseAuth.signOut()
+        logoutUseCase.execute()
         _authState.value = AuthState.Unauthenticated
     }
     
@@ -1041,25 +1039,16 @@ class AuthViewModel @Inject constructor(
      * Função para verificar usuário atual
      */
     fun checkCurrentUser() {
-        val currentUser = firebaseAuth.currentUser
-        if (currentUser != null) {
-            _authState.value = AuthState.Authenticated(currentUser, true)
-        } else {
-            _authState.value = AuthState.Unauthenticated
-        }
+        _authState.value = checkAuthStatusUseCase.execute()
     }
     
     /**
      * Função para resetar senha (apenas online)
      */
     fun resetPassword(email: String) {
-        if (email.isBlank()) {
-            _errorMessage.value = "Email é obrigatório"
-            return
-        }
-        
-        if (!android.util.Patterns.EMAIL_ADDRESS.matcher(email).matches()) {
-            _errorMessage.value = "Email inválido"
+        val validationError = authValidator.validateResetEmail(email)
+        if (validationError != null) {
+            _errorMessage.value = validationError
             return
         }
         

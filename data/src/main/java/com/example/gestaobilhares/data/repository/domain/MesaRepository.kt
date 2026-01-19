@@ -29,6 +29,7 @@ class MesaRepository(
     // ==================== MESA BÁSICA ====================
     
     suspend fun obterPorId(id: Long) = mesaDao?.obterMesaPorId(id)
+    suspend fun obterPorNumero(numero: String) = mesaDao?.obterPorNumeroENullCliente(numero)
     fun obterPorCliente(clienteId: Long) = mesaDao?.obterMesasPorCliente(clienteId) ?: flowOf(emptyList())
     fun obterDisponiveis() = mesaDao?.obterMesasDisponiveis() ?: flowOf(emptyList())
     fun obterTodas() = mesaDao?.obterTodasMesas() ?: flowOf(emptyList())
