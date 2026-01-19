@@ -4,7 +4,7 @@ import android.content.Context
 import com.example.gestaobilhares.data.database.AppDatabase
 import com.example.gestaobilhares.data.dao.*
 import com.example.gestaobilhares.data.repository.AppRepository
-// import com.example.gestaobilhares.data.repository.domain.*
+import com.example.gestaobilhares.data.repository.domain.MetaRepository
 import com.google.firebase.firestore.FirebaseFirestore
 import dagger.Module
 import dagger.Provides
@@ -26,6 +26,7 @@ object RepositoryModule {
     // Providers de repositórios de domínio necessários para ViewModels migrados para Hilt
     @Provides
     @Singleton
+    @Suppress("DEPRECATION")
     fun provideClienteRepository(
         dao: ClienteDao,
         appRepository: AppRepository
@@ -35,6 +36,7 @@ object RepositoryModule {
 
     @Provides
     @Singleton
+    @Suppress("DEPRECATION")
     fun provideAcertoRepository(
         acertoDao: AcertoDao,
         clienteDao: ClienteDao
@@ -44,6 +46,7 @@ object RepositoryModule {
 
     @Provides
     @Singleton
+    @Suppress("DEPRECATION")
     fun provideCicloAcertoRepository(
         cicloDao: CicloAcertoDao,
         despesaDao: DespesaDao,
@@ -55,6 +58,14 @@ object RepositoryModule {
         return com.example.gestaobilhares.data.repository.CicloAcertoRepository(
             cicloDao, despesaDao, acertoRepository, clienteRepository, rotaDao, colaboradorDao
         )
+    }
+
+    @Provides
+    @Singleton
+    fun provideMetaRepository(
+        database: AppDatabase
+    ): MetaRepository {
+        return MetaRepository(database.metaDao())
     }
 
     /*

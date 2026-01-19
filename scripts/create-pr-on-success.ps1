@@ -63,13 +63,10 @@ Write-Host "📝 Fazendo commit das mudanças..." -ForegroundColor Yellow
 git add -A 2>&1 | Out-Null
 
 $timestamp = Get-Date -Format "yyyy-MM-dd HH:mm:ss"
-$COMMIT_MSG = "Auto-commit: Build bem-sucedido - $timestamp
+$commitTitle = "Auto-commit: Build bem-sucedido - $timestamp"
+$commitBody = "Build passou com sucesso`nTodas as correções aplicadas`nPronto para revisão"
 
-- Build passou com sucesso
-- Todas as correções aplicadas
-- Pronto para revisão"
-
-git commit -m $COMMIT_MSG 2>&1 | Out-Null
+git commit -m $commitTitle -m $commitBody 2>&1 | Out-Null
 
 if ($LASTEXITCODE -ne 0) {
     Write-Host "⚠️  Nenhuma mudança para commitar." -ForegroundColor Yellow

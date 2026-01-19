@@ -322,6 +322,7 @@ tasks.register<JacocoCoverageVerification>("jacocoCoverageVerification") {
 
 // ✅ AUTOMAÇÃO: Criar PR automaticamente após build bem-sucedido
 tasks.register("createPROnSuccess") {
+    onlyIf { project.hasProperty("enableCreatePrOnSuccess") }
     doLast {
         // Detectar sistema operacional e usar script apropriado
         val isWindows = System.getProperty("os.name").lowercase().contains("windows")
@@ -333,6 +334,7 @@ tasks.register("createPROnSuccess") {
                 try {
                     exec {
                         commandLine("powershell", "-ExecutionPolicy", "Bypass", "-File", psScript.absolutePath)
+                        isIgnoreExitValue = true
                     }
                 } catch (e: Exception) {
                     // Não falhar o build se o PR falhar
@@ -346,6 +348,7 @@ tasks.register("createPROnSuccess") {
                 try {
                     exec {
                         commandLine("bash", scriptPath.absolutePath)
+                        isIgnoreExitValue = true
                     }
                 } catch (e: Exception) {
                     // Não falhar o build se o PR falhar
