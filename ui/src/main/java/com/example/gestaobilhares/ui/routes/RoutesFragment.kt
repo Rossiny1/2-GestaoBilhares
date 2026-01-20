@@ -811,6 +811,14 @@ class RoutesFragment : Fragment() {
                                 "\nEntidades: ${status.totalSynced}\n" +
                                 "Erros: ${status.errors.size}"
                         }
+
+                        // ✅ Timeout de segurança: fechar o diálogo após 3s mesmo se algo travar
+                        viewLifecycleOwner.lifecycleScope.launch {
+                            kotlinx.coroutines.delay(3000)
+                            if (dialog.isShowing) {
+                                dialog.dismiss()
+                            }
+                        }
                         
                         // ✅ CORREÇÃO: Forçar atualização completa dos dados das rotas após sincronização
                         // Aguardar um pouco para garantir que os dados foram processados no banco
@@ -848,7 +856,9 @@ class RoutesFragment : Fragment() {
                         progressStatus.text = "❌ Erro na sincronização: ${e.message ?: "Erro desconhecido"}"
                     }
                 } finally {
-                    progressDialog?.dismiss()
+                    if (dialog.isShowing) {
+                        dialog.dismiss()
+                    }
                     // Restaurar UI - Use _binding? para evitar NPE se navegar durante o sync
                     _binding?.let { b ->
                         b.syncButton.isEnabled = true
