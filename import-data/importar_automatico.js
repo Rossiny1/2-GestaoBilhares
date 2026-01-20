@@ -7,6 +7,7 @@
 
 const admin = require('firebase-admin');
 const fs = require('fs');
+const iconv = require('iconv-lite');
 
 // Configurar Firebase Admin com sua chave
 try {
@@ -91,7 +92,7 @@ function mapearLinhaParaCliente(linha, rotaId, clienteId) {
         throw new Error('Nome do cliente é obrigatório');
     }
 
-    const ativo = !observacoes.toLowerCase().includes('mesa retirada');
+    const ativo = true;
 
     return {
         id: parseInt(clienteId), // ID numérico como o app usa
@@ -110,7 +111,7 @@ function mapearLinhaParaCliente(linha, rotaId, clienteId) {
         longitude: null,
         precisao_gps: null,
         data_captura_gps: null,
-        rota_id: parseInt(rotaId), // ID numérico da rota
+        rota_id: Number(rotaId), // ID numérico da rota
         valor_ficha: converterValorMonetario(valorFichaStr),
         comissao_ficha: 0.0,
         numero_contrato: null,
@@ -131,13 +132,13 @@ async function getNextId(collectionPath) {
         // Para evitar problemas com índice, vamos usar timestamp + random
         const timestamp = Date.now();
         const random = Math.floor(Math.random() * 1000);
-        const nextId = (timestamp + random).toString();
+        const nextId = timestamp + random;
 
         // Tentar usar um ID numérico simples baseado no timestamp
-        return (Date.now() % 1000000).toString();
+        return Date.now() % 1000000;
     } catch (error) {
         console.warn(`⚠️ Erro ao obter próximo ID: ${error.message}`);
-        return Date.now().toString();
+        return Date.now();
     }
 }
 
@@ -172,7 +173,7 @@ async function obterOuCriarRota(nomeRota, descricao = '') {
             };
 
             await db.collection(collectionPath)
-                .doc(rotaId)
+                .doc(String(rotaId))
                 .set(novaRota);
             console.log(`🆕 Rota criada: ${nomeRota} (ID: ${rotaId})`);
             return rotaId;
@@ -180,7 +181,12 @@ async function obterOuCriarRota(nomeRota, descricao = '') {
             // Rota já existe
             const rotaDoc = rotaSnapshot.docs[0];
             console.log(`✅ Rota encontrada: ${nomeRota} (ID: ${rotaDoc.id})`);
-            return rotaDoc.id;
+            const rotaId = Number(rotaDoc.id);
+            if (Number.isNaN(rotaId)) {
+                console.warn(`⚠️ ID da rota não numérico (${rotaDoc.id}) - usando 0`);
+                return 0;
+            }
+            return rotaId;
         }
 
     } catch (error) {
@@ -214,9 +220,10 @@ async function processarArquivoCSV(caminhoArquivo, nomeRota, descricaoRota) {
         // Obter próximo ID para clientes
         let proximoClienteId = await getNextId(clientesCollectionPath);
 
-        // Ler arquivo como UTF-8 simples (sem conversões)
-        const conteudo = fs.readFileSync(caminhoArquivo, 'utf8');
-        console.log('📝 Arquivo lido como UTF-8 (simples)');
+        // Ler arquivo em Windows-1252 e converter para UTF-8
+        const buffer = fs.readFileSync(caminhoArquivo);
+        const conteudo = iconv.decode(buffer, 'win1252');
+        console.log('📝 Arquivo lido como Windows-1252 e convertido para UTF-8');
         const linhas = conteudo.split('\n');
 
         console.log(`📊 Encontradas ${linhas.length} linhas no CSV`);
@@ -232,7 +239,7 @@ async function processarArquivoCSV(caminhoArquivo, nomeRota, descricaoRota) {
 
             try {
                 const cliente = mapearLinhaParaCliente(linha, rotaId, proximoClienteId);
-                const clienteId = proximoClienteId.toString();
+                const clienteId = String(proximoClienteId);
 
                 // Validar que o ID não está vazio
                 if (!clienteId || clienteId.trim() === '') {
