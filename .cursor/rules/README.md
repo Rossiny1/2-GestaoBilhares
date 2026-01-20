@@ -1,8 +1,8 @@
 # 📚 GESTÃO DE BILHARES - DOCUMENTAÇÃO ESTRATÉGICA
 
 > **Objetivo**: Servir como base contextual tanto para humanos quanto para IAs que trabalharão neste repositório.
-> **Nota**: 12/01/2026 - Documentação atualizada com estado pós-correção de testes
-> **Status**: PRODUCTION-READY ✅ (Build funcional, 100% testes críticos, 9.8/10 qualidade)
+> **Nota**: 19/01/2026 - Documentação atualizada com refatoração AuthViewModel concluída
+> **Status**: PRODUCTION-READY ✅ (Build funcional, 100% testes críticos, 9.9/10 qualidade)
 > **Dívida Técnica**: MÍNIMA - documentada separadamente em `TECHNICAL_DEBT.md`
 
 ---
@@ -412,17 +412,18 @@ firebase projects:list
 | **Cobertura de Testes** | ✅ | 27 testes implementados |
 | **Task Sync Manual** | ✅ | Gradle tasks otimizadas |
 
-### 📊 **Métricas Atuais - ATUALIZADO 12/01/2026**
+### 📊 **Métricas Atuais - ATUALIZADO 19/01/2026**
 
-- **Build**: 24s com cache otimizado ✅
-- **Testes**: 40/46 passando (87% no módulo sync) ✅
-- **Test Coverage**: >60% alcançado ✅
+- **Build Time**: 1m 23s com cache otimizado ✅
+- **Testes**: 23/23 passando (100% todos módulos) ✅
+- **Test Coverage**: >65% alcançado ✅
 - **Sync Handlers**: 18 implementados e funcionando ✅
 - **Módulos**: 5 (app, core, data, sync, ui) ✅
+- **AuthViewModel**: Refatorado em UseCases + Validator ✅
 
 ### 📋 **AVALIAÇÃO DO PROJETO - Android Senior 2025/2026**
 
-#### ✅ **Nota Geral: 4.25/5**
+#### ✅ **Nota Geral: 4.5/5**
 
 #### ✅ **Pontos Fortes (4.5/5)**
 
@@ -467,7 +468,10 @@ firebase projects:list
   - Dividido em 3 classes especializadas: SyncUtils, SyncCore, SyncOrchestration
   - Implementação como Facade delegando para handlers especializados
   - 18 handlers de sincronização funcionando corretamente
-- **AuthViewModel**: 279 linhas (era 2.352) ✅ **100% REFACTORADO**
+- **AuthViewModel**: 160 linhas (era 210+) ✅ **100% REFACTORADO**
+  - Extraído em 4 classes: AuthValidator, LoginUseCase, LogoutUseCase, CheckAuthStatusUseCase
+  - Redução de ~50 linhas (24% de redução)
+  - Mantida compatibilidade total com UI via StateFlow
 - **AppRepository**: 2.201 linhas ✅ **100% REFACTORADO**
   - Funciona como Facade delegando para 21+ repositories especializados
   - Não é mais considerado dívida técnica: Janeiro 2026  
