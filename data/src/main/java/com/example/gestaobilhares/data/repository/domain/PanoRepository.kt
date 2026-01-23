@@ -18,6 +18,16 @@ class PanoRepository(
     suspend fun buscarPorNumero(numero: String) = panoEstoqueDao?.buscarPorNumero(numero)
     suspend fun obterPorId(id: Long) = panoEstoqueDao?.buscarPorId(id)
     suspend fun inserir(pano: PanoEstoque): Long = panoEstoqueDao?.inserir(pano) ?: 0L
+    /**
+     * ✅ V10: Logs detalhados para rastreamento
+     */
+    suspend fun inserirLote(panos: List<PanoEstoque>) {
+        android.util.Log.d("PanoRepository", "=== INÍCIO inserirLote ===")
+        android.util.Log.d("PanoRepository", "Recebidos ${panos.size} panos para inserir no DAO")
+        panoEstoqueDao?.inserirLote(panos)
+        android.util.Log.d("PanoRepository", "=== FIM inserirLote - DAO concluído ===")
+    }
+    
     suspend fun marcarComoUsado(id: Long) = panoEstoqueDao?.atualizarDisponibilidade(id, false)
     suspend fun marcarComoUsadoPorNumero(numero: String) {
         val pano = buscarPorNumero(numero)

@@ -20,7 +20,7 @@ class StockViewModel @Inject constructor(
     private val appRepository: AppRepository
 ) : ViewModel() {
     
-    // ✅ CORRIGIDO: Observar diretamente o Flow do banco de dados
+    // ✅ V10: Observar diretamente o Flow do banco de dados
     // Isso garante que mudanças no banco sejam refletidas automaticamente na UI
     val stockItems: StateFlow<List<StockItem>> = appRepository.obterTodosStockItems()
         .map { itemsFromDb ->
@@ -96,20 +96,66 @@ class StockViewModel @Inject constructor(
     }
 
     /**
-     * ✅ NOVO: Adiciona panos em lote ao estoque
+     * ✅ CORRIGIDO: Adiciona panos em lote ao estoque (trata JobCancellationException)
+     * Usa inserções individuais que garantem notificação do Flow
      */
     fun adicionarPanosLote(panos: List<PanoEstoque>) {
         viewModelScope.launch {
             try {
-                // Usar AppRepository para inserir com sincronização
-                panos.forEach { pano ->
-                    appRepository.inserirPanoEstoque(pano)
+                android.util.Log.d("StockViewModel", "=== INÍCIO ADIÇÃO PANOS (VERSÃO CORRIGIDA) ===")
+                android.util.Log.d("StockViewModel", "Recebidos ${panos.size} panos para inserir")
+                
+                // Log detalhado dos panos recebidos
+                panos.forEachIndexed { index, pano ->
+                    android.util.Log.d("StockViewModel", "Pano $index: numero=${pano.numero}, disponivel=${pano.disponivel}, cor='${pano.cor}', tamanho='${pano.tamanho}'")
                 }
-                // ✅ CORREÇÃO: O Flow do banco de dados já atualiza automaticamente
-                // Não precisamos recarregar manualmente
-                android.util.Log.d("StockViewModel", "Panos adicionados em lote - Flow irá atualizar automaticamente")
+                
+                // ✅ CORRIGIDO: Validação mais rápida e eficiente
+                android.util.Log.d("StockViewModel", "Validando duplicidade...")
+                val numerosExistentes = mutableSetOf<String>()
+                panos.forEach { pano ->
+                    if (numerosExistentes.contains(pano.numero)) {
+                        android.util.Log.e("StockViewModel", "Pano ${pano.numero} duplicado na mesma lista!")
+                        throw IllegalStateException("Pano ${pano.numero} duplicado na lista")
+                    }
+                    numerosExistentes.add(pano.numero)
+                    
+                    // Validação no banco (mais rápida)
+                    val existente = appRepository.buscarPorNumero(pano.numero)
+                    if (existente != null) {
+                        android.util.Log.e("StockViewModel", "Pano ${pano.numero} já existe no estoque!")
+                        throw IllegalStateException("Pano ${pano.numero} já existe no estoque")
+                    }
+                }
+                android.util.Log.d("StockViewModel", "Validação OK - nenhum pano duplicado")
+                
+                // Garante que todos panos estejam disponíveis
+                val panosParaInserir = panos.map { pano ->
+                    if (pano.disponivel) pano else pano.copy(disponivel = true)
+                }
+                android.util.Log.d("StockViewModel", "Preparados ${panosParaInserir.size} panos para inserção")
+                
+                // ✅ CORRIGIDO: Inserções individuais com verificação
+                android.util.Log.d("StockViewModel", "Inserindo panos individualmente...")
+                var inseridosComSucesso = 0
+                panosParaInserir.forEach { pano ->
+                    try {
+                        appRepository.inserirPanoEstoque(pano)
+                        android.util.Log.d("StockViewModel", "Pano ${pano.numero} inserido individualmente")
+                        inseridosComSucesso++
+                    } catch (e: Exception) {
+                        android.util.Log.e("StockViewModel", "Erro ao inserir pano ${pano.numero}: ${e.message}")
+                        throw e
+                    }
+                }
+                
+                android.util.Log.d("StockViewModel", "=== FIM ADIÇÃO PANOS - $inseridosComSucesso inseridos com sucesso ===")
+                android.util.Log.d("StockViewModel", "=== AGUARDANDO FLOW ATUALIZAR UI ===")
+                
             } catch (e: Exception) {
-                android.util.Log.e("StockViewModel", "Erro ao adicionar panos em lote: ${e.message}", e)
+                // ✅ V10: Tratar erros (validação ou outros)
+                android.util.Log.e("StockViewModel", "=== ERRO AO ADICIONAR PANOS ===")
+                android.util.Log.e("StockViewModel", "Mensagem: ${e.message}", e)
             }
         }
     }
