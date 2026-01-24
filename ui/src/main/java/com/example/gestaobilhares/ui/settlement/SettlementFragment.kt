@@ -16,6 +16,7 @@ import android.text.TextWatcher
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import android.util.Log
 import android.widget.ArrayAdapter
 import android.widget.EditText
 import android.widget.ImageView
@@ -1105,41 +1106,44 @@ class SettlementFragment : Fragment() {
         // Desabilitar botão apenas após validação bem-sucedida
         binding.btnSaveSettlement.isEnabled = false
         viewModel.setLoading(true)
-
-        // ✅ CORREÇÃO: valorRecebido não é usado - o valor é calculado a partir dos paymentValues no ViewModel
-        val desconto = binding.etDesconto.text.toString().toDoubleOrNull() ?: 0.0
-        val observacao = binding.etObservacao.text.toString().trim()
-        // Removido: funcionalidade de pano movida para sistema de troca separado
-        val numeroPano = null // Não mais usado no acerto principal
-        val tipoAcerto = binding.spTipoAcerto.selectedItem.toString()
-        val representante = binding.tvRepresentante.text.toString()
-
-        // ✅ CORREÇÃO: Logs detalhados para debug das observações
-        Timber.d("SettlementFragment", "=== SALVANDO ACERTO - DEBUG OBSERVAÇÕES ===")
-        Timber.d("SettlementFragment", "Campo observação (RAW): '${binding.etObservacao.text}'")
-        Timber.d("SettlementFragment", "Campo observação (TRIM): '$observacao'")
-        // ✅ CORREÇÃO: observacao é String (não nullable), verificação == null sempre false - removida
-        Timber.d("SettlementFragment", "Observação é vazia? ${observacao.isEmpty()}")
-        Timber.d("SettlementFragment", "Observação é blank? ${observacao.isBlank()}")
-        Timber.d("SettlementFragment", "Tamanho da observação: ${observacao.length}")
         
-        // ✅ CORREÇÃO: Observação será apenas manual, sem preenchimento automático
-        val observacaoFinal = observacao.trim()
-        Timber.d("SettlementFragment", "Observação final que será salva: '$observacaoFinal'")
+        // ✅ CORREÇÃO: Executar lógica de salvar dentro de coroutine para permitir chamadas suspend
+        lifecycleScope.launch {
+            try {
+                // ✅ CORREÇÃO: valorRecebido não é usado - o valor é calculado a partir dos paymentValues no ViewModel
+                val desconto = binding.etDesconto.text.toString().toDoubleOrNull() ?: 0.0
+                val observacao = binding.etObservacao.text.toString().trim()
+                // Removido: funcionalidade de pano movida para sistema de troca separado
+                val numeroPano = null // Não mais usado no acerto principal
+                val tipoAcerto = binding.spTipoAcerto.selectedItem.toString()
+                val representante = binding.tvRepresentante.text.toString()
 
-        // ✅ CORREÇÃO CRÍTICA: Usar dados do adapter como fonte única e confiável quando houver mesas
-        val mesasDoAcerto = if (!isDebtOnlyMode && ::mesasAcertoAdapter.isInitialized) {
-            mesasAcertoAdapter.getMesasAcerto().mapIndexed { idx, mesaState ->
-                // Buscar a mesa original no adapter para obter dados completos
-                val mesaOriginal = mesasAcertoAdapter.currentList.find { it.id == mesaState.mesaId }
+                // ✅ CORREÇÃO: Logs detalhados para debug das observações
+                Timber.d("SettlementFragment", "=== SALVANDO ACERTO - DEBUG OBSERVAÇÕES ===")
+                Timber.d("SettlementFragment", "Campo observação (RAW): '${binding.etObservacao.text}'")
+                Timber.d("SettlementFragment", "Campo observação (TRIM): '$observacao'")
+                // ✅ CORREÇÃO: observacao é String (não nullable), verificação == null sempre false - removida
+                Timber.d("SettlementFragment", "Observação é vazia? ${observacao.isEmpty()}")
+                Timber.d("SettlementFragment", "Observação é blank? ${observacao.isBlank()}")
+                Timber.d("SettlementFragment", "Tamanho da observação: ${observacao.length}")
                 
-                Timber.d("SettlementFragment", "=== MONTANDO MESA PARA SALVAR ===")
-                Timber.d("SettlementFragment", "Mesa ${idx + 1}: ID=${mesaState.mesaId}")
-                Timber.d("SettlementFragment", "Relógio inicial: ${mesaState.relogioInicial}")
-                Timber.d("SettlementFragment", "Relógio final: ${mesaState.relogioFinal}")
-                Timber.d("SettlementFragment", "Valor fixo (mesa original): ${mesaOriginal?.valorFixo ?: 0.0}")
-                Timber.d("SettlementFragment", "Com defeito: ${mesaState.comDefeito}")
-                Timber.d("SettlementFragment", "Relógio reiniciou: ${mesaState.relogioReiniciou}")
+                // ✅ CORREÇÃO: Observação será apenas manual, sem preenchimento automático
+                val observacaoFinal = observacao.trim()
+                Timber.d("SettlementFragment", "Observação final que será salva: '$observacaoFinal'")
+
+                // ✅ CORREÇÃO CRÍTICA: Usar dados do adapter como fonte única e confiável quando houver mesas
+                val mesasDoAcerto = if (!isDebtOnlyMode && ::mesasAcertoAdapter.isInitialized) {
+                    mesasAcertoAdapter.getMesasAcerto().mapIndexed { idx, mesaState ->
+                        // Buscar a mesa original no adapter para obter dados completos
+                        val mesaOriginal = mesasAcertoAdapter.currentList.find { it.id == mesaState.mesaId }
+                        
+                        Timber.d("SettlementFragment", "=== MONTANDO MESA PARA SALVAR ===")
+                        Timber.d("SettlementFragment", "Mesa ${idx + 1}: ID=${mesaState.mesaId}")
+                        Timber.d("SettlementFragment", "Relógio inicial: ${mesaState.relogioInicial}")
+                        Timber.d("SettlementFragment", "Relógio final: ${mesaState.relogioFinal}")
+                        Timber.d("SettlementFragment", "Valor fixo (mesa original): ${mesaOriginal?.valorFixo ?: 0.0}")
+                        Timber.d("SettlementFragment", "Com defeito: ${mesaState.comDefeito}")
+                        Timber.d("SettlementFragment", "Relógio reiniciou: ${mesaState.relogioReiniciou}")
                 
                 // ✅ CORREÇÃO: Priorizar URL do Firebase Storage para sincronização
                 // Se houver URL do Firebase, usar ela; caso contrário, usar caminho local
@@ -1159,7 +1163,39 @@ class SettlementFragment : Fragment() {
                     }
                 }
                 
-                SettlementViewModel.MesaAcerto(
+                // ════════════════════════════════════════════════════════════════
+                // LOG DIAGNÓSTICO: Rastrear dados ANTES de construir MesaAcerto DTO
+                // ════════════════════════════════════════════════════════════════
+                Log.w("DEBUG_POPUP", "╔═══════════════════════════════════════════════════╗")
+                Log.w("DEBUG_POPUP", "║  CONSTRUINDO MesaAcerto DTO                       ║")
+                Log.w("DEBUG_POPUP", "╚═══════════════════════════════════════════════════╝")
+                Log.w("DEBUG_POPUP", "📦 Fonte dos dados: ${mesaOriginal?.javaClass?.simpleName ?: "mesaState"}")
+                Log.w("DEBUG_POPUP", "📦 mesaOriginal.id: ${mesaOriginal?.id}")
+                Log.w("DEBUG_POPUP", "📦 mesaOriginal.numero: ${mesaOriginal?.numero}")
+                Log.w("DEBUG_POPUP", "📦 mesaOriginal é MesaDTO? ${mesaOriginal is com.example.gestaobilhares.ui.settlement.MesaDTO}")
+                Log.w("DEBUG_POPUP", "📦 mesaOriginal tem panoAtualId? N/A (MesaDTO não tem este campo)")
+                Log.w("DEBUG_POPUP", "📦 mesaState.mesaId: ${mesaState.mesaId}")
+                Log.w("DEBUG_POPUP", "📦 mesaState tem dados de pano? N/A (estado UI)")
+                
+                // ════════════════════════════════════════════════════════════════
+                // CORREÇÃO: Buscar panoAtualId do Room para preencher panoNovoId
+                // ════════════════════════════════════════════════════════════════
+                
+                // 1. Buscar a Mesa atualizada do Room (fonte da verdade)
+                val mesaRoom = appRepository.obterMesaPorId(mesaState.mesaId)
+                
+                // 2. Extrair panoAtualId se existir
+                val panoIdParaRegistro = mesaRoom?.panoAtualId
+                
+                Log.w("DEBUG_POPUP", "╔═══════════════════════════════════════════════════╗")
+                Log.w("DEBUG_POPUP", "║  BUSCANDO PANO DO ROOM                            ║")
+                Log.w("DEBUG_POPUP", "╚═══════════════════════════════════════════════════╝")
+                Log.w("DEBUG_POPUP", "🔍 Mesa ID buscada no Room: ${mesaState.mesaId}")
+                Log.w("DEBUG_POPUP", "🔍 mesaRoom encontrada? ${mesaRoom != null}")
+                Log.w("DEBUG_POPUP", "🔍 mesaRoom.panoAtualId: ${mesaRoom?.panoAtualId}")
+                Log.w("DEBUG_POPUP", "✅ panoIdParaRegistro que será usado: $panoIdParaRegistro")
+                
+                val mesaAcerto = SettlementViewModel.MesaAcerto(
                     id = mesaState.mesaId,
                     numero = mesaOriginal?.numero ?: (idx + 1).toString(),
                     relogioInicial = mesaState.relogioInicial,
@@ -1171,53 +1207,91 @@ class SettlementFragment : Fragment() {
                     mediaFichasJogadas = mesaState.mediaFichasJogadas,
                     // ✅ CORREÇÃO: Priorizar URL do Firebase Storage para sincronização
                     fotoRelogioFinal = fotoParaSalvar,
-                    dataFoto = mesaState.dataFoto
+                    dataFoto = mesaState.dataFoto,
+                    // ✅ CORREÇÃO: Preencher com o panoAtualId do Room
+                    panoNovoId = panoIdParaRegistro  // null se não houver troca, ID se houver
                 )
+                
+                // ════════════════════════════════════════════════════════════════
+                // LOG DIAGNÓSTICO: Validar MesaAcerto APÓS construção
+                // ════════════════════════════════════════════════════════════════
+                Log.w("DEBUG_POPUP", "╔═══════════════════════════════════════════════════╗")
+                Log.w("DEBUG_POPUP", "║  MesaAcerto CONSTRUÍDA (CORRIGIDA)                ║")
+                Log.w("DEBUG_POPUP", "╚═══════════════════════════════════════════════════╝")
+                Log.w("DEBUG_POPUP", "✅ mesaAcerto.id: ${mesaAcerto.id}")
+                Log.w("DEBUG_POPUP", "✅ mesaAcerto.numero: ${mesaAcerto.numero}")
+                Log.w("DEBUG_POPUP", "✅ mesaAcerto.panoNovoId: ${mesaAcerto.panoNovoId}")
+                if (mesaAcerto.panoNovoId != null) {
+                    Log.w("DEBUG_POPUP", "🎉 SUCESSO: panoNovoId PREENCHIDO!")
+                } else {
+                    Log.w("DEBUG_POPUP", "ℹ️  NULL: Mesa não teve troca de pano")
+                }
+                Log.w("DEBUG_POPUP", "╚═══════════════════════════════════════════════════╝")
+                
+                mesaAcerto
             }
-        } else {
-            emptyList()
-        }
-        
-        Timber.d("SettlementFragment", "=== LISTA DE MESAS PARA SALVAR ===")
-        Timber.d("SettlementFragment", "Total de mesas: ${mesasDoAcerto.size}")
-        mesasDoAcerto.forEachIndexed { index, mesa ->
-            Timber.d("SettlementFragment", "Mesa ${index + 1}: ${mesa.numero} - Valor fixo: R$ ${mesa.valorFixo}")
-        }
+                    } else {
+                        emptyList()
+                    }
+                    
+                    Timber.d("SettlementFragment", "=== LISTA DE MESAS PARA SALVAR ===")
+                    Timber.d("SettlementFragment", "Total de mesas: ${mesasDoAcerto.size}")
+                    mesasDoAcerto.forEachIndexed { index, mesa ->
+                        Timber.d("SettlementFragment", "Mesa ${index + 1}: ${mesa.numero} - Valor fixo: R$ ${mesa.valorFixo}")
+                    }
 
-        val dadosAcerto = SettlementViewModel.DadosAcerto(
-            mesas = mesasDoAcerto,
-            representante = representante,
-            panoTrocado = houveTrocaPanoNoAcerto,
-            numeroPano = numeroPano,
-            tipoAcerto = tipoAcerto,
-            observacao = observacaoFinal, // ✅ CORREÇÃO: Usar observação final
-            justificativa = null,
-            metodosPagamento = paymentValues
-        )
+                    val dadosAcerto = SettlementViewModel.DadosAcerto(
+                        mesas = mesasDoAcerto,
+                        representante = representante,
+                        panoTrocado = houveTrocaPanoNoAcerto,
+                        numeroPano = numeroPano,
+                        tipoAcerto = tipoAcerto,
+                        observacao = observacaoFinal, // ✅ CORREÇÃO: Usar observação final
+                        justificativa = null,
+                        metodosPagamento = paymentValues
+                    )
 
-        // ✅ LOG CRASH: Chamando ViewModel para salvar
-        Timber.d("LOG_CRASH", "SettlementFragment.salvarAcertoComCamposExtras - Chamando ViewModel para salvar")
-        
-        Timber.d("SettlementFragment", "Iniciando salvamento do acerto...")
-        Timber.d("SettlementFragment", "Desconto aplicado: R$ $desconto")
-        Timber.d("SettlementFragment", "Observação enviada para ViewModel: '$observacaoFinal'")
-        Timber.d("SettlementFragment", "Tipo de acerto: $tipoAcerto")
-        
-        try {
-            viewModel.salvarAcerto(
-                clienteId = args.clienteId,
-                dadosAcerto = dadosAcerto,
-                metodosPagamento = paymentValues,
-                desconto = desconto,
-                acertoIdParaEdicao = args.acertoIdParaEdicao.takeIf { it != 0L }
-            )
-            
-            Timber.d("LOG_CRASH", "SettlementFragment.salvarAcertoComCamposExtras - ViewModel chamado com sucesso")
-        } catch (e: Exception) {
-            Timber.e("LOG_CRASH", "SettlementFragment.salvarAcertoComCamposExtras - ERRO ao chamar ViewModel: ${e.message}", e)
-            Toast.makeText(requireContext(), "Erro ao salvar acerto: ${e.message}", Toast.LENGTH_LONG).show()
+                    // ════════════════════════════════════════════════════════════════
+                    // LOG DIAGNÓSTICO: Validar dadosAcerto completo antes de salvar
+                    // ════════════════════════════════════════════════════════════════
+                    Log.w("DEBUG_POPUP", "╔═══════════════════════════════════════════════════╗")
+                    Log.w("DEBUG_POPUP", "║  dadosAcerto FINAL (antes de salvar)              ║")
+                    Log.w("DEBUG_POPUP", "╚═══════════════════════════════════════════════════╝")
+                    Log.w("DEBUG_POPUP", "🎯 dadosAcerto.panoTrocado: ${dadosAcerto.panoTrocado}")
+                    Log.w("DEBUG_POPUP", "🎯 dadosAcerto.numeroPano: '${dadosAcerto.numeroPano}'")
+                    Log.w("DEBUG_POPUP", "🎯 dadosAcerto.mesas.size: ${dadosAcerto.mesas.size}")
+                    dadosAcerto.mesas.forEachIndexed { idx, mesa ->
+                        Log.w("DEBUG_POPUP", "🎯   Mesa [$idx]: id=${mesa.id}, numero=${mesa.numero}, panoNovoId=${mesa.panoNovoId}")
+                    }
+                    Log.w("DEBUG_POPUP", "╚═══════════════════════════════════════════════════╝")
+
+                    // ✅ LOG CRASH: Chamando ViewModel para salvar
+                    Timber.d("LOG_CRASH", "SettlementFragment.salvarAcertoComCamposExtras - Chamando ViewModel para salvar")
+                    
+                    Timber.d("SettlementFragment", "Iniciando salvamento do acerto...")
+                    Timber.d("SettlementFragment", "Desconto aplicado: R$ $desconto")
+                    Timber.d("SettlementFragment", "Observação enviada para ViewModel: '$observacaoFinal'")
+                    Timber.d("SettlementFragment", "Tipo de acerto: $tipoAcerto")
+                    
+                    viewModel.salvarAcerto(
+                        clienteId = args.clienteId,
+                        dadosAcerto = dadosAcerto,
+                        metodosPagamento = paymentValues,
+                        desconto = desconto,
+                        acertoIdParaEdicao = args.acertoIdParaEdicao.takeIf { it != 0L }
+                    )
+                    
+                    Timber.d("LOG_CRASH", "SettlementFragment.salvarAcertoComCamposExtras - ViewModel chamado com sucesso")
+                } catch (e: Exception) {
+                    Timber.e("LOG_CRASH", "SettlementFragment.salvarAcertoComCamposExtras - ERRO ao chamar ViewModel: ${e.message}", e)
+                    Toast.makeText(requireContext(), "Erro ao salvar acerto: ${e.message}", Toast.LENGTH_LONG).show()
+                } finally {
+                    // Sempre reabilitar o botão e loading
+                    binding.btnSaveSettlement.isEnabled = true
+                    viewModel.setLoading(false)
+                }
+            }
         }
-    }
 
     private fun observeViewModel() {
         // Observer para dados do cliente
