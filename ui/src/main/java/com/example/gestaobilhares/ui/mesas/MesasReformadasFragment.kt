@@ -2,6 +2,7 @@
 import com.example.gestaobilhares.ui.R
 
 import android.os.Bundle
+import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
@@ -62,10 +63,31 @@ class MesasReformadasFragment : Fragment() {
     }
 
     private fun setupRecyclerView() {
-        adapter = MesasReformadasAdapter { mesaComHistorico ->
-            // ✅ NOVO: Navegar para nova tela de histórico dedicada
-            val action = MesasReformadasFragmentDirections.actionMesasReformadasFragmentToHistoricoMesaFragment(mesaComHistorico)
-            findNavController().navigate(action)
+        adapter = MesasReformadasAdapter { card ->
+            when (card.origem) {
+                "HEADER_MESA" -> {
+                    // ✅ Navegar para detalhes da mesa
+                    lifecycleScope.launch {
+                        try {
+                            // Buscar dados completos da mesa através do ViewModel
+                            val mesaComHistorico = viewModel.obterMesaComHistorico(card.mesaId)
+                            
+                            val action = MesasReformadasFragmentDirections
+                                .actionMesasReformadasFragmentToHistoricoMesaFragment(mesaComHistorico)
+                            
+                            findNavController().navigate(action)
+                            
+                        } catch (e: Exception) {
+                            Log.e("MesasReformadas", "Erro ao navegar para histórico", e)
+                            Toast.makeText(requireContext(), "Erro ao carregar detalhes", Toast.LENGTH_SHORT).show()
+                        }
+                    }
+                }
+                else -> {
+                    // Outros tipos de card (manter toast por enquanto)
+                    Toast.makeText(requireContext(), "Card clicado: ${card.descricao}", Toast.LENGTH_SHORT).show()
+                }
+            }
         }
 
         binding.rvMesasReformadas.apply {
@@ -132,11 +154,11 @@ class MesasReformadasFragment : Fragment() {
     private fun observeViewModel() {
         viewLifecycleOwner.lifecycleScope.launch {
             viewLifecycleOwner.repeatOnLifecycle(Lifecycle.State.STARTED) {
-                viewModel.mesasReformadas.collect { mesas ->
-                    adapter.submitList(mesas)
+                viewModel.cards.collect { cards ->
+                    adapter.submitList(cards)
                     
                     // Mostrar/ocultar estado vazio
-                    binding.emptyStateLayout.visibility = if (mesas.isEmpty()) View.VISIBLE else View.GONE
+                    binding.emptyStateLayout.visibility = if (cards.isEmpty()) View.VISIBLE else View.GONE
                 }
             }
         }

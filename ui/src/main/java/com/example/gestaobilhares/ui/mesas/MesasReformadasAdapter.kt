@@ -1,4 +1,4 @@
-﻿package com.example.gestaobilhares.ui.mesas
+package com.example.gestaobilhares.ui.mesas
 
 import android.view.LayoutInflater
 import android.view.View
@@ -6,20 +6,17 @@ import android.view.ViewGroup
 import androidx.recyclerview.widget.DiffUtil
 import androidx.recyclerview.widget.ListAdapter
 import androidx.recyclerview.widget.RecyclerView
-import com.example.gestaobilhares.data.entities.MesaReformada
-import com.example.gestaobilhares.data.entities.HistoricoManutencaoMesa
-import com.example.gestaobilhares.data.entities.TipoManutencao
 import com.example.gestaobilhares.ui.databinding.ItemMesaReformadaBinding
 import java.text.SimpleDateFormat
 import java.util.*
 
 /**
- * Adapter para a lista de mesas reformadas.
- * ✅ NOVO: Agrupa reformas por mesa e exibe histórico de manutenções
+ * Adapter para a lista de cards de reforma.
+ * ✅ NOVO: Exibe cards unificados de reformas e acertos
  */
 class MesasReformadasAdapter(
-    private val onItemClick: (MesaReformadaComHistorico) -> Unit
-) : ListAdapter<MesaReformadaComHistorico, MesasReformadasAdapter.ViewHolder>(DiffCallback()) {
+    private val onItemClick: (ReformaCard) -> Unit
+) : ListAdapter<ReformaCard, MesasReformadasAdapter.ViewHolder>(DiffCallback()) {
 
     private val dateFormat = SimpleDateFormat("dd/MM/yyyy", Locale("pt", "BR"))
     private val dateTimeFormat = SimpleDateFormat("dd/MM/yyyy HH:mm", Locale("pt", "BR"))
@@ -41,111 +38,136 @@ class MesasReformadasAdapter(
         private val binding: ItemMesaReformadaBinding
     ) : RecyclerView.ViewHolder(binding.root) {
 
-        fun bind(mesaComHistorico: MesaReformadaComHistorico) {
-            val ultimaReforma = mesaComHistorico.reformas.firstOrNull()
-            val ultimaManutencao = mesaComHistorico.historicoManutencoes.firstOrNull()
-            
-            // Número da mesa
-            binding.tvNumeroMesa.text = "Mesa ${mesaComHistorico.numeroMesa}"
-            
-            // ✅ CORREÇÃO: Usar Data do último evento (reforma ou manutenção)
-            val dataExibicao = mesaComHistorico.dataUltimoEvento
-            if (dataExibicao != null) {
-                binding.tvDataReforma.text = dateFormat.format(dataExibicao)
-                binding.tvDataReforma.visibility = View.VISIBLE
-            } else {
-                binding.tvDataReforma.visibility = View.GONE
-            }
-            
-            // Tipo da mesa
-            binding.tvTipoMesa.text = "${mesaComHistorico.tipoMesa} - ${mesaComHistorico.tamanhoMesa}"
-            
-            // Total de reformas
-            if (mesaComHistorico.totalReformas > 1) {
-                binding.tvTotalReformas.text = "${mesaComHistorico.totalReformas} reformas realizadas"
-                binding.tvTotalReformas.visibility = View.VISIBLE
-            } else if (mesaComHistorico.totalReformas == 1) {
-                binding.tvTotalReformas.text = "1 reforma realizada"
-                binding.tvTotalReformas.visibility = View.VISIBLE
-            } else {
-                // Se não houver reformas, mostrar que tem histórico
-                val totalManutencoes = mesaComHistorico.historicoManutencoes.size
-                if (totalManutencoes > 0) {
-                    binding.tvTotalReformas.text = "$totalManutencoes manutenções registradas"
-                    binding.tvTotalReformas.visibility = View.VISIBLE
-                } else {
-                    binding.tvTotalReformas.visibility = View.GONE
-                }
-            }
-            
-            // Itens reformados ou última manutenção
-            if (ultimaReforma != null) {
-                val itensReformados = buildString {
-                    val itens = mutableListOf<String>()
-                    if (ultimaReforma.pintura) itens.add("Pintura")
-                    if (ultimaReforma.tabela) itens.add("Tabela")
-                    if (ultimaReforma.panos) {
-                        val panosText = if (ultimaReforma.numeroPanos != null) {
-                            "Panos (${ultimaReforma.numeroPanos})"
-                        } else {
-                            "Panos"
-                        }
-                        itens.add(panosText)
+        fun bind(card: ReformaCard) {
+            binding.apply {
+                when (card.origem) {
+                    "HEADER_MESA" -> {
+                        // ✅ TRATAMENTO ESPECIAL PARA HEADER
+                        tvNumeroMesa.text = card.descricao  // "🏓 Mesa X - Y manutenção(ões)"
+                        tvNumeroMesa.textSize = 18f
+                        tvNumeroMesa.setTypeface(null, android.graphics.Typeface.BOLD)
+                        
+                        // Ocultar campos irrelevantes no header
+                        tvDataReforma.visibility = View.GONE
+                        tvTipoMesa.visibility = View.GONE
+                        tvItensReformados.visibility = View.GONE
+                        tvObservacoes.visibility = View.GONE
+                        
+                        // ✅ Header AGORA é clicável para navegação
+                        root.setOnClickListener { onItemClick(card) }
+                        root.isClickable = true
                     }
-                    if (ultimaReforma.outros) itens.add("Outros")
                     
-                    append(itens.joinToString(", "))
+                    "NOVA_REFORMA" -> {
+                        // ✅ REFORMA MANUAL
+                        tvNumeroMesa.text = "Mesa ${card.numeroMesa}"
+                        tvNumeroMesa.textSize = 16f
+                        tvNumeroMesa.setTypeface(null, android.graphics.Typeface.NORMAL)
+                        tvDataReforma.text = dateTimeFormat.format(Date(card.data))
+                        tvDataReforma.visibility = View.VISIBLE
+                        tvTipoMesa.text = "Reforma Manual"
+                        tvTipoMesa.visibility = View.VISIBLE
+                        tvItensReformados.text = card.descricao
+                        tvItensReformados.visibility = View.VISIBLE
+                        
+                        // Observações
+                        if (!card.observacoes.isNullOrBlank()) {
+                            tvObservacoes.text = "Obs: ${card.observacoes}"
+                            tvObservacoes.visibility = View.VISIBLE
+                        } else {
+                            tvObservacoes.visibility = View.GONE
+                        }
+                        
+                        root.setOnClickListener { onItemClick(card) }
+                        root.isClickable = true
+                    }
+                    
+                    "ACERTO" -> {
+                        // ✅ ACERTO ESTRUTURADO (com responsável)
+                        tvNumeroMesa.text = "Mesa ${card.numeroMesa}"
+                        tvNumeroMesa.textSize = 16f
+                        tvNumeroMesa.setTypeface(null, android.graphics.Typeface.NORMAL)
+                        tvDataReforma.text = dateTimeFormat.format(Date(card.data))
+                        tvDataReforma.visibility = View.VISIBLE
+                        
+                        // Mostrar responsável se disponível
+                        if (!card.responsavel.isNullOrBlank()) {
+                            tvTipoMesa.text = "Acerto - ${card.responsavel}"
+                        } else {
+                            tvTipoMesa.text = "Acerto"
+                        }
+                        tvTipoMesa.visibility = View.VISIBLE
+                        
+                        tvItensReformados.text = card.descricao
+                        tvItensReformados.visibility = View.VISIBLE
+                        
+                        // Observações
+                        if (!card.observacoes.isNullOrBlank()) {
+                            tvObservacoes.text = "Obs: ${card.observacoes}"
+                            tvObservacoes.visibility = View.VISIBLE
+                        } else {
+                            tvObservacoes.visibility = View.GONE
+                        }
+                        
+                        root.setOnClickListener { onItemClick(card) }
+                        root.isClickable = true
+                    }
+                    
+                    "ACERTO_LEGACY" -> {
+                        // ✅ ACERTO LEGACY (texto)
+                        tvNumeroMesa.text = "Mesa ${card.numeroMesa}"
+                        tvNumeroMesa.textSize = 16f
+                        tvNumeroMesa.setTypeface(null, android.graphics.Typeface.NORMAL)
+                        tvDataReforma.text = dateTimeFormat.format(Date(card.data))
+                        tvDataReforma.visibility = View.VISIBLE
+                        tvTipoMesa.text = "Acerto (Legacy)"
+                        tvTipoMesa.visibility = View.VISIBLE
+                        tvItensReformados.text = card.descricao
+                        tvItensReformados.visibility = View.VISIBLE
+                        
+                        // Observações
+                        if (!card.observacoes.isNullOrBlank()) {
+                            tvObservacoes.text = "Obs: ${card.observacoes}"
+                            tvObservacoes.visibility = View.VISIBLE
+                        } else {
+                            tvObservacoes.visibility = View.GONE
+                        }
+                        
+                        root.setOnClickListener { onItemClick(card) }
+                        root.isClickable = true
+                    }
+                    
+                    else -> {
+                        // ✅ FALLBACK (não deveria acontecer)
+                        tvNumeroMesa.text = "Mesa ${card.numeroMesa}"
+                        tvNumeroMesa.textSize = 16f
+                        tvNumeroMesa.setTypeface(null, android.graphics.Typeface.NORMAL)
+                        tvDataReforma.text = dateTimeFormat.format(Date(card.data))
+                        tvDataReforma.visibility = View.VISIBLE
+                        tvTipoMesa.text = "Tipo: ${card.origem}"
+                        tvTipoMesa.visibility = View.VISIBLE
+                        tvItensReformados.text = card.descricao
+                        tvItensReformados.visibility = View.VISIBLE
+                        tvObservacoes.visibility = View.GONE
+                        
+                        root.setOnClickListener { onItemClick(card) }
+                        root.isClickable = true
+                    }
                 }
-                binding.tvItensReformados.text = itensReformados
                 
-                // Observações da última reforma
-                if (!ultimaReforma.observacoes.isNullOrBlank()) {
-                    binding.tvObservacoes.text = "Obs: ${ultimaReforma.observacoes}"
-                    binding.tvObservacoes.visibility = View.VISIBLE
-                } else {
-                    binding.tvObservacoes.visibility = View.GONE
-                }
-            } else if (ultimaManutencao != null) {
-                // Fallback: Mostrar dados da última manutenção se não houver reforma
-                binding.tvItensReformados.text = "Manutenção: ${formatarTipoManutencao(ultimaManutencao.tipoManutencao)}"
-                
-                if (!ultimaManutencao.descricao.isNullOrBlank()) {
-                    binding.tvObservacoes.text = "Obs: ${ultimaManutencao.descricao}"
-                    binding.tvObservacoes.visibility = View.VISIBLE
-                } else {
-                    binding.tvObservacoes.visibility = View.GONE
-                }
-            } else {
-                binding.tvItensReformados.text = "Sem atividades registradas"
-                binding.tvObservacoes.visibility = View.GONE
-            }
-            
-            // Click listener
-            binding.root.setOnClickListener {
-                onItemClick(mesaComHistorico)
-            }
-        }
-        
-        private fun formatarTipoManutencao(tipo: TipoManutencao): String {
-            return when (tipo) {
-                TipoManutencao.PINTURA -> "Pintura"
-                TipoManutencao.TROCA_PANO -> "Troca de Pano"
-                TipoManutencao.TROCA_TABELA -> "Troca de Tabela"
-                TipoManutencao.REPARO_ESTRUTURAL -> "Reparo Estrutural"
-                TipoManutencao.LIMPEZA -> "Limpeza"
-                TipoManutencao.OUTROS -> "Outros"
+                // Total de reformas sempre invisível (não aplicável para cards individuais)
+                tvTotalReformas.visibility = View.GONE
             }
         }
     }
 
-    class DiffCallback : DiffUtil.ItemCallback<MesaReformadaComHistorico>() {
-        override fun areItemsTheSame(oldItem: MesaReformadaComHistorico, newItem: MesaReformadaComHistorico): Boolean {
-            return oldItem.mesaId == newItem.mesaId && oldItem.numeroMesa == newItem.numeroMesa
+    class DiffCallback : DiffUtil.ItemCallback<ReformaCard>() {
+        override fun areItemsTheSame(oldItem: ReformaCard, newItem: ReformaCard): Boolean {
+            return oldItem.id == newItem.id
         }
 
-        override fun areContentsTheSame(oldItem: MesaReformadaComHistorico, newItem: MesaReformadaComHistorico): Boolean {
+        override fun areContentsTheSame(oldItem: ReformaCard, newItem: ReformaCard): Boolean {
             return oldItem == newItem
         }
     }
 }
-
