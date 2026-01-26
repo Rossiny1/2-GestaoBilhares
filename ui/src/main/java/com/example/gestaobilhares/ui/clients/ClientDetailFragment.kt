@@ -324,17 +324,27 @@ class ClientDetailFragment : Fragment(), ConfirmarRetiradaMesaDialogFragment.Con
                         Toast.LENGTH_LONG
                     ).show()
                 } else {
-                    // Navegar para ContractGenerationFragment com parâmetros corretos
-                    val bundle = android.os.Bundle().apply {
-                        putLong("cliente_id", clientId)
-                        putLongArray("mesas_vinculadas", longArrayOf()) // Array vazio para novo contrato
-                        putBoolean("tipo_fixo", false) // Padrão: fichas jogadas
-                        putDouble("valor_fixo", 0.0) // Padrão: 0.0
+                    // ✅ CORREÇÃO: Obter mesas do cliente e passar IDs corretos
+                    val mesasDoCliente = viewModel.mesasCliente.first()
+                    
+                    if (mesasDoCliente.isEmpty()) {
+                        Toast.makeText(
+                            requireContext(),
+                            "Este cliente não possui mesas locadas. Vincule mesas antes de gerar o contrato.",
+                            Toast.LENGTH_LONG
+                        ).show()
+                    } else {
+                        val bundle = android.os.Bundle().apply {
+                            putLong("cliente_id", clientId)
+                            putLongArray("mesas_vinculadas", mesasDoCliente.map { it.id }.toLongArray())
+                            putBoolean("tipo_fixo", false)
+                            putDouble("valor_fixo", 0.0)
+                        }
+                        findNavController().navigate(
+                            com.example.gestaobilhares.ui.R.id.contractGenerationFragment,
+                            bundle
+                        )
                     }
-                    findNavController().navigate(
-                        com.example.gestaobilhares.ui.R.id.contractGenerationFragment,
-                        bundle
-                    )
                 }
                 recolherFabMenu()
             }
@@ -362,6 +372,12 @@ class ClientDetailFragment : Fragment(), ConfirmarRetiradaMesaDialogFragment.Con
         val formattedDebt = NumberFormat.getCurrencyInstance(Locale("pt", "BR")).format(cliente.debitoAtual)
         binding.tvClientCurrentDebt.text = formattedDebt
         binding.tvLastVisit.text = cliente.ultimaVisita
+        val locationTint = if (cliente.latitude != null && cliente.longitude != null) {
+            ContextCompat.getColor(requireContext(), R.color.green_500)
+        } else {
+            ContextCompat.getColor(requireContext(), R.color.white)
+        }
+        binding.ivLocationIcon.setColorFilter(locationTint)
         
         // ✅ NOVO: Exibir mensagem de pendência se houver
         if (cliente.mensagemPendencia != null && cliente.mensagemPendencia.isNotBlank()) {

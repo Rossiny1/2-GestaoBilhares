@@ -236,7 +236,6 @@ object ReciboPrinterHelper {
         texto.append("💰 *RESUMO FINANCEIRO:*\n")
         texto.append("• Débito anterior: ${formatter.format(debitoAnterior)}\n")
         texto.append("• Total das mesas: ${formatter.format(valorTotalMesas)}\n")
-        texto.append("• Valor da ficha: ${formatter.format(valorFicha)}\n")
         val valorTotal = valorTotalMesas + debitoAnterior
         texto.append("• Valor total: ${formatter.format(valorTotal)}\n")
         texto.append("• Desconto: ${formatter.format(desconto)}\n")
