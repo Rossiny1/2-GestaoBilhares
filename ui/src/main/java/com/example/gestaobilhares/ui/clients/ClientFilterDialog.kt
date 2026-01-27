@@ -16,8 +16,8 @@ import com.google.android.material.dialog.MaterialAlertDialogBuilder
  */
 class ClientFilterDialog(
     context: Context,
-    private val currentFilter: FiltroCliente,
-    private val onFilterSelected: (FiltroCliente) -> Unit
+    private val currentFilter: FiltroGeralCliente,
+    private val onFilterSelected: (FiltroGeralCliente) -> Unit
 ) : Dialog(context) {
 
     private lateinit var binding: DialogClientFilterBinding
@@ -43,15 +43,15 @@ class ClientFilterDialog(
     private fun setupListeners() {
         // Containers clicáveis
         binding.containerAtivos.setOnClickListener {
-            setSingleSelection(FiltroCliente.ACERTADOS)
+            setSingleSelection(FiltroGeralCliente.ATIVOS)
         }
 
         binding.containerInativos.setOnClickListener {
-            setSingleSelection(FiltroCliente.NAO_ACERTADOS)
+            setSingleSelection(FiltroGeralCliente.INATIVOS)
         }
 
         binding.containerTodos.setOnClickListener {
-            setSingleSelection(FiltroCliente.TODOS)
+            setSingleSelection(FiltroGeralCliente.TODOS)
         }
 
         // Botões
@@ -66,7 +66,7 @@ class ClientFilterDialog(
         }
     }
 
-    private fun setCurrentFilter(filter: FiltroCliente) {
+    private fun setCurrentFilter(filter: FiltroGeralCliente) {
         // Desmarcar todos primeiro
         binding.cbAtivos.isChecked = false
         binding.cbInativos.isChecked = false
@@ -74,14 +74,13 @@ class ClientFilterDialog(
 
         // Marcar o filtro atual
         when (filter) {
-            FiltroCliente.ACERTADOS -> binding.cbAtivos.isChecked = true
-            FiltroCliente.NAO_ACERTADOS -> binding.cbInativos.isChecked = true
-            FiltroCliente.TODOS -> binding.cbTodos.isChecked = true
-            FiltroCliente.PENDENCIAS -> binding.cbAtivos.isChecked = true // Fallback para acertados
+            FiltroGeralCliente.ATIVOS -> binding.cbAtivos.isChecked = true
+            FiltroGeralCliente.INATIVOS -> binding.cbInativos.isChecked = true
+            FiltroGeralCliente.TODOS -> binding.cbTodos.isChecked = true
         }
     }
 
-    private fun setSingleSelection(filter: FiltroCliente) {
+    private fun setSingleSelection(filter: FiltroGeralCliente) {
         // Desmarcar todos
         binding.cbAtivos.isChecked = false
         binding.cbInativos.isChecked = false
@@ -89,19 +88,18 @@ class ClientFilterDialog(
 
         // Marcar apenas o selecionado
         when (filter) {
-            FiltroCliente.ACERTADOS -> binding.cbAtivos.isChecked = true
-            FiltroCliente.NAO_ACERTADOS -> binding.cbInativos.isChecked = true
-            FiltroCliente.TODOS -> binding.cbTodos.isChecked = true
-            FiltroCliente.PENDENCIAS -> binding.cbAtivos.isChecked = true
+            FiltroGeralCliente.ATIVOS -> binding.cbAtivos.isChecked = true
+            FiltroGeralCliente.INATIVOS -> binding.cbInativos.isChecked = true
+            FiltroGeralCliente.TODOS -> binding.cbTodos.isChecked = true
         }
     }
 
-    private fun getSelectedFilter(): FiltroCliente {
+    private fun getSelectedFilter(): FiltroGeralCliente {
         return when {
-            binding.cbAtivos.isChecked -> FiltroCliente.ACERTADOS
-            binding.cbInativos.isChecked -> FiltroCliente.NAO_ACERTADOS
-            binding.cbTodos.isChecked -> FiltroCliente.TODOS
-            else -> FiltroCliente.ACERTADOS // Padrão
+            binding.cbAtivos.isChecked -> FiltroGeralCliente.ATIVOS
+            binding.cbInativos.isChecked -> FiltroGeralCliente.INATIVOS
+            binding.cbTodos.isChecked -> FiltroGeralCliente.TODOS
+            else -> FiltroGeralCliente.TODOS // Padrão
         }
     }
 
@@ -111,8 +109,8 @@ class ClientFilterDialog(
          */
         fun show(
             context: Context,
-            currentFilter: FiltroCliente,
-            onFilterSelected: (FiltroCliente) -> Unit
+            currentFilter: FiltroGeralCliente,
+            onFilterSelected: (FiltroGeralCliente) -> Unit
         ) {
             ClientFilterDialog(context, currentFilter, onFilterSelected).show()
         }

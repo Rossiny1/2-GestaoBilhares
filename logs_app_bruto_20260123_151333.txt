@@ -1,0 +1,1427 @@
+﻿
+01-23 15:10:09.897   843   843 I BufferQueueProducer: [com.example.gestaobilhares/com.example.gestaobilhares.MainActivi
+ty$_16008#0](this:0xb400006ffd844948,id:-1,api:0,p:-1,c:843) queueBuffer: fps=0.07 dur=165368.60 max=165116.00 
+min=16.32
+01-23 15:10:16.844   843   843 I BufferQueueProducer: [com.example.gestaobilhares/com.example.gestaobilhares.MainActivi
+ty$_16008#0](this:0xb400006ffd844948,id:-1,api:0,p:-1,c:843) queueBuffer: fps=0.29 dur=6947.01 max=6930.52 min=16.49
+01-23 15:10:18.048   843   843 I BufferQueueProducer: [com.example.gestaobilhares/com.example.gestaobilhares.MainActivi
+ty$_16008#0](this:0xb400006ffd844948,id:-1,api:0,p:-1,c:843) queueBuffer: fps=27.39 dur=1204.73 max=669.91 min=8.83
+01-23 15:10:20.125   843   843 I BufferQueueProducer: [com.example.gestaobilhares/com.example.gestaobilhares.MainActivi
+ty$_16008#0](this:0xb400006ffd844948,id:-1,api:0,p:-1,c:843) queueBuffer: fps=5.78 dur=2076.04 max=1825.12 min=16.32
+01-23 15:10:20.267 16008 16008 V Toast   : show: caller = 
+com.example.gestaobilhares.ui.mesas.NovaReformaFragment$observeViewModel$1$1$1.emit:196 
+01-23 15:10:20.315  1391  3894 V WindowManager: Relayout Window{26d009 u0 
+com.example.gestaobilhares/com.example.gestaobilhares.MainActivity}: viewVisibility=0 req=1080x2400 d0
+01-23 15:10:20.454   843   843 D SurfaceFlinger:      DEVICE | 0xb4000070050ece00 | 0100 | RGBA_8888    |    0.0    
+0.0 1080.0 2400.0 |    0    0 1080 2400 | com.example.gestaobilhares/com.example.gestaobilhares.MainActivity$_16008#0
+01-23 15:10:21.766   843   843 I BufferQueueProducer: [com.example.gestaobilhares/com.example.gestaobilhares.MainActivi
+ty$_16008#0](this:0xb400006ffd844948,id:-1,api:0,p:-1,c:843) queueBuffer: fps=8.53 dur=1641.80 max=1373.15 min=16.41
+01-23 15:10:21.816   843  2857 I SurfaceFlinger: [SF client] NEW(0xb4000070b1e81a00) for 
+(16008:com.example.gestaobilhares)
+01-23 15:10:21.823   843  2857 I SurfaceFlinger: id=16170 createSurf (0x0),-1 flag=80004, 1714a6b 
+com.example.gestaobilhares/com.example.gestaobilhares.MainActivity#0
+01-23 15:10:21.831  1391  3894 V WindowManager: Changing focus from Window{26d009 u0 
+com.example.gestaobilhares/com.example.gestaobilhares.MainActivity} to Window{1714a6b u0 
+com.example.gestaobilhares/com.example.gestaobilhares.MainActivity} displayId=0 
+Callers=com.android.server.wm.RootWindowContainer.updateFocusedWindowLocked:583 
+com.android.server.wm.WindowManagerService.updateFocusedWindowLocked:6477 
+com.android.server.wm.WindowManagerService.addWindow:2030 com.android.server.wm.Session.addToDisplayAsUser:211 
+01-23 15:10:21.831  1391  3894 D MARsPolicyManager: onPackageResumedFG pkgName = com.example.gestaobilhares, userId = 0
+01-23 15:10:21.852  1391  4231 V WindowManager: Relayout Window{1714a6b u0 
+com.example.gestaobilhares/com.example.gestaobilhares.MainActivity}: viewVisibility=0 req=1024x1043 d0
+01-23 15:10:21.856   843   903 E BufferQueueDebug: [com.example.gestaobilhares/com.example.gestaobilhares.MainActivity$
+_16008#1](this:0xb400006ffd891948,id:-1,api:0,p:-1,c:-1) id info cannot be read from 
+'com.example.gestaobilhares/com.example.gestaobilhares.MainActivity$_16008#1'
+01-23 15:10:21.857   843   903 I BufferQueueDebug: [com.example.gestaobilhares/com.example.gestaobilhares.MainActivity$
+_16008#1](this:0xb400006ffd891948,id:-1,api:0,p:-1,c:-1) BufferQueue core=(843:/system/bin/surfaceflinger)
+01-23 15:10:21.857   843   903 I SurfaceFlinger: id=16173 createSurf (65x65),-3 flag=40004, 
+com.example.gestaobilhares/com.example.gestaobilhares.MainActivity$_16008#1
+01-23 15:10:21.858  1391  4231 D WindowManager: makeSurface duration=2 
+name=com.example.gestaobilhares/com.example.gestaobilhares.MainActivity$_16008
+01-23 15:10:21.865 16008 16008 D InsetsSourceConsumer: ensureControlAlpha: for ITYPE_NAVIGATION_BAR on 
+com.example.gestaobilhares/com.example.gestaobilhares.MainActivity
+01-23 15:10:21.866 16008 16008 D InsetsSourceConsumer: ensureControlAlpha: for ITYPE_STATUS_BAR on 
+com.example.gestaobilhares/com.example.gestaobilhares.MainActivity
+01-23 15:10:21.884  1391  4231 D InputDispatcher: Focus request (0): 1714a6b 
+com.example.gestaobilhares/com.example.gestaobilhares.MainActivity but waiting because NOT_VISIBLE
+01-23 15:10:21.884  1391  4231 D InputDispatcher: Focus left window (0): 26d009 
+com.example.gestaobilhares/com.example.gestaobilhares.MainActivity
+01-23 15:10:21.891  1391  4231 D WindowManager: finishDrawingWindow: Window{1714a6b u0 
+com.example.gestaobilhares/com.example.gestaobilhares.MainActivity} mDrawState=DRAW_PENDING
+01-23 15:10:21.895  1391  1455 I WindowManager: Reparenting to leash, surface=Surface(name=1714a6b 
+com.example.gestaobilhares/com.example.gestaobilhares.MainActivity)/@0xe8edb9d, 
+leashParent=Surface(name=ActivityRecord{f9b151c u0 com.example.gestaobilhares/.MainActivity t3254})/@0xdff1a27
+01-23 15:10:21.896   843  1643 I SurfaceFlinger: id=16174 createSurf (0x0),-1 flag=24004, Surface(name=1714a6b 
+com.example.gestaobilhares/com.example.gestaobilhares.MainActivity)/@0xe8edb9d - animation-leash of window_animation#0
+01-23 15:10:21.897  1391  1455 D WindowManager: makeSurface duration=1 leash=Surface(name=Surface(name=1714a6b 
+com.example.gestaobilhares/com.example.gestaobilhares.MainActivity)/@0xe8edb9d - animation-leash of 
+window_animation)/@0x22b8812
+01-23 15:10:21.919  1391  4231 D InputDispatcher: Focus entered window (0): 1714a6b 
+com.example.gestaobilhares/com.example.gestaobilhares.MainActivity
+01-23 15:10:21.971   843   843 D SurfaceFlinger:      DEVICE | 0xb40000702b430b80 | 0100 | RGBA_8888    |    0.0    
+0.0 1080.0 2400.0 |    0    0 1080 2400 | com.example.gestaobilhares/com.example.gestaobilhares.MainActivity$_16008#0
+01-23 15:10:21.971   843   843 D SurfaceFlinger:      CLIENT | 0xb4000070050ec980 | 0100 | RGBA_8888    |    0.0    
+0.0 1088.0 1107.0 |   67  695 1004 1649 | com.example.gestaobilhares/com.example.gestaobilhares.MainActivity$_16008#1
+01-23 15:10:21.985   843   843 D SurfaceFlinger:      DEVICE | 0xb4000070050ece00 | 0100 | RGBA_8888    |    0.0    
+0.0 1080.0 2400.0 |    0    0 1080 2400 | com.example.gestaobilhares/com.example.gestaobilhares.MainActivity$_16008#0
+01-23 15:10:21.985   843   843 D SurfaceFlinger:      CLIENT | 0xb400006ffe1ebf00 | 0100 | RGBA_8888    |    0.0    
+0.0 1088.0 1107.0 |   25  653 1051 1697 | com.example.gestaobilhares/com.example.gestaobilhares.MainActivity$_16008#1
+01-23 15:10:22.302  1391  1455 I WindowManager: Reparenting to original parent: Surface(name=ActivityRecord{f9b151c u0 
+com.example.gestaobilhares/.MainActivity t3254})/@0xdff1a27, destroy=true, surface=Surface(name=1714a6b 
+com.example.gestaobilhares/com.example.gestaobilhares.MainActivity)/@0xe8edb9d
+01-23 15:10:22.319   843   843 I Layer   : id=16174 removedFromDrawingState Surface(name=1714a6b 
+com.example.gestaobilhares/com.example.gestaobilhares.MainActivity)/@0xe8edb9d - animation-leash of window_animation#0 
+(147)
+01-23 15:10:22.320   843   843 I SurfaceFlinger: id=16174 Removed Surface(name=1714a6b 
+com.example.gestaobilhares/com.example.gestaobilhares.MainActivity)/@0xe8edb9d - animation-leash of window_animation#0 
+(147)
+01-23 15:10:22.320   843   843 I Layer   : id=16174 Destroyed Surface(name=1714a6b 
+com.example.gestaobilhares/com.example.gestaobilhares.MainActivity)/@0xe8edb9d - animation-leash of window_animation#0
+01-23 15:10:22.658  1391  3894 W NotificationService: Toast already killed. pkg=com.example.gestaobilhares 
+token=android.os.BinderProxy@9082b37
+01-23 15:10:23.173   843   843 D SurfaceFlinger:      DEVICE | 0xb4000070050ece00 | 0100 | RGBA_8888    |    0.0    
+0.0 1080.0 2400.0 |    0    0 1080 2400 | com.example.gestaobilhares/com.example.gestaobilhares.MainActivity$_16008#0
+01-23 15:10:23.173   843   843 D SurfaceFlinger:      DEVICE | 0xb400006ffe1ebf00 | 0100 | RGBA_8888    |    4.0    
+0.0 1084.0 1107.0 |    0  623 1080 1730 | com.example.gestaobilhares/com.example.gestaobilhares.MainActivity$_16008#1
+01-23 15:10:24.289  1391  3894 W InputManager-JNI: Input channel object '1714a6b 
+com.example.gestaobilhares/com.example.gestaobilhares.MainActivity (client)' was disposed without first being removed 
+with the input manager!
+01-23 15:10:24.290  1391  3894 I WindowManager: Reparenting to leash, surface=Surface(name=1714a6b 
+com.example.gestaobilhares/com.example.gestaobilhares.MainActivity)/@0xe8edb9d, 
+leashParent=Surface(name=ActivityRecord{f9b151c u0 com.example.gestaobilhares/.MainActivity t3254})/@0xdff1a27
+01-23 15:10:24.290   843   904 I SurfaceFlinger: id=16178 createSurf (0x0),-1 flag=24000, Surface(name=1714a6b 
+com.example.gestaobilhares/com.example.gestaobilhares.MainActivity)/@0xe8edb9d - animation-leash of window_animation#0
+01-23 15:10:24.291  1391  3894 D WindowManager: makeSurface duration=2 leash=Surface(name=Surface(name=1714a6b 
+com.example.gestaobilhares/com.example.gestaobilhares.MainActivity)/@0xe8edb9d - animation-leash of 
+window_animation)/@0x13c100e
+01-23 15:10:24.292  1391  3894 V WindowManager: removeIfPossible 2, Window{1714a6b u0 
+com.example.gestaobilhares/com.example.gestaobilhares.MainActivity}: mAnimatingExit=true 
+caller=com.android.server.wm.WindowState.removeIfPossible:2984 
+com.android.server.wm.WindowManagerService.removeWindow:2246 com.android.server.wm.Session.remove:225 
+android.view.IWindowSession$Stub.onTransact:746 com.android.server.wm.Session.onTransact:176 
+01-23 15:10:24.292  1391  3894 V WindowManager: Changing focus from Window{1714a6b u0 
+com.example.gestaobilhares/com.example.gestaobilhares.MainActivity EXITING} to Window{26d009 u0 
+com.example.gestaobilhares/com.example.gestaobilhares.MainActivity} displayId=0 
+Callers=com.android.server.wm.RootWindowContainer.updateFocusedWindowLocked:583 
+com.android.server.wm.WindowManagerService.updateFocusedWindowLocked:6477 
+com.android.server.wm.WindowState.setupWindowForRemoveOnExit:3175 
+com.android.server.wm.WindowState.removeIfPossible:3143 
+01-23 15:10:24.292  1391  3894 D MARsPolicyManager: onPackageResumedFG pkgName = com.example.gestaobilhares, userId = 0
+01-23 15:10:24.295   843   843 I BufferQueueProducer: [com.example.gestaobilhares/com.example.gestaobilhares.MainActivi
+ty$_16008#1](this:0xb400006ffd891948,id:-1,api:0,p:-1,c:843) queueBuffer: fps=1.67 dur=2395.06 max=2321.34 min=16.88
+01-23 15:10:24.296  1391  4231 D InputDispatcher: Focus left window (0): 1714a6b 
+com.example.gestaobilhares/com.example.gestaobilhares.MainActivity
+01-23 15:10:24.313 16008 16008 D InsetsSourceConsumer: ensureControlAlpha: for ITYPE_NAVIGATION_BAR on 
+com.example.gestaobilhares/com.example.gestaobilhares.MainActivity
+01-23 15:10:24.313 16008 16008 D InsetsSourceConsumer: ensureControlAlpha: for ITYPE_STATUS_BAR on 
+com.example.gestaobilhares/com.example.gestaobilhares.MainActivity
+01-23 15:10:24.328   843   843 I BufferQueueProducer: [com.example.gestaobilhares/com.example.gestaobilhares.MainActivi
+ty$_16008#0](this:0xb400006ffd844948,id:-1,api:0,p:-1,c:843) queueBuffer: fps=9.37 dur=2561.58 max=2159.89 min=13.46
+01-23 15:10:24.329  1391  3894 D InputDispatcher: Focus entered window (0): 26d009 
+com.example.gestaobilhares/com.example.gestaobilhares.MainActivity
+01-23 15:10:24.352  3933  3933 I GoogleInputMethodService: GoogleInputMethodService.onStartInput():1349 
+onStartInput(EditorInfo{EditorInfo{packageName=com.example.gestaobilhares, inputType=0, inputTypeString=NULL, 
+enableLearning=false, autoCorrection=false, autoComplete=false, imeOptions=0, privateImeOptions=null, 
+actionName=UNSPECIFIED, actionLabel=null, initialSelStart=-1, initialSelEnd=-1, initialCapsMode=0, label=null, 
+fieldId=-1, fieldName=null, extras=Bundle[{displayId=0}], hintText=null, hintLocales=[]}}, false)
+01-23 15:10:24.446  1391  1455 I WindowManager: Reparenting to original parent: Surface(name=ActivityRecord{f9b151c u0 
+com.example.gestaobilhares/.MainActivity t3254})/@0xdff1a27, destroy=true, surface=Surface(name=1714a6b 
+com.example.gestaobilhares/com.example.gestaobilhares.MainActivity)/@0xe8edb9d
+01-23 15:10:24.453  1391  1455 E WindowManager: win=Window{1714a6b u0 
+com.example.gestaobilhares/com.example.gestaobilhares.MainActivity EXITING} destroySurfaces: appStopped=false 
+win.mWindowRemovalAllowed=true win.mRemoveOnExit=true win.mViewVisibility=0 
+caller=com.android.server.wm.ActivityRecord.destroySurfaces:5873 
+com.android.server.wm.ActivityRecord.destroySurfaces:5854 com.android.server.wm.WindowState.onExitAnimationDone:5983 
+com.android.server.wm.WindowStateAnimator.onAnimationFinished:242 
+com.android.server.wm.WindowState.onAnimationFinished:6236 
+com.android.server.wm.WindowContainer$$ExternalSyntheticLambda0.onAnimationFinished:2 
+com.android.server.wm.SurfaceAnimator.lambda$getFinishedCallback$0$SurfaceAnimator:113 
+01-23 15:10:24.453  1391  1455 I WindowManager: Destroying surface 
+Surface(name=com.example.gestaobilhares/com.example.gestaobilhares.MainActivity$_16008)/@0x8866c7d called by 
+com.android.server.wm.WindowStateAnimator.destroySurface:987 
+com.android.server.wm.WindowStateAnimator.destroySurfaceLocked:518 
+com.android.server.wm.WindowState.destroySurfaceUnchecked:4229 com.android.server.wm.WindowState.destroySurface:4203 
+com.android.server.wm.ActivityRecord.destroySurfaces:5873 com.android.server.wm.ActivityRecord.destroySurfaces:5854 
+com.android.server.wm.WindowState.onExitAnimationDone:5983 
+com.android.server.wm.WindowStateAnimator.onAnimationFinished:242 
+01-23 15:10:24.463   843   843 I Layer   : id=16173 removedFromDrawingState 
+com.example.gestaobilhares/com.example.gestaobilhares.MainActivity$_16008#1 (144)
+01-23 15:10:24.463   843   843 I Layer   : id=16170 removedFromDrawingState 1714a6b 
+com.example.gestaobilhares/com.example.gestaobilhares.MainActivity#0 (144)
+01-23 15:10:24.463   843   843 I Layer   : id=16178 removedFromDrawingState Surface(name=1714a6b 
+com.example.gestaobilhares/com.example.gestaobilhares.MainActivity)/@0xe8edb9d - animation-leash of window_animation#0 
+(144)
+01-23 15:10:24.463   843   843 I SurfaceFlinger: id=16170 Removed 1714a6b 
+com.example.gestaobilhares/com.example.gestaobilhares.MainActivity#0 (144)
+01-23 15:10:24.463   843   843 I SurfaceFlinger: id=16173 Removed 
+com.example.gestaobilhares/com.example.gestaobilhares.MainActivity$_16008#1 (144)
+01-23 15:10:24.463   843   843 I SurfaceFlinger: id=16178 Removed Surface(name=1714a6b 
+com.example.gestaobilhares/com.example.gestaobilhares.MainActivity)/@0xe8edb9d - animation-leash of window_animation#0 
+(144)
+01-23 15:10:24.464   843   843 I Layer   : id=16178 Destroyed Surface(name=1714a6b 
+com.example.gestaobilhares/com.example.gestaobilhares.MainActivity)/@0xe8edb9d - animation-leash of window_animation#0
+01-23 15:10:24.464   843   843 I Layer   : id=16170 Destroyed 1714a6b 
+com.example.gestaobilhares/com.example.gestaobilhares.MainActivity#0
+01-23 15:10:24.467   843   843 I BufferQueueDebug: [com.example.gestaobilhares/com.example.gestaobilhares.MainActivity$
+_16008#1](this:0xb400006ffd891948,id:-1,api:0,p:-1,c:843) onDestructor()
+01-23 15:10:24.467   843   843 I Layer   : id=16173 Destroyed 
+com.example.gestaobilhares/com.example.gestaobilhares.MainActivity$_16008#1
+01-23 15:10:24.471   843   843 D SurfaceFlinger:      DEVICE | 0xb4000070050ece00 | 0100 | RGBA_8888    |    0.0    
+0.0 1080.0 2400.0 |    0    0 1080 2400 | com.example.gestaobilhares/com.example.gestaobilhares.MainActivity$_16008#0
+01-23 15:10:25.736   843   843 I BufferQueueProducer: [com.example.gestaobilhares/com.example.gestaobilhares.MainActivi
+ty$_16008#0](this:0xb400006ffd844948,id:-1,api:0,p:-1,c:843) queueBuffer: fps=2.13 dur=1407.73 max=1373.89 min=16.70
+01-23 15:10:26.354   843  1643 I SurfaceFlinger: [SF client] NEW(0xb400007005e75600) for 
+(16008:com.example.gestaobilhares)
+01-23 15:10:26.358   843   904 I SurfaceFlinger: id=16182 createSurf (0x0),-1 flag=80004, 35b086c 
+com.example.gestaobilhares/com.example.gestaobilhares.MainActivity#0
+01-23 15:10:26.360  1391  3894 V WindowManager: Changing focus from Window{26d009 u0 
+com.example.gestaobilhares/com.example.gestaobilhares.MainActivity} to Window{35b086c u0 
+com.example.gestaobilhares/com.example.gestaobilhares.MainActivity} displayId=0 
+Callers=com.android.server.wm.RootWindowContainer.updateFocusedWindowLocked:583 
+com.android.server.wm.WindowManagerService.updateFocusedWindowLocked:6477 
+com.android.server.wm.WindowManagerService.addWindow:2030 com.android.server.wm.Session.addToDisplayAsUser:211 
+01-23 15:10:26.360  1391  3894 D MARsPolicyManager: onPackageResumedFG pkgName = com.example.gestaobilhares, userId = 0
+01-23 15:10:26.393  1391  4231 V WindowManager: Relayout Window{35b086c u0 
+com.example.gestaobilhares/com.example.gestaobilhares.MainActivity}: viewVisibility=0 req=1024x1845 d0
+01-23 15:10:26.394   843  1643 E BufferQueueDebug: [com.example.gestaobilhares/com.example.gestaobilhares.MainActivity$
+_16008#1](this:0xb400006ffd84c948,id:-1,api:0,p:-1,c:-1) id info cannot be read from 
+'com.example.gestaobilhares/com.example.gestaobilhares.MainActivity$_16008#1'
+01-23 15:10:26.394   843  1643 I BufferQueueDebug: [com.example.gestaobilhares/com.example.gestaobilhares.MainActivity$
+_16008#1](this:0xb400006ffd84c948,id:-1,api:0,p:-1,c:-1) BufferQueue core=(843:/system/bin/surfaceflinger)
+01-23 15:10:26.394   843  1643 I SurfaceFlinger: id=16185 createSurf (65x65),-3 flag=40004, 
+com.example.gestaobilhares/com.example.gestaobilhares.MainActivity$_16008#1
+01-23 15:10:26.395  1391  4231 D WindowManager: makeSurface duration=2 
+name=com.example.gestaobilhares/com.example.gestaobilhares.MainActivity$_16008
+01-23 15:10:26.400 16008 16008 D InsetsSourceConsumer: ensureControlAlpha: for ITYPE_NAVIGATION_BAR on 
+com.example.gestaobilhares/com.example.gestaobilhares.MainActivity
+01-23 15:10:26.401 16008 16008 D InsetsSourceConsumer: ensureControlAlpha: for ITYPE_STATUS_BAR on 
+com.example.gestaobilhares/com.example.gestaobilhares.MainActivity
+01-23 15:10:26.424  1391  3894 D InputDispatcher: Focus request (0): 35b086c 
+com.example.gestaobilhares/com.example.gestaobilhares.MainActivity but waiting because NOT_VISIBLE
+01-23 15:10:26.424  1391  3894 D InputDispatcher: Focus left window (0): 26d009 
+com.example.gestaobilhares/com.example.gestaobilhares.MainActivity
+01-23 15:10:26.441  1391  3894 D WindowManager: finishDrawingWindow: Window{35b086c u0 
+com.example.gestaobilhares/com.example.gestaobilhares.MainActivity} mDrawState=DRAW_PENDING
+01-23 15:10:26.445  1391  1455 I WindowManager: Reparenting to leash, surface=Surface(name=35b086c 
+com.example.gestaobilhares/com.example.gestaobilhares.MainActivity)/@0x6570196, 
+leashParent=Surface(name=ActivityRecord{f9b151c u0 com.example.gestaobilhares/.MainActivity t3254})/@0xdff1a27
+01-23 15:10:26.445   843   904 I SurfaceFlinger: id=16186 createSurf (0x0),-1 flag=24004, Surface(name=35b086c 
+com.example.gestaobilhares/com.example.gestaobilhares.MainActivity)/@0x6570196 - animation-leash of window_animation#0
+01-23 15:10:26.446  1391  1455 D WindowManager: makeSurface duration=2 leash=Surface(name=Surface(name=35b086c 
+com.example.gestaobilhares/com.example.gestaobilhares.MainActivity)/@0x6570196 - animation-leash of 
+window_animation)/@0x58b9117
+01-23 15:10:26.459  1391  3894 D InputDispatcher: Focus entered window (0): 35b086c 
+com.example.gestaobilhares/com.example.gestaobilhares.MainActivity
+01-23 15:10:26.497  3933  3933 I GoogleInputMethodService: GoogleInputMethodService.onStartInput():1349 
+onStartInput(EditorInfo{EditorInfo{packageName=com.example.gestaobilhares, inputType=0, inputTypeString=NULL, 
+enableLearning=false, autoCorrection=false, autoComplete=false, imeOptions=0, privateImeOptions=null, 
+actionName=UNSPECIFIED, actionLabel=null, initialSelStart=-1, initialSelEnd=-1, initialCapsMode=0, label=null, 
+fieldId=-1, fieldName=null, extras=Bundle[{displayId=0}], hintText=null, hintLocales=[]}}, false)
+01-23 15:10:26.504   843   843 D SurfaceFlinger:      DEVICE | 0xb4000070050ece00 | 0100 | RGBA_8888    |    0.0    
+0.0 1080.0 2400.0 |    0    0 1080 2400 | com.example.gestaobilhares/com.example.gestaobilhares.MainActivity$_16008#0
+01-23 15:10:26.504   843   843 D SurfaceFlinger:      CLIENT | 0xb400006ffe1ec500 | 0100 | RGBA_8888    |    0.0    
+0.0 1088.0 1909.0 |   69  353 1002 1991 | com.example.gestaobilhares/com.example.gestaobilhares.MainActivity$_16008#1
+01-23 15:10:26.860  1391  1455 I WindowManager: Reparenting to original parent: Surface(name=ActivityRecord{f9b151c u0 
+com.example.gestaobilhares/.MainActivity t3254})/@0xdff1a27, destroy=true, surface=Surface(name=35b086c 
+com.example.gestaobilhares/com.example.gestaobilhares.MainActivity)/@0x6570196
+01-23 15:10:26.876   843   843 I Layer   : id=16186 removedFromDrawingState Surface(name=35b086c 
+com.example.gestaobilhares/com.example.gestaobilhares.MainActivity)/@0x6570196 - animation-leash of window_animation#0 
+(144)
+01-23 15:10:26.876   843   843 I SurfaceFlinger: id=16186 Removed Surface(name=35b086c 
+com.example.gestaobilhares/com.example.gestaobilhares.MainActivity)/@0x6570196 - animation-leash of window_animation#0 
+(144)
+01-23 15:10:26.876   843   843 I Layer   : id=16186 Destroyed Surface(name=35b086c 
+com.example.gestaobilhares/com.example.gestaobilhares.MainActivity)/@0x6570196 - animation-leash of window_animation#0
+01-23 15:10:28.173 16008 16008 V Toast   : show: caller = 
+com.example.gestaobilhares.ui.mesas.NovaReformaFragment.registrarPanoReforma:569 
+01-23 15:10:28.181   843   843 I BufferQueueProducer: [com.example.gestaobilhares/com.example.gestaobilhares.MainActivi
+ty$_16008#1](this:0xb400006ffd84c948,id:-1,api:0,p:-1,c:843) queueBuffer: fps=9.76 dur=1741.11 max=803.38 min=16.66
+01-23 15:10:28.187  1391  3894 W InputManager-JNI: Input channel object '35b086c 
+com.example.gestaobilhares/com.example.gestaobilhares.MainActivity (client)' was disposed without first being removed 
+with the input manager!
+01-23 15:10:28.187  1391  3894 I WindowManager: Reparenting to leash, surface=Surface(name=35b086c 
+com.example.gestaobilhares/com.example.gestaobilhares.MainActivity)/@0x6570196, 
+leashParent=Surface(name=ActivityRecord{f9b151c u0 com.example.gestaobilhares/.MainActivity t3254})/@0xdff1a27
+01-23 15:10:28.188   843  1643 I SurfaceFlinger: id=16191 createSurf (0x0),-1 flag=24000, Surface(name=35b086c 
+com.example.gestaobilhares/com.example.gestaobilhares.MainActivity)/@0x6570196 - animation-leash of window_animation#0
+01-23 15:10:28.189  1391  3894 D WindowManager: makeSurface duration=2 leash=Surface(name=Surface(name=35b086c 
+com.example.gestaobilhares/com.example.gestaobilhares.MainActivity)/@0x6570196 - animation-leash of 
+window_animation)/@0x49cee07
+01-23 15:10:28.189  1391  3894 V WindowManager: removeIfPossible 2, Window{35b086c u0 
+com.example.gestaobilhares/com.example.gestaobilhares.MainActivity}: mAnimatingExit=true 
+caller=com.android.server.wm.WindowState.removeIfPossible:2984 
+com.android.server.wm.WindowManagerService.removeWindow:2246 com.android.server.wm.Session.remove:225 
+android.view.IWindowSession$Stub.onTransact:746 com.android.server.wm.Session.onTransact:176 
+01-23 15:10:28.190  1391  3894 V WindowManager: Changing focus from Window{35b086c u0 
+com.example.gestaobilhares/com.example.gestaobilhares.MainActivity EXITING} to Window{26d009 u0 
+com.example.gestaobilhares/com.example.gestaobilhares.MainActivity} displayId=0 
+Callers=com.android.server.wm.RootWindowContainer.updateFocusedWindowLocked:583 
+com.android.server.wm.WindowManagerService.updateFocusedWindowLocked:6477 
+com.android.server.wm.WindowState.setupWindowForRemoveOnExit:3175 
+com.android.server.wm.WindowState.removeIfPossible:3143 
+01-23 15:10:28.190  1391  3894 D MARsPolicyManager: onPackageResumedFG pkgName = com.example.gestaobilhares, userId = 0
+01-23 15:10:28.199  1391  4189 D InputDispatcher: Focus left window (0): 35b086c 
+com.example.gestaobilhares/com.example.gestaobilhares.MainActivity
+01-23 15:10:28.203 16008 16008 D InsetsSourceConsumer: ensureControlAlpha: for ITYPE_NAVIGATION_BAR on 
+com.example.gestaobilhares/com.example.gestaobilhares.MainActivity
+01-23 15:10:28.204 16008 16008 D InsetsSourceConsumer: ensureControlAlpha: for ITYPE_STATUS_BAR on 
+com.example.gestaobilhares/com.example.gestaobilhares.MainActivity
+01-23 15:10:28.233  1391  4231 D InputDispatcher: Focus entered window (0): 26d009 
+com.example.gestaobilhares/com.example.gestaobilhares.MainActivity
+01-23 15:10:28.251  3933  3933 I GoogleInputMethodService: GoogleInputMethodService.onStartInput():1349 
+onStartInput(EditorInfo{EditorInfo{packageName=com.example.gestaobilhares, inputType=0, inputTypeString=NULL, 
+enableLearning=false, autoCorrection=false, autoComplete=false, imeOptions=0, privateImeOptions=null, 
+actionName=UNSPECIFIED, actionLabel=null, initialSelStart=-1, initialSelEnd=-1, initialCapsMode=0, label=null, 
+fieldId=-1, fieldName=null, extras=Bundle[{displayId=0}], hintText=null, hintLocales=[]}}, false)
+01-23 15:10:28.281   843   843 I BufferQueueProducer: [com.example.gestaobilhares/com.example.gestaobilhares.MainActivi
+ty$_16008#0](this:0xb400006ffd844948,id:-1,api:0,p:-1,c:843) queueBuffer: fps=18.07 dur=2545.24 max=1589.79 min=16.26
+01-23 15:10:28.294   843   843 D SurfaceFlinger:      DEVICE | 0xb40000702b430b80 | 0100 | RGBA_8888    |    0.0    
+0.0 1080.0 2400.0 |    0    0 1080 2400 | com.example.gestaobilhares/com.example.gestaobilhares.MainActivity$_16008#0
+01-23 15:10:28.294   843   843 D SurfaceFlinger:      DEVICE | 0xb400006ffe1ec500 | 0100 | RGBA_8888    |    4.0    
+0.0 1084.0 1909.0 |    0  222 1080 2131 | com.example.gestaobilhares/com.example.gestaobilhares.MainActivity$_16008#1
+01-23 15:10:28.349  1391  1455 I WindowManager: Reparenting to original parent: Surface(name=ActivityRecord{f9b151c u0 
+com.example.gestaobilhares/.MainActivity t3254})/@0xdff1a27, destroy=true, surface=Surface(name=35b086c 
+com.example.gestaobilhares/com.example.gestaobilhares.MainActivity)/@0x6570196
+01-23 15:10:28.350  1391  1455 E WindowManager: win=Window{35b086c u0 
+com.example.gestaobilhares/com.example.gestaobilhares.MainActivity EXITING} destroySurfaces: appStopped=false 
+win.mWindowRemovalAllowed=true win.mRemoveOnExit=true win.mViewVisibility=0 
+caller=com.android.server.wm.ActivityRecord.destroySurfaces:5873 
+com.android.server.wm.ActivityRecord.destroySurfaces:5854 com.android.server.wm.WindowState.onExitAnimationDone:5983 
+com.android.server.wm.WindowStateAnimator.onAnimationFinished:242 
+com.android.server.wm.WindowState.onAnimationFinished:6236 
+com.android.server.wm.WindowContainer$$ExternalSyntheticLambda0.onAnimationFinished:2 
+com.android.server.wm.SurfaceAnimator.lambda$getFinishedCallback$0$SurfaceAnimator:113 
+01-23 15:10:28.350  1391  1455 I WindowManager: Destroying surface 
+Surface(name=com.example.gestaobilhares/com.example.gestaobilhares.MainActivity$_16008)/@0x3b17b93 called by 
+com.android.server.wm.WindowStateAnimator.destroySurface:987 
+com.android.server.wm.WindowStateAnimator.destroySurfaceLocked:518 
+com.android.server.wm.WindowState.destroySurfaceUnchecked:4229 com.android.server.wm.WindowState.destroySurface:4203 
+com.android.server.wm.ActivityRecord.destroySurfaces:5873 com.android.server.wm.ActivityRecord.destroySurfaces:5854 
+com.android.server.wm.WindowState.onExitAnimationDone:5983 
+com.android.server.wm.WindowStateAnimator.onAnimationFinished:242 
+01-23 15:10:28.365   843   843 I Layer   : id=16185 removedFromDrawingState 
+com.example.gestaobilhares/com.example.gestaobilhares.MainActivity$_16008#1 (148)
+01-23 15:10:28.365   843   843 I Layer   : id=16182 removedFromDrawingState 35b086c 
+com.example.gestaobilhares/com.example.gestaobilhares.MainActivity#0 (148)
+01-23 15:10:28.365   843   843 I Layer   : id=16191 removedFromDrawingState Surface(name=35b086c 
+com.example.gestaobilhares/com.example.gestaobilhares.MainActivity)/@0x6570196 - animation-leash of window_animation#0 
+(148)
+01-23 15:10:28.366   843   843 I SurfaceFlinger: id=16182 Removed 35b086c 
+com.example.gestaobilhares/com.example.gestaobilhares.MainActivity#0 (148)
+01-23 15:10:28.366   843   843 I SurfaceFlinger: id=16185 Removed 
+com.example.gestaobilhares/com.example.gestaobilhares.MainActivity$_16008#1 (148)
+01-23 15:10:28.366   843   843 I SurfaceFlinger: id=16191 Removed Surface(name=35b086c 
+com.example.gestaobilhares/com.example.gestaobilhares.MainActivity)/@0x6570196 - animation-leash of window_animation#0 
+(148)
+01-23 15:10:28.366   843   843 I Layer   : id=16191 Destroyed Surface(name=35b086c 
+com.example.gestaobilhares/com.example.gestaobilhares.MainActivity)/@0x6570196 - animation-leash of window_animation#0
+01-23 15:10:28.366   843   843 I Layer   : id=16182 Destroyed 35b086c 
+com.example.gestaobilhares/com.example.gestaobilhares.MainActivity#0
+01-23 15:10:28.369   843   843 I BufferQueueDebug: [com.example.gestaobilhares/com.example.gestaobilhares.MainActivity$
+_16008#1](this:0xb400006ffd84c948,id:-1,api:0,p:-1,c:843) onDestructor()
+01-23 15:10:28.369   843   843 I Layer   : id=16185 Destroyed 
+com.example.gestaobilhares/com.example.gestaobilhares.MainActivity$_16008#1
+01-23 15:10:28.373   843   843 D SurfaceFlinger:      DEVICE | 0xb40000702b430b80 | 0100 | RGBA_8888    |    0.0    
+0.0 1080.0 2400.0 |    0    0 1080 2400 | com.example.gestaobilhares/com.example.gestaobilhares.MainActivity$_16008#0
+01-23 15:10:29.286   843   843 I BufferQueueProducer: [com.example.gestaobilhares/com.example.gestaobilhares.MainActivi
+ty$_16008#0](this:0xb400006ffd844948,id:-1,api:0,p:-1,c:843) queueBuffer: fps=24.88 dur=1004.86 max=603.31 min=16.51
+01-23 15:10:29.875 16008 16008 V Toast   : show: caller = 
+com.example.gestaobilhares.ui.mesas.NovaReformaFragment$observeViewModel$4$1$1.emit:225 
+01-23 15:10:29.947  1391  3894 V WindowManager: Relayout Window{26d009 u0 
+com.example.gestaobilhares/com.example.gestaobilhares.MainActivity}: viewVisibility=0 req=1080x2400 d0
+01-23 15:10:30.307   843   843 I BufferQueueProducer: [com.example.gestaobilhares/com.example.gestaobilhares.MainActivi
+ty$_16008#0](this:0xb400006ffd844948,id:-1,api:0,p:-1,c:843) queueBuffer: fps=31.34 dur=1020.94 max=468.81 min=16.48
+01-23 15:10:30.521  1391  4189 W NotificationService: Toast already killed. pkg=com.example.gestaobilhares 
+token=android.os.BinderProxy@8e415a6
+01-23 15:10:30.639   843   843 D SurfaceFlinger:      DEVICE | 0xb4000070050ece00 | 0100 | RGBA_8888    |    0.0    
+0.0 1080.0 2400.0 |    0    0 1080 2400 | com.example.gestaobilhares/com.example.gestaobilhares.MainActivity$_16008#0
+01-23 15:10:31.050   843   843 D SurfaceFlinger:      DEVICE | 0xb4000070050ece00 | 0100 | RGBA_8888    |    0.0    
+0.0 1080.0 2400.0 |    0    0 1080 2400 | com.example.gestaobilhares/com.example.gestaobilhares.MainActivity$_16008#0
+01-23 15:10:33.123  1391  3894 W NotificationService: Toast already killed. pkg=com.example.gestaobilhares 
+token=android.os.BinderProxy@7e10d5c
+01-23 15:10:33.648   843   843 D SurfaceFlinger:      DEVICE | 0xb4000070050ece00 | 0100 | RGBA_8888    |    0.0    
+0.0 1080.0 2400.0 |    0    0 1080 2400 | com.example.gestaobilhares/com.example.gestaobilhares.MainActivity$_16008#0
+01-23 15:10:35.481   843   843 I BufferQueueProducer: [com.example.gestaobilhares/com.example.gestaobilhares.MainActivi
+ty$_16008#0](this:0xb400006ffd844948,id:-1,api:0,p:-1,c:843) queueBuffer: fps=1.55 dur=5174.50 max=5057.41 min=16.61
+01-23 15:10:36.708  1391  3894 V WindowManager: Relayout Window{26d009 u0 
+com.example.gestaobilhares/com.example.gestaobilhares.MainActivity}: viewVisibility=0 req=1080x2400 d0
+01-23 15:10:36.753   843   843 I BufferQueueProducer: [com.example.gestaobilhares/com.example.gestaobilhares.MainActivi
+ty$_16008#0](this:0xb400006ffd844948,id:-1,api:0,p:-1,c:843) queueBuffer: fps=1.57 dur=1271.99 max=1255.45 min=16.54
+01-23 15:10:37.758   843   843 I BufferQueueProducer: [com.example.gestaobilhares/com.example.gestaobilhares.MainActivi
+ty$_16008#0](this:0xb400006ffd844948,id:-1,api:0,p:-1,c:843) queueBuffer: fps=19.91 dur=1004.76 max=552.76 min=16.58
+01-23 15:10:39.461  1391  4231 V WindowManager: Relayout Window{26d009 u0 
+com.example.gestaobilhares/com.example.gestaobilhares.MainActivity}: viewVisibility=0 req=1080x2400 d0
+01-23 15:10:39.824   840  1796 I PerfHint: REPORT_BOTTLENECK_HINT_TRANSACTION :: param = 26d009 
+com.example.gestaobilhares/com.example.gestaobilhares.MainActivity (server)
+01-23 15:10:39.851   843   843 I BufferQueueProducer: [com.example.gestaobilhares/com.example.gestaobilhares.MainActivi
+ty$_16008#0](this:0xb400006ffd844948,id:-1,api:0,p:-1,c:843) queueBuffer: fps=0.96 dur=2093.48 max=2076.79 min=16.69
+01-23 15:10:40.857   843   843 I BufferQueueProducer: [com.example.gestaobilhares/com.example.gestaobilhares.MainActivi
+ty$_16008#0](this:0xb400006ffd844948,id:-1,api:0,p:-1,c:843) queueBuffer: fps=30.82 dur=1005.90 max=318.27 min=16.49
+01-23 15:10:48.809   843   843 I BufferQueueProducer: [com.example.gestaobilhares/com.example.gestaobilhares.MainActivi
+ty$_16008#0](this:0xb400006ffd844948,id:-1,api:0,p:-1,c:843) queueBuffer: fps=0.63 dur=7952.14 max=7818.26 min=16.58
+01-23 15:10:48.833   843  1643 I SurfaceFlinger: [SF client] NEW(0xb400007005e75600) for 
+(16008:com.example.gestaobilhares)
+01-23 15:10:48.837   843  1643 I SurfaceFlinger: id=16205 createSurf (0x0),-1 flag=80004, bae4431 
+com.example.gestaobilhares/com.example.gestaobilhares.MainActivity#0
+01-23 15:10:48.838  1391  3894 V WindowManager: Changing focus from Window{26d009 u0 
+com.example.gestaobilhares/com.example.gestaobilhares.MainActivity} to Window{bae4431 u0 
+com.example.gestaobilhares/com.example.gestaobilhares.MainActivity} displayId=0 
+Callers=com.android.server.wm.RootWindowContainer.updateFocusedWindowLocked:583 
+com.android.server.wm.WindowManagerService.updateFocusedWindowLocked:6477 
+com.android.server.wm.WindowManagerService.addWindow:2030 com.android.server.wm.Session.addToDisplayAsUser:211 
+01-23 15:10:48.838  1391  3894 D MARsPolicyManager: onPackageResumedFG pkgName = com.example.gestaobilhares, userId = 0
+01-23 15:10:48.858  1391  3894 V WindowManager: Relayout Window{bae4431 u0 
+com.example.gestaobilhares/com.example.gestaobilhares.MainActivity}: viewVisibility=0 req=1024x1361 d0
+01-23 15:10:48.859   843  1642 E BufferQueueDebug: [com.example.gestaobilhares/com.example.gestaobilhares.MainActivity$
+_16008#1](this:0xb400007005258948,id:-1,api:0,p:-1,c:-1) id info cannot be read from 
+'com.example.gestaobilhares/com.example.gestaobilhares.MainActivity$_16008#1'
+01-23 15:10:48.860   843  1642 I BufferQueueDebug: [com.example.gestaobilhares/com.example.gestaobilhares.MainActivity$
+_16008#1](this:0xb400007005258948,id:-1,api:0,p:-1,c:-1) BufferQueue core=(843:/system/bin/surfaceflinger)
+01-23 15:10:48.860   843  1642 I SurfaceFlinger: id=16208 createSurf (65x65),-3 flag=40004, 
+com.example.gestaobilhares/com.example.gestaobilhares.MainActivity$_16008#1
+01-23 15:10:48.861  1391  3894 D WindowManager: makeSurface duration=2 
+name=com.example.gestaobilhares/com.example.gestaobilhares.MainActivity$_16008
+01-23 15:10:48.866 16008 16008 D InsetsSourceConsumer: ensureControlAlpha: for ITYPE_NAVIGATION_BAR on 
+com.example.gestaobilhares/com.example.gestaobilhares.MainActivity
+01-23 15:10:48.866 16008 16008 D InsetsSourceConsumer: ensureControlAlpha: for ITYPE_STATUS_BAR on 
+com.example.gestaobilhares/com.example.gestaobilhares.MainActivity
+01-23 15:10:48.894  1391  3894 D WindowManager: finishDrawingWindow: Window{bae4431 u0 
+com.example.gestaobilhares/com.example.gestaobilhares.MainActivity} mDrawState=DRAW_PENDING
+01-23 15:10:48.898  1391  1455 I WindowManager: Reparenting to leash, surface=Surface(name=bae4431 
+com.example.gestaobilhares/com.example.gestaobilhares.MainActivity)/@0x9484869, 
+leashParent=Surface(name=ActivityRecord{f9b151c u0 com.example.gestaobilhares/.MainActivity t3254})/@0xdff1a27
+01-23 15:10:48.899   843  1642 I SurfaceFlinger: id=16209 createSurf (0x0),-1 flag=24004, Surface(name=bae4431 
+com.example.gestaobilhares/com.example.gestaobilhares.MainActivity)/@0x9484869 - animation-leash of window_animation#0
+01-23 15:10:48.899  1391  3894 D InputDispatcher: Focus request (0): bae4431 
+com.example.gestaobilhares/com.example.gestaobilhares.MainActivity but waiting because NOT_VISIBLE
+01-23 15:10:48.899  1391  3894 D InputDispatcher: Focus left window (0): 26d009 
+com.example.gestaobilhares/com.example.gestaobilhares.MainActivity
+01-23 15:10:48.900  1391  1455 D WindowManager: makeSurface duration=1 leash=Surface(name=Surface(name=bae4431 
+com.example.gestaobilhares/com.example.gestaobilhares.MainActivity)/@0x9484869 - animation-leash of 
+window_animation)/@0x40d02ee
+01-23 15:10:48.915  1391  3894 D InputDispatcher: Focus entered window (0): bae4431 
+com.example.gestaobilhares/com.example.gestaobilhares.MainActivity
+01-23 15:10:48.959   843   843 D SurfaceFlinger:      DEVICE | 0xb40000702b430b80 | 0100 | RGBA_8888    |    0.0    
+0.0 1080.0 2400.0 |    0    0 1080 2400 | com.example.gestaobilhares/com.example.gestaobilhares.MainActivity$_16008#0
+01-23 15:10:48.959   843   843 D SurfaceFlinger:      DEVICE | 0xb40000702b430580 | 0100 | RGBA_8888    |    4.0    
+0.0 1084.0 1425.0 |    0  464 1080 1889 | com.example.gestaobilhares/com.example.gestaobilhares.MainActivity$_16008#1
+01-23 15:10:49.065  1391  1455 I WindowManager: Reparenting to original parent: Surface(name=ActivityRecord{f9b151c u0 
+com.example.gestaobilhares/.MainActivity t3254})/@0xdff1a27, destroy=true, surface=Surface(name=bae4431 
+com.example.gestaobilhares/com.example.gestaobilhares.MainActivity)/@0x9484869
+01-23 15:10:49.081   843   843 I Layer   : id=16209 removedFromDrawingState Surface(name=bae4431 
+com.example.gestaobilhares/com.example.gestaobilhares.MainActivity)/@0x9484869 - animation-leash of window_animation#0 
+(144)
+01-23 15:10:49.082   843   843 I SurfaceFlinger: id=16209 Removed Surface(name=bae4431 
+com.example.gestaobilhares/com.example.gestaobilhares.MainActivity)/@0x9484869 - animation-leash of window_animation#0 
+(144)
+01-23 15:10:49.082   843   843 I Layer   : id=16209 Destroyed Surface(name=bae4431 
+com.example.gestaobilhares/com.example.gestaobilhares.MainActivity)/@0x9484869 - animation-leash of window_animation#0
+01-23 15:10:49.779  1391  3894 W InputManager-JNI: Input channel object 'bae4431 
+com.example.gestaobilhares/com.example.gestaobilhares.MainActivity (client)' was disposed without first being removed 
+with the input manager!
+01-23 15:10:49.781  1391  3894 I WindowManager: Reparenting to leash, surface=Surface(name=bae4431 
+com.example.gestaobilhares/com.example.gestaobilhares.MainActivity)/@0x9484869, 
+leashParent=Surface(name=ActivityRecord{f9b151c u0 com.example.gestaobilhares/.MainActivity t3254})/@0xdff1a27
+01-23 15:10:49.782   843  2857 I SurfaceFlinger: id=16212 createSurf (0x0),-1 flag=24000, Surface(name=bae4431 
+com.example.gestaobilhares/com.example.gestaobilhares.MainActivity)/@0x9484869 - animation-leash of window_animation#0
+01-23 15:10:49.783  1391  3894 D WindowManager: makeSurface duration=3 leash=Surface(name=Surface(name=bae4431 
+com.example.gestaobilhares/com.example.gestaobilhares.MainActivity)/@0x9484869 - animation-leash of 
+window_animation)/@0x6ec6cb4
+01-23 15:10:49.784  1391  3894 V WindowManager: removeIfPossible 2, Window{bae4431 u0 
+com.example.gestaobilhares/com.example.gestaobilhares.MainActivity}: mAnimatingExit=true 
+caller=com.android.server.wm.WindowState.removeIfPossible:2984 
+com.android.server.wm.WindowManagerService.removeWindow:2246 com.android.server.wm.Session.remove:225 
+android.view.IWindowSession$Stub.onTransact:746 com.android.server.wm.Session.onTransact:176 
+01-23 15:10:49.785  1391  3894 V WindowManager: Changing focus from Window{bae4431 u0 
+com.example.gestaobilhares/com.example.gestaobilhares.MainActivity EXITING} to Window{26d009 u0 
+com.example.gestaobilhares/com.example.gestaobilhares.MainActivity} displayId=0 
+Callers=com.android.server.wm.RootWindowContainer.updateFocusedWindowLocked:583 
+com.android.server.wm.WindowManagerService.updateFocusedWindowLocked:6477 
+com.android.server.wm.WindowState.setupWindowForRemoveOnExit:3175 
+com.android.server.wm.WindowState.removeIfPossible:3143 
+01-23 15:10:49.785  1391  3894 D MARsPolicyManager: onPackageResumedFG pkgName = com.example.gestaobilhares, userId = 0
+01-23 15:10:49.787  1391  4231 D InputDispatcher: Focus left window (0): bae4431 
+com.example.gestaobilhares/com.example.gestaobilhares.MainActivity
+01-23 15:10:49.798 16008 16008 D InsetsSourceConsumer: ensureControlAlpha: for ITYPE_NAVIGATION_BAR on 
+com.example.gestaobilhares/com.example.gestaobilhares.MainActivity
+01-23 15:10:49.799 16008 16008 D InsetsSourceConsumer: ensureControlAlpha: for ITYPE_STATUS_BAR on 
+com.example.gestaobilhares/com.example.gestaobilhares.MainActivity
+01-23 15:10:49.818   843   843 I BufferQueueProducer: [com.example.gestaobilhares/com.example.gestaobilhares.MainActivi
+ty$_16008#0](this:0xb400006ffd844948,id:-1,api:0,p:-1,c:843) queueBuffer: fps=23.80 dur=1008.24 max=603.05 min=16.25
+01-23 15:10:49.819  1391  4189 D InputDispatcher: Focus entered window (0): 26d009 
+com.example.gestaobilhares/com.example.gestaobilhares.MainActivity
+01-23 15:10:49.952  1391  1455 I WindowManager: Reparenting to original parent: Surface(name=ActivityRecord{f9b151c u0 
+com.example.gestaobilhares/.MainActivity t3254})/@0xdff1a27, destroy=true, surface=Surface(name=bae4431 
+com.example.gestaobilhares/com.example.gestaobilhares.MainActivity)/@0x9484869
+01-23 15:10:49.953  1391  1455 E WindowManager: win=Window{bae4431 u0 
+com.example.gestaobilhares/com.example.gestaobilhares.MainActivity EXITING} destroySurfaces: appStopped=false 
+win.mWindowRemovalAllowed=true win.mRemoveOnExit=true win.mViewVisibility=0 
+caller=com.android.server.wm.ActivityRecord.destroySurfaces:5873 
+com.android.server.wm.ActivityRecord.destroySurfaces:5854 com.android.server.wm.WindowState.onExitAnimationDone:5983 
+com.android.server.wm.WindowStateAnimator.onAnimationFinished:242 
+com.android.server.wm.WindowState.onAnimationFinished:6236 
+com.android.server.wm.WindowContainer$$ExternalSyntheticLambda0.onAnimationFinished:2 
+com.android.server.wm.SurfaceAnimator.lambda$getFinishedCallback$0$SurfaceAnimator:113 
+01-23 15:10:49.953  1391  1455 I WindowManager: Destroying surface 
+Surface(name=com.example.gestaobilhares/com.example.gestaobilhares.MainActivity$_16008)/@0x782be95 called by 
+com.android.server.wm.WindowStateAnimator.destroySurface:987 
+com.android.server.wm.WindowStateAnimator.destroySurfaceLocked:518 
+com.android.server.wm.WindowState.destroySurfaceUnchecked:4229 com.android.server.wm.WindowState.destroySurface:4203 
+com.android.server.wm.ActivityRecord.destroySurfaces:5873 com.android.server.wm.ActivityRecord.destroySurfaces:5854 
+com.android.server.wm.WindowState.onExitAnimationDone:5983 
+com.android.server.wm.WindowStateAnimator.onAnimationFinished:242 
+01-23 15:10:49.968   843   843 I Layer   : id=16208 removedFromDrawingState 
+com.example.gestaobilhares/com.example.gestaobilhares.MainActivity$_16008#1 (144)
+01-23 15:10:49.968   843   843 I Layer   : id=16205 removedFromDrawingState bae4431 
+com.example.gestaobilhares/com.example.gestaobilhares.MainActivity#0 (144)
+01-23 15:10:49.968   843   843 I Layer   : id=16212 removedFromDrawingState Surface(name=bae4431 
+com.example.gestaobilhares/com.example.gestaobilhares.MainActivity)/@0x9484869 - animation-leash of window_animation#0 
+(144)
+01-23 15:10:49.968   843   843 I SurfaceFlinger: id=16205 Removed bae4431 
+com.example.gestaobilhares/com.example.gestaobilhares.MainActivity#0 (144)
+01-23 15:10:49.969   843   843 I SurfaceFlinger: id=16208 Removed 
+com.example.gestaobilhares/com.example.gestaobilhares.MainActivity$_16008#1 (144)
+01-23 15:10:49.969   843   843 I SurfaceFlinger: id=16212 Removed Surface(name=bae4431 
+com.example.gestaobilhares/com.example.gestaobilhares.MainActivity)/@0x9484869 - animation-leash of window_animation#0 
+(144)
+01-23 15:10:49.969   843   843 I Layer   : id=16212 Destroyed Surface(name=bae4431 
+com.example.gestaobilhares/com.example.gestaobilhares.MainActivity)/@0x9484869 - animation-leash of window_animation#0
+01-23 15:10:49.969   843   843 I Layer   : id=16205 Destroyed bae4431 
+com.example.gestaobilhares/com.example.gestaobilhares.MainActivity#0
+01-23 15:10:49.972   843   843 I BufferQueueDebug: [com.example.gestaobilhares/com.example.gestaobilhares.MainActivity$
+_16008#1](this:0xb400007005258948,id:-1,api:0,p:-1,c:843) onDestructor()
+01-23 15:10:49.972   843   843 I Layer   : id=16208 Destroyed 
+com.example.gestaobilhares/com.example.gestaobilhares.MainActivity$_16008#1
+01-23 15:10:49.976   843   843 D SurfaceFlinger:      DEVICE | 0xb4000070050ed700 | 0100 | RGBA_8888    |    0.0    
+0.0 1080.0 2400.0 |    0    0 1080 2400 | com.example.gestaobilhares/com.example.gestaobilhares.MainActivity$_16008#0
+01-23 15:10:50.109  3933  3933 I GoogleInputMethodService: GoogleInputMethodService.onStartInput():1349 
+onStartInput(EditorInfo{EditorInfo{packageName=com.example.gestaobilhares, inputType=0, inputTypeString=NULL, 
+enableLearning=false, autoCorrection=false, autoComplete=false, imeOptions=0, privateImeOptions=null, 
+actionName=UNSPECIFIED, actionLabel=null, initialSelStart=-1, initialSelEnd=-1, initialCapsMode=0, label=null, 
+fieldId=-1, fieldName=null, extras=Bundle[{displayId=0}], hintText=null, hintLocales=[]}}, false)
+01-23 15:10:51.093  1391  3894 V WindowManager: Relayout Window{26d009 u0 
+com.example.gestaobilhares/com.example.gestaobilhares.MainActivity}: viewVisibility=0 req=1080x2400 d0
+01-23 15:10:51.107   843   843 I BufferQueueProducer: [com.example.gestaobilhares/com.example.gestaobilhares.MainActivi
+ty$_16008#0](this:0xb400006ffd844948,id:-1,api:0,p:-1,c:843) queueBuffer: fps=5.43 dur=1289.33 max=502.46 min=16.71
+01-23 15:10:51.201 16008 16008 W ƒöì DB_POPULATION:    [2] 
+com.example.gestaobilhares.data.repository.domain.CicloRepository.logDbInsertStart(CicloRepository.kt:49)
+01-23 15:10:51.202 16008 16008 W ƒöì DB_POPULATION:    [3] 
+com.example.gestaobilhares.data.repository.domain.CicloRepository.inserir(CicloRepository.kt:26)
+01-23 15:10:51.202 16008 16008 W ƒöì DB_POPULATION:    [4] 
+com.example.gestaobilhares.data.repository.AppRepository.inserirCicloAcerto(AppRepository.kt:1245)
+01-23 15:10:51.202 16008 16008 W ƒöì DB_POPULATION:    [5] 
+com.example.gestaobilhares.ui.clients.ClientListViewModel$iniciarRota$1.invokeSuspend(ClientListViewModel.kt:522)
+01-23 15:10:52.112   843   843 I BufferQueueProducer: [com.example.gestaobilhares/com.example.gestaobilhares.MainActivi
+ty$_16008#0](this:0xb400006ffd844948,id:-1,api:0,p:-1,c:843) queueBuffer: fps=42.78 dur=1005.07 max=301.46 min=16.56
+01-23 15:10:53.116   843   843 I BufferQueueProducer: [com.example.gestaobilhares/com.example.gestaobilhares.MainActivi
+ty$_16008#0](this:0xb400006ffd844948,id:-1,api:0,p:-1,c:843) queueBuffer: fps=42.82 dur=1004.26 max=183.89 min=16.35
+01-23 15:10:55.639  1391  3894 V WindowManager: Relayout Window{26d009 u0 
+com.example.gestaobilhares/com.example.gestaobilhares.MainActivity}: viewVisibility=0 req=1080x2400 d0
+01-23 15:10:56.063   843   843 I BufferQueueProducer: [com.example.gestaobilhares/com.example.gestaobilhares.MainActivi
+ty$_16008#0](this:0xb400006ffd844948,id:-1,api:0,p:-1,c:843) queueBuffer: fps=9.84 dur=2946.86 max=2427.70 min=16.19
+01-23 15:10:57.069   843   843 I BufferQueueProducer: [com.example.gestaobilhares/com.example.gestaobilhares.MainActivi
+ty$_16008#0](this:0xb400006ffd844948,id:-1,api:0,p:-1,c:843) queueBuffer: fps=9.94 dur=1005.86 max=837.14 min=16.15
+01-23 15:10:58.073   843   843 I BufferQueueProducer: [com.example.gestaobilhares/com.example.gestaobilhares.MainActivi
+ty$_16008#0](this:0xb400006ffd844948,id:-1,api:0,p:-1,c:843) queueBuffer: fps=3.99 dur=1003.55 max=919.97 min=16.79
+01-23 15:10:58.206   843  1642 I SurfaceFlinger: [SF client] NEW(0xb400007005a02040) for 
+(16008:com.example.gestaobilhares)
+01-23 15:10:58.211   843  1642 I SurfaceFlinger: id=16216 createSurf (0x0),-1 flag=80004, ea4bb3c 
+com.example.gestaobilhares/com.example.gestaobilhares.MainActivity#0
+01-23 15:10:58.213  1391  4229 V WindowManager: Changing focus from Window{26d009 u0 
+com.example.gestaobilhares/com.example.gestaobilhares.MainActivity} to Window{ea4bb3c u0 
+com.example.gestaobilhares/com.example.gestaobilhares.MainActivity} displayId=0 
+Callers=com.android.server.wm.RootWindowContainer.updateFocusedWindowLocked:583 
+com.android.server.wm.WindowManagerService.updateFocusedWindowLocked:6477 
+com.android.server.wm.WindowManagerService.addWindow:2030 com.android.server.wm.Session.addToDisplayAsUser:211 
+01-23 15:10:58.213  1391  4229 D MARsPolicyManager: onPackageResumedFG pkgName = com.example.gestaobilhares, userId = 0
+01-23 15:10:58.250  1391  4229 V WindowManager: Relayout Window{ea4bb3c u0 
+com.example.gestaobilhares/com.example.gestaobilhares.MainActivity}: viewVisibility=0 req=1024x1400 d0
+01-23 15:10:58.250   843  1643 E BufferQueueDebug: [com.example.gestaobilhares/com.example.gestaobilhares.MainActivity$
+_16008#1](this:0xb400006ffd820948,id:-1,api:0,p:-1,c:-1) id info cannot be read from 
+'com.example.gestaobilhares/com.example.gestaobilhares.MainActivity$_16008#1'
+01-23 15:10:58.251   843  1643 I BufferQueueDebug: [com.example.gestaobilhares/com.example.gestaobilhares.MainActivity$
+_16008#1](this:0xb400006ffd820948,id:-1,api:0,p:-1,c:-1) BufferQueue core=(843:/system/bin/surfaceflinger)
+01-23 15:10:58.251   843  1643 I SurfaceFlinger: id=16219 createSurf (65x65),-3 flag=40004, 
+com.example.gestaobilhares/com.example.gestaobilhares.MainActivity$_16008#1
+01-23 15:10:58.252  1391  4229 D WindowManager: makeSurface duration=2 
+name=com.example.gestaobilhares/com.example.gestaobilhares.MainActivity$_16008
+01-23 15:10:58.258 16008 16008 D InsetsSourceConsumer: ensureControlAlpha: for ITYPE_NAVIGATION_BAR on 
+com.example.gestaobilhares/com.example.gestaobilhares.MainActivity
+01-23 15:10:58.258 16008 16008 D InsetsSourceConsumer: ensureControlAlpha: for ITYPE_STATUS_BAR on 
+com.example.gestaobilhares/com.example.gestaobilhares.MainActivity
+01-23 15:10:58.276  1391  4229 D InputDispatcher: Focus request (0): ea4bb3c 
+com.example.gestaobilhares/com.example.gestaobilhares.MainActivity but waiting because NOT_VISIBLE
+01-23 15:10:58.276  1391  4229 D InputDispatcher: Focus left window (0): 26d009 
+com.example.gestaobilhares/com.example.gestaobilhares.MainActivity
+01-23 15:10:58.282  1391  4229 D WindowManager: finishDrawingWindow: Window{ea4bb3c u0 
+com.example.gestaobilhares/com.example.gestaobilhares.MainActivity} mDrawState=DRAW_PENDING
+01-23 15:10:58.288  1391  1455 I WindowManager: Reparenting to leash, surface=Surface(name=ea4bb3c 
+com.example.gestaobilhares/com.example.gestaobilhares.MainActivity)/@0x8320a79, 
+leashParent=Surface(name=ActivityRecord{f9b151c u0 com.example.gestaobilhares/.MainActivity t3254})/@0xdff1a27
+01-23 15:10:58.288   843  1642 I SurfaceFlinger: id=16220 createSurf (0x0),-1 flag=24004, Surface(name=ea4bb3c 
+com.example.gestaobilhares/com.example.gestaobilhares.MainActivity)/@0x8320a79 - animation-leash of window_animation#0
+01-23 15:10:58.290  1391  1455 D WindowManager: makeSurface duration=2 leash=Surface(name=Surface(name=ea4bb3c 
+com.example.gestaobilhares/com.example.gestaobilhares.MainActivity)/@0x8320a79 - animation-leash of 
+window_animation)/@0xf1583be
+01-23 15:10:58.313  1391  2006 D InputDispatcher: Focus entered window (0): ea4bb3c 
+com.example.gestaobilhares/com.example.gestaobilhares.MainActivity
+01-23 15:10:58.336   843   843 D SurfaceFlinger:      DEVICE | 0xb4000070050ece00 | 0100 | RGBA_8888    |    0.0    
+0.0 1080.0 2400.0 |    0    0 1080 2400 | com.example.gestaobilhares/com.example.gestaobilhares.MainActivity$_16008#0
+01-23 15:10:58.336   843   843 D SurfaceFlinger:      CLIENT | 0xb40000700520ec00 | 0100 | RGBA_8888    |    0.0    
+0.0 1088.0 1464.0 |   69  543 1002 1800 | com.example.gestaobilhares/com.example.gestaobilhares.MainActivity$_16008#1
+01-23 15:10:58.353   843   843 D SurfaceFlinger:      DEVICE | 0xb4000070050ed700 | 0100 | RGBA_8888    |    0.0    
+0.0 1080.0 2400.0 |    0    0 1080 2400 | com.example.gestaobilhares/com.example.gestaobilhares.MainActivity$_16008#0
+01-23 15:10:58.353   843   843 D SurfaceFlinger:      CLIENT | 0xb400006ffe1eb300 | 0100 | RGBA_8888    |    0.0    
+0.0 1088.0 1464.0 |   47  514 1027 1832 | com.example.gestaobilhares/com.example.gestaobilhares.MainActivity$_16008#1
+01-23 15:10:58.697  1391  1455 I WindowManager: Reparenting to original parent: Surface(name=ActivityRecord{f9b151c u0 
+com.example.gestaobilhares/.MainActivity t3254})/@0xdff1a27, destroy=true, surface=Surface(name=ea4bb3c 
+com.example.gestaobilhares/com.example.gestaobilhares.MainActivity)/@0x8320a79
+01-23 15:10:58.711   843   843 I Layer   : id=16220 removedFromDrawingState Surface(name=ea4bb3c 
+com.example.gestaobilhares/com.example.gestaobilhares.MainActivity)/@0x8320a79 - animation-leash of window_animation#0 
+(144)
+01-23 15:10:58.711   843   843 I SurfaceFlinger: id=16220 Removed Surface(name=ea4bb3c 
+com.example.gestaobilhares/com.example.gestaobilhares.MainActivity)/@0x8320a79 - animation-leash of window_animation#0 
+(144)
+01-23 15:10:58.711   843   843 I Layer   : id=16220 Destroyed Surface(name=ea4bb3c 
+com.example.gestaobilhares/com.example.gestaobilhares.MainActivity)/@0x8320a79 - animation-leash of window_animation#0
+01-23 15:10:59.207  1391  4198 W InputManager-JNI: Input channel object 'ea4bb3c 
+com.example.gestaobilhares/com.example.gestaobilhares.MainActivity (client)' was disposed without first being removed 
+with the input manager!
+01-23 15:10:59.208  1391  4198 I WindowManager: Reparenting to leash, surface=Surface(name=ea4bb3c 
+com.example.gestaobilhares/com.example.gestaobilhares.MainActivity)/@0x8320a79, 
+leashParent=Surface(name=ActivityRecord{f9b151c u0 com.example.gestaobilhares/.MainActivity t3254})/@0xdff1a27
+01-23 15:10:59.208   843  2857 I SurfaceFlinger: id=16223 createSurf (0x0),-1 flag=24000, Surface(name=ea4bb3c 
+com.example.gestaobilhares/com.example.gestaobilhares.MainActivity)/@0x8320a79 - animation-leash of window_animation#0
+01-23 15:10:59.209  1391  4198 D WindowManager: makeSurface duration=2 leash=Surface(name=Surface(name=ea4bb3c 
+com.example.gestaobilhares/com.example.gestaobilhares.MainActivity)/@0x8320a79 - animation-leash of 
+window_animation)/@0x2e19d07
+01-23 15:10:59.210  1391  4198 V WindowManager: removeIfPossible 2, Window{ea4bb3c u0 
+com.example.gestaobilhares/com.example.gestaobilhares.MainActivity}: mAnimatingExit=true 
+caller=com.android.server.wm.WindowState.removeIfPossible:2984 
+com.android.server.wm.WindowManagerService.removeWindow:2246 com.android.server.wm.Session.remove:225 
+android.view.IWindowSession$Stub.onTransact:746 com.android.server.wm.Session.onTransact:176 
+01-23 15:10:59.210  1391  4198 V WindowManager: Changing focus from Window{ea4bb3c u0 
+com.example.gestaobilhares/com.example.gestaobilhares.MainActivity EXITING} to Window{26d009 u0 
+com.example.gestaobilhares/com.example.gestaobilhares.MainActivity} displayId=0 
+Callers=com.android.server.wm.RootWindowContainer.updateFocusedWindowLocked:583 
+com.android.server.wm.WindowManagerService.updateFocusedWindowLocked:6477 
+com.android.server.wm.WindowState.setupWindowForRemoveOnExit:3175 
+com.android.server.wm.WindowState.removeIfPossible:3143 
+01-23 15:10:59.210  1391  4198 D MARsPolicyManager: onPackageResumedFG pkgName = com.example.gestaobilhares, userId = 0
+01-23 15:10:59.215  1391  4216 D InputDispatcher: Focus left window (0): ea4bb3c 
+com.example.gestaobilhares/com.example.gestaobilhares.MainActivity
+01-23 15:10:59.222 16008 16008 D InsetsSourceConsumer: ensureControlAlpha: for ITYPE_NAVIGATION_BAR on 
+com.example.gestaobilhares/com.example.gestaobilhares.MainActivity
+01-23 15:10:59.223 16008 16008 D InsetsSourceConsumer: ensureControlAlpha: for ITYPE_STATUS_BAR on 
+com.example.gestaobilhares/com.example.gestaobilhares.MainActivity
+01-23 15:10:59.247  1391  4216 D InputDispatcher: Focus entered window (0): 26d009 
+com.example.gestaobilhares/com.example.gestaobilhares.MainActivity
+01-23 15:10:59.255  3933  3933 I GoogleInputMethodService: GoogleInputMethodService.onStartInput():1349 
+onStartInput(EditorInfo{EditorInfo{packageName=com.example.gestaobilhares, inputType=0, inputTypeString=NULL, 
+enableLearning=false, autoCorrection=false, autoComplete=false, imeOptions=0, privateImeOptions=null, 
+actionName=UNSPECIFIED, actionLabel=null, initialSelStart=-1, initialSelEnd=-1, initialCapsMode=0, label=null, 
+fieldId=-1, fieldName=null, extras=Bundle[{displayId=0}], hintText=null, hintLocales=[]}}, false)
+01-23 15:10:59.279   843   843 I BufferQueueProducer: [com.example.gestaobilhares/com.example.gestaobilhares.MainActivi
+ty$_16008#0](this:0xb400006ffd844948,id:-1,api:0,p:-1,c:843) queueBuffer: fps=12.43 dur=1206.82 max=837.23 min=16.59
+01-23 15:10:59.365  1391  1455 I WindowManager: Reparenting to original parent: Surface(name=ActivityRecord{f9b151c u0 
+com.example.gestaobilhares/.MainActivity t3254})/@0xdff1a27, destroy=true, surface=Surface(name=ea4bb3c 
+com.example.gestaobilhares/com.example.gestaobilhares.MainActivity)/@0x8320a79
+01-23 15:10:59.367  1391  1455 E WindowManager: win=Window{ea4bb3c u0 
+com.example.gestaobilhares/com.example.gestaobilhares.MainActivity EXITING} destroySurfaces: appStopped=false 
+win.mWindowRemovalAllowed=true win.mRemoveOnExit=true win.mViewVisibility=0 
+caller=com.android.server.wm.ActivityRecord.destroySurfaces:5873 
+com.android.server.wm.ActivityRecord.destroySurfaces:5854 com.android.server.wm.WindowState.onExitAnimationDone:5983 
+com.android.server.wm.WindowStateAnimator.onAnimationFinished:242 
+com.android.server.wm.WindowState.onAnimationFinished:6236 
+com.android.server.wm.WindowContainer$$ExternalSyntheticLambda0.onAnimationFinished:2 
+com.android.server.wm.SurfaceAnimator.lambda$getFinishedCallback$0$SurfaceAnimator:113 
+01-23 15:10:59.368  1391  1455 I WindowManager: Destroying surface 
+Surface(name=com.example.gestaobilhares/com.example.gestaobilhares.MainActivity$_16008)/@0x9041215 called by 
+com.android.server.wm.WindowStateAnimator.destroySurface:987 
+com.android.server.wm.WindowStateAnimator.destroySurfaceLocked:518 
+com.android.server.wm.WindowState.destroySurfaceUnchecked:4229 com.android.server.wm.WindowState.destroySurface:4203 
+com.android.server.wm.ActivityRecord.destroySurfaces:5873 com.android.server.wm.ActivityRecord.destroySurfaces:5854 
+com.android.server.wm.WindowState.onExitAnimationDone:5983 
+com.android.server.wm.WindowStateAnimator.onAnimationFinished:242 
+01-23 15:10:59.381   843   843 I Layer   : id=16219 removedFromDrawingState 
+com.example.gestaobilhares/com.example.gestaobilhares.MainActivity$_16008#1 (144)
+01-23 15:10:59.381   843   843 I Layer   : id=16216 removedFromDrawingState ea4bb3c 
+com.example.gestaobilhares/com.example.gestaobilhares.MainActivity#0 (144)
+01-23 15:10:59.381   843   843 I Layer   : id=16223 removedFromDrawingState Surface(name=ea4bb3c 
+com.example.gestaobilhares/com.example.gestaobilhares.MainActivity)/@0x8320a79 - animation-leash of window_animation#0 
+(144)
+01-23 15:10:59.382   843   843 I SurfaceFlinger: id=16216 Removed ea4bb3c 
+com.example.gestaobilhares/com.example.gestaobilhares.MainActivity#0 (144)
+01-23 15:10:59.382   843   843 I SurfaceFlinger: id=16219 Removed 
+com.example.gestaobilhares/com.example.gestaobilhares.MainActivity$_16008#1 (144)
+01-23 15:10:59.382   843   843 I SurfaceFlinger: id=16223 Removed Surface(name=ea4bb3c 
+com.example.gestaobilhares/com.example.gestaobilhares.MainActivity)/@0x8320a79 - animation-leash of window_animation#0 
+(144)
+01-23 15:10:59.384   843   843 I Layer   : id=16223 Destroyed Surface(name=ea4bb3c 
+com.example.gestaobilhares/com.example.gestaobilhares.MainActivity)/@0x8320a79 - animation-leash of window_animation#0
+01-23 15:10:59.384   843   843 I Layer   : id=16216 Destroyed ea4bb3c 
+com.example.gestaobilhares/com.example.gestaobilhares.MainActivity#0
+01-23 15:10:59.392   843   843 I BufferQueueDebug: [com.example.gestaobilhares/com.example.gestaobilhares.MainActivity$
+_16008#1](this:0xb400006ffd820948,id:-1,api:0,p:-1,c:843) onDestructor()
+01-23 15:10:59.392   843   843 I Layer   : id=16219 Destroyed 
+com.example.gestaobilhares/com.example.gestaobilhares.MainActivity$_16008#1
+01-23 15:10:59.399   843   843 D SurfaceFlinger:      DEVICE | 0xb40000702b430b80 | 0100 | RGBA_8888    |    0.0    
+0.0 1080.0 2400.0 |    0    0 1080 2400 | com.example.gestaobilhares/com.example.gestaobilhares.MainActivity$_16008#0
+01-23 15:11:00.283   843   843 I BufferQueueProducer: [com.example.gestaobilhares/com.example.gestaobilhares.MainActivi
+ty$_16008#0](this:0xb400006ffd844948,id:-1,api:0,p:-1,c:843) queueBuffer: fps=1.99 dur=1004.01 max=987.90 min=16.11
+01-23 15:11:02.142   843   843 I BufferQueueProducer: [com.example.gestaobilhares/com.example.gestaobilhares.MainActivi
+ty$_16008#0](this:0xb400006ffd844948,id:-1,api:0,p:-1,c:843) queueBuffer: fps=12.37 dur=1858.83 max=1489.92 min=16.51
+01-23 15:11:03.162 16008 16008 I IMM_LC  : ssi() - flag : 0 view : com.example.gestaobilhares reason = SHOW_SOFT_INPUT
+01-23 15:11:03.176  3933  3933 I GoogleInputMethodService: GoogleInputMethodService.onStartInput():1349 
+onStartInput(EditorInfo{EditorInfo{packageName=com.example.gestaobilhares, inputType=2, inputTypeString=Number, 
+enableLearning=false, autoCorrection=false, autoComplete=false, imeOptions=48000005, privateImeOptions=null, 
+actionName=NEXT, actionLabel=null, initialSelStart=0, initialSelEnd=0, initialCapsMode=0, label=null, 
+fieldId=2131296771, fieldName=null, extras=Bundle[{android.support.text.emoji.emojiCompat_metadataVersion=11, 
+android.support.text.emoji.emojiCompat_replaceAll=false, displayId=0}], hintText=non-empty, hintLocales=[]}}, false)
+01-23 15:11:03.188  3933  3933 I GoogleInputMethodService: GoogleInputMethodService.onStartInputView():1447 
+onStartInputView(EditorInfo{EditorInfo{packageName=com.example.gestaobilhares, inputType=2, inputTypeString=Number, 
+enableLearning=false, autoCorrection=false, autoComplete=false, imeOptions=48000005, privateImeOptions=null, 
+actionName=NEXT, actionLabel=null, initialSelStart=0, initialSelEnd=0, initialCapsMode=0, label=null, 
+fieldId=2131296771, fieldName=null, extras=Bundle[{android.support.text.emoji.emojiCompat_metadataVersion=11, 
+android.support.text.emoji.emojiCompat_replaceAll=false, displayId=0}], hintText=non-empty, hintLocales=[]}}, false)
+01-23 15:11:03.190  1391  4216 D ContentCapturePerUserService: Notified activity assist data for activity: 
+Token{a43ae8f ActivityRecord{f9b151c u0 com.example.gestaobilhares/.MainActivity t3254}} without a session Id
+01-23 15:11:03.197   843   843 I BufferQueueProducer: [com.example.gestaobilhares/com.example.gestaobilhares.MainActivi
+ty$_16008#0](this:0xb400006ffd844948,id:-1,api:0,p:-1,c:843) queueBuffer: fps=38.88 dur=1054.56 max=267.92 min=16.26
+01-23 15:11:03.358 16008 16008 D InsetsSourceConsumer: setRequestedVisible: visible=true, type=19, 
+host=com.example.gestaobilhares/com.example.gestaobilhares.MainActivity, 
+from=android.view.InsetsSourceConsumer.show:246 android.view.InsetsController.showDirectly:1489 
+android.view.InsetsController.controlAnimationUnchecked:1137 android.view.InsetsController.applyAnimation:1456 
+android.view.InsetsController.applyAnimation:1437 android.view.InsetsController.show:976 
+android.view.ViewRootImpl$ViewRootHandler.handleMessageImpl:6478 
+android.view.ViewRootImpl$ViewRootHandler.handleMessage:6403 android.os.Handler.dispatchMessage:106 
+android.os.Looper.loopOnce:226 
+01-23 15:11:03.363  1391  4229 D InsetsSourceProvider: updateVisibility: serverVisible=true, clientVisible=true, 
+source=InsetsSource: {mType=ITYPE_IME, mFrame=[0,2274][1080,2400], mVisible=true}, controlTarget=Window{26d009 u0 
+com.example.gestaobilhares/com.example.gestaobilhares.MainActivity}, 
+from=com.android.server.wm.ImeInsetsSourceProvider.updateVisibility:89 
+com.android.server.wm.InsetsSourceProvider.setClientVisible:415 
+com.android.server.wm.InsetsSourceProvider.updateClientVisibility:400 
+com.android.server.wm.InsetsStateController.onInsetsModified:508 
+com.android.server.wm.InsetsPolicy.onInsetsModified:510 com.android.server.wm.Session.insetsModified:704 
+android.view.IWindowSession$Stub.onTransact:1256 com.android.server.wm.Session.onTransact:176 
+android.os.Binder.execTransactInternal:1220 android.os.Binder.execTransact:1179 
+01-23 15:11:03.386  4071  4071 I SS:HintsMappingManager: getEntityTypeFromResourceMap map: 
+com.example.gestaobilhares.MainActivity_com.example.gestaobilhares_etRelogioFinal, value: null
+01-23 15:11:03.406   843   843 D SurfaceFlinger:      DEVICE | 0xb40000702b430b80 | 0100 | RGBA_8888    |    0.0    
+0.0 1080.0 2400.0 |    0    0 1080 2400 | com.example.gestaobilhares/com.example.gestaobilhares.MainActivity$_16008#0
+01-23 15:11:04.196  3933  3933 I GoogleInputMethodService: GoogleInputMethodService.onStartInput():1349 
+onStartInput(EditorInfo{EditorInfo{packageName=com.example.gestaobilhares, inputType=2, inputTypeString=Number, 
+enableLearning=false, autoCorrection=false, autoComplete=false, imeOptions=48000005, privateImeOptions=null, 
+actionName=NEXT, actionLabel=null, initialSelStart=1, initialSelEnd=1, initialCapsMode=0, label=null, 
+fieldId=2131296771, fieldName=null, extras=Bundle[{android.support.text.emoji.emojiCompat_metadataVersion=11, 
+android.support.text.emoji.emojiCompat_replaceAll=false, displayId=0}], hintText=non-empty, hintLocales=[]}}, false)
+01-23 15:11:04.200  3933  3933 I GoogleInputMethodService: GoogleInputMethodService.onStartInputView():1447 
+onStartInputView(EditorInfo{EditorInfo{packageName=com.example.gestaobilhares, inputType=2, inputTypeString=Number, 
+enableLearning=false, autoCorrection=false, autoComplete=false, imeOptions=48000005, privateImeOptions=null, 
+actionName=NEXT, actionLabel=null, initialSelStart=1, initialSelEnd=1, initialCapsMode=0, label=null, 
+fieldId=2131296771, fieldName=null, extras=Bundle[{android.support.text.emoji.emojiCompat_metadataVersion=11, 
+android.support.text.emoji.emojiCompat_replaceAll=false, displayId=0}], hintText=non-empty, hintLocales=[]}}, false)
+01-23 15:11:04.218   843   843 I BufferQueueProducer: [com.example.gestaobilhares/com.example.gestaobilhares.MainActivi
+ty$_16008#0](this:0xb400006ffd844948,id:-1,api:0,p:-1,c:843) queueBuffer: fps=40.14 dur=1021.39 max=334.67 min=16.02
+01-23 15:11:04.689  3933  3933 I GoogleInputMethodService: GoogleInputMethodService.onStartInput():1349 
+onStartInput(EditorInfo{EditorInfo{packageName=com.example.gestaobilhares, inputType=2, inputTypeString=Number, 
+enableLearning=false, autoCorrection=false, autoComplete=false, imeOptions=48000005, privateImeOptions=null, 
+actionName=NEXT, actionLabel=null, initialSelStart=2, initialSelEnd=2, initialCapsMode=0, label=null, 
+fieldId=2131296771, fieldName=null, extras=Bundle[{android.support.text.emoji.emojiCompat_metadataVersion=11, 
+android.support.text.emoji.emojiCompat_replaceAll=false, displayId=0}], hintText=non-empty, hintLocales=[]}}, false)
+01-23 15:11:04.694  3933  3933 I GoogleInputMethodService: GoogleInputMethodService.onStartInputView():1447 
+onStartInputView(EditorInfo{EditorInfo{packageName=com.example.gestaobilhares, inputType=2, inputTypeString=Number, 
+enableLearning=false, autoCorrection=false, autoComplete=false, imeOptions=48000005, privateImeOptions=null, 
+actionName=NEXT, actionLabel=null, initialSelStart=2, initialSelEnd=2, initialCapsMode=0, label=null, 
+fieldId=2131296771, fieldName=null, extras=Bundle[{android.support.text.emoji.emojiCompat_metadataVersion=11, 
+android.support.text.emoji.emojiCompat_replaceAll=false, displayId=0}], hintText=non-empty, hintLocales=[]}}, false)
+01-23 15:11:04.987  3933  3933 I GoogleInputMethodService: GoogleInputMethodService.onStartInput():1349 
+onStartInput(EditorInfo{EditorInfo{packageName=com.example.gestaobilhares, inputType=2, inputTypeString=Number, 
+enableLearning=false, autoCorrection=false, autoComplete=false, imeOptions=48000005, privateImeOptions=null, 
+actionName=NEXT, actionLabel=null, initialSelStart=3, initialSelEnd=3, initialCapsMode=0, label=null, 
+fieldId=2131296771, fieldName=null, extras=Bundle[{android.support.text.emoji.emojiCompat_metadataVersion=11, 
+android.support.text.emoji.emojiCompat_replaceAll=false, displayId=0}], hintText=non-empty, hintLocales=[]}}, false)
+01-23 15:11:04.991  3933  3933 I GoogleInputMethodService: GoogleInputMethodService.onStartInputView():1447 
+onStartInputView(EditorInfo{EditorInfo{packageName=com.example.gestaobilhares, inputType=2, inputTypeString=Number, 
+enableLearning=false, autoCorrection=false, autoComplete=false, imeOptions=48000005, privateImeOptions=null, 
+actionName=NEXT, actionLabel=null, initialSelStart=3, initialSelEnd=3, initialCapsMode=0, label=null, 
+fieldId=2131296771, fieldName=null, extras=Bundle[{android.support.text.emoji.emojiCompat_metadataVersion=11, 
+android.support.text.emoji.emojiCompat_replaceAll=false, displayId=0}], hintText=non-empty, hintLocales=[]}}, false)
+01-23 15:11:04.997  1391  4245 D ContentCapturePerUserService: Notified activity assist data for activity: 
+Token{a43ae8f ActivityRecord{f9b151c u0 com.example.gestaobilhares/.MainActivity t3254}} without a session Id
+01-23 15:11:05.070  4071  4071 I SS:HintsMappingManager: getEntityTypeFromResourceMap map: 
+com.example.gestaobilhares.MainActivity_com.example.gestaobilhares_etRelogioFinal, value: null
+01-23 15:11:05.296  3933  3933 I GoogleInputMethodService: GoogleInputMethodService.onStartInput():1349 
+onStartInput(EditorInfo{EditorInfo{packageName=com.example.gestaobilhares, inputType=2, inputTypeString=Number, 
+enableLearning=false, autoCorrection=false, autoComplete=false, imeOptions=48000005, privateImeOptions=null, 
+actionName=NEXT, actionLabel=null, initialSelStart=4, initialSelEnd=4, initialCapsMode=0, label=null, 
+fieldId=2131296771, fieldName=null, extras=Bundle[{android.support.text.emoji.emojiCompat_metadataVersion=11, 
+android.support.text.emoji.emojiCompat_replaceAll=false, displayId=0}], hintText=non-empty, hintLocales=[]}}, false)
+01-23 15:11:05.301  3933  3933 I GoogleInputMethodService: GoogleInputMethodService.onStartInputView():1447 
+onStartInputView(EditorInfo{EditorInfo{packageName=com.example.gestaobilhares, inputType=2, inputTypeString=Number, 
+enableLearning=false, autoCorrection=false, autoComplete=false, imeOptions=48000005, privateImeOptions=null, 
+actionName=NEXT, actionLabel=null, initialSelStart=4, initialSelEnd=4, initialCapsMode=0, label=null, 
+fieldId=2131296771, fieldName=null, extras=Bundle[{android.support.text.emoji.emojiCompat_metadataVersion=11, 
+android.support.text.emoji.emojiCompat_replaceAll=false, displayId=0}], hintText=non-empty, hintLocales=[]}}, false)
+01-23 15:11:05.306   843   843 I BufferQueueProducer: [com.example.gestaobilhares/com.example.gestaobilhares.MainActivi
+ty$_16008#0](this:0xb400006ffd844948,id:-1,api:0,p:-1,c:843) queueBuffer: fps=48.70 dur=1088.21 max=150.72 min=16.49
+01-23 15:11:05.919 16008 16008 D InsetsSourceConsumer: setRequestedVisible: visible=false, type=19, 
+host=com.example.gestaobilhares/com.example.gestaobilhares.MainActivity, 
+from=android.view.InsetsSourceConsumer.hide:253 android.view.ImeInsetsSourceConsumer.hide:68 
+android.view.ImeInsetsSourceConsumer.hide:74 android.view.InsetsController.hideDirectly:1473 
+android.view.InsetsController.controlAnimationUnchecked:1139 android.view.InsetsController.applyAnimation:1456 
+android.view.InsetsController.applyAnimation:1437 android.view.InsetsController.hide:1006 
+android.view.ViewRootImpl$ViewRootHandler.handleMessageImpl:6482 
+android.view.ViewRootImpl$ViewRootHandler.handleMessage:6403 
+01-23 15:11:05.920  1391  2006 D InsetsSourceProvider: updateVisibility: serverVisible=true, clientVisible=false, 
+source=InsetsSource: {mType=ITYPE_IME, mFrame=[0,1517][1080,2400], mVisible=false}, controlTarget=Window{26d009 u0 
+com.example.gestaobilhares/com.example.gestaobilhares.MainActivity}, 
+from=com.android.server.wm.ImeInsetsSourceProvider.updateVisibility:89 
+com.android.server.wm.InsetsSourceProvider.setClientVisible:415 
+com.android.server.wm.InsetsSourceProvider.updateClientVisibility:400 
+com.android.server.wm.InsetsStateController.onInsetsModified:508 
+com.android.server.wm.InsetsPolicy.onInsetsModified:510 com.android.server.wm.Session.insetsModified:704 
+android.view.IWindowSession$Stub.onTransact:1256 com.android.server.wm.Session.onTransact:176 
+android.os.Binder.execTransactInternal:1220 android.os.Binder.execTransact:1179 
+01-23 15:11:05.952 16008 16008 D InsetsSourceConsumer: ensureControlAlpha: for ITYPE_NAVIGATION_BAR on 
+com.example.gestaobilhares/com.example.gestaobilhares.MainActivity
+01-23 15:11:06.151   843   843 D SurfaceFlinger:      DEVICE | 0xb4000070050ed700 | 0100 | RGBA_8888    |    0.0    
+0.0 1080.0 2400.0 |    0    0 1080 2400 | com.example.gestaobilhares/com.example.gestaobilhares.MainActivity$_16008#0
+01-23 15:11:06.311   843   843 I BufferQueueProducer: [com.example.gestaobilhares/com.example.gestaobilhares.MainActivi
+ty$_16008#0](this:0xb400006ffd844948,id:-1,api:0,p:-1,c:843) queueBuffer: fps=19.91 dur=1004.45 max=334.55 min=16.51
+01-23 15:11:07.283  1391  4245 D PhoneWindowManagerExt: f.b. a=false id=50052 he=true eme=false ksno=false uid=12022 
+callingPackage=com.example.gestaobilhares reason=null 
+Caller=com.android.server.policy.PhoneWindowManager.performHapticFeedback:6237 
+com.android.server.wm.Session.performHapticFeedback:285 android.view.IWindowSession$Stub.onTransact:920 
+com.android.server.wm.Session.onTransact:176 android.os.Binder.execTransactInternal:1215 
+01-23 15:11:07.315   843   843 I BufferQueueProducer: [com.example.gestaobilhares/com.example.gestaobilhares.MainActivi
+ty$_16008#0](this:0xb400006ffd844948,id:-1,api:0,p:-1,c:843) queueBuffer: fps=31.86 dur=1004.28 max=284.71 min=16.52
+01-23 15:11:08.210   843  1642 I SurfaceFlinger: [SF client] NEW(0xb400007005b263c0) for 
+(16008:com.example.gestaobilhares)
+01-23 15:11:08.214   843  1643 I SurfaceFlinger: id=16229 createSurf (0x0),-1 flag=80004, a98f2a1 
+com.example.gestaobilhares/com.example.gestaobilhares.MainActivity#0
+01-23 15:11:08.216  1391  4245 V WindowManager: Changing focus from Window{26d009 u0 
+com.example.gestaobilhares/com.example.gestaobilhares.MainActivity} to Window{a98f2a1 u0 
+com.example.gestaobilhares/com.example.gestaobilhares.MainActivity} displayId=0 
+Callers=com.android.server.wm.RootWindowContainer.updateFocusedWindowLocked:583 
+com.android.server.wm.WindowManagerService.updateFocusedWindowLocked:6477 
+com.android.server.wm.WindowManagerService.addWindow:2030 com.android.server.wm.Session.addToDisplayAsUser:211 
+01-23 15:11:08.216  1391  4245 D MARsPolicyManager: onPackageResumedFG pkgName = com.example.gestaobilhares, userId = 0
+01-23 15:11:08.253  1391  4245 V WindowManager: Relayout Window{a98f2a1 u0 
+com.example.gestaobilhares/com.example.gestaobilhares.MainActivity}: viewVisibility=0 req=1024x1845 d0
+01-23 15:11:08.254   843  1642 E BufferQueueDebug: [com.example.gestaobilhares/com.example.gestaobilhares.MainActivity$
+_16008#1](this:0xb400007005290948,id:-1,api:0,p:-1,c:-1) id info cannot be read from 
+'com.example.gestaobilhares/com.example.gestaobilhares.MainActivity$_16008#1'
+01-23 15:11:08.255   843  1642 I BufferQueueDebug: [com.example.gestaobilhares/com.example.gestaobilhares.MainActivity$
+_16008#1](this:0xb400007005290948,id:-1,api:0,p:-1,c:-1) BufferQueue core=(843:/system/bin/surfaceflinger)
+01-23 15:11:08.255   843  1642 I SurfaceFlinger: id=16232 createSurf (65x65),-3 flag=40004, 
+com.example.gestaobilhares/com.example.gestaobilhares.MainActivity$_16008#1
+01-23 15:11:08.256  1391  4245 D WindowManager: makeSurface duration=2 
+name=com.example.gestaobilhares/com.example.gestaobilhares.MainActivity$_16008
+01-23 15:11:08.265 16008 16008 D InsetsSourceConsumer: ensureControlAlpha: for ITYPE_NAVIGATION_BAR on 
+com.example.gestaobilhares/com.example.gestaobilhares.MainActivity
+01-23 15:11:08.266 16008 16008 D InsetsSourceConsumer: ensureControlAlpha: for ITYPE_STATUS_BAR on 
+com.example.gestaobilhares/com.example.gestaobilhares.MainActivity
+01-23 15:11:08.287  1391  4245 D InputDispatcher: Focus request (0): a98f2a1 
+com.example.gestaobilhares/com.example.gestaobilhares.MainActivity but waiting because NOT_VISIBLE
+01-23 15:11:08.288  1391  4245 D InputDispatcher: Focus left window (0): 26d009 
+com.example.gestaobilhares/com.example.gestaobilhares.MainActivity
+01-23 15:11:08.304  1391  4245 D WindowManager: finishDrawingWindow: Window{a98f2a1 u0 
+com.example.gestaobilhares/com.example.gestaobilhares.MainActivity} mDrawState=DRAW_PENDING
+01-23 15:11:08.309  1391  1455 I WindowManager: Reparenting to leash, surface=Surface(name=a98f2a1 
+com.example.gestaobilhares/com.example.gestaobilhares.MainActivity)/@0xb3d223, 
+leashParent=Surface(name=ActivityRecord{f9b151c u0 com.example.gestaobilhares/.MainActivity t3254})/@0xdff1a27
+01-23 15:11:08.310   843  2857 I SurfaceFlinger: id=16233 createSurf (0x0),-1 flag=24004, Surface(name=a98f2a1 
+com.example.gestaobilhares/com.example.gestaobilhares.MainActivity)/@0xb3d223 - animation-leash of window_animation#0
+01-23 15:11:08.311  1391  1455 D WindowManager: makeSurface duration=2 leash=Surface(name=Surface(name=a98f2a1 
+com.example.gestaobilhares/com.example.gestaobilhares.MainActivity)/@0xb3d223 - animation-leash of 
+window_animation)/@0xa95320
+01-23 15:11:08.320   843   843 I BufferQueueProducer: [com.example.gestaobilhares/com.example.gestaobilhares.MainActivi
+ty$_16008#0](this:0xb400006ffd844948,id:-1,api:0,p:-1,c:843) queueBuffer: fps=50.76 dur=1004.82 max=134.02 min=16.18
+01-23 15:11:08.323  1391  4245 D InputDispatcher: Focus entered window (0): a98f2a1 
+com.example.gestaobilhares/com.example.gestaobilhares.MainActivity
+01-23 15:11:08.367  3933  3933 I GoogleInputMethodService: GoogleInputMethodService.onStartInput():1349 
+onStartInput(EditorInfo{EditorInfo{packageName=com.example.gestaobilhares, inputType=0, inputTypeString=NULL, 
+enableLearning=false, autoCorrection=false, autoComplete=false, imeOptions=0, privateImeOptions=null, 
+actionName=UNSPECIFIED, actionLabel=null, initialSelStart=-1, initialSelEnd=-1, initialCapsMode=0, label=null, 
+fieldId=-1, fieldName=null, extras=Bundle[{displayId=0}], hintText=null, hintLocales=[]}}, false)
+01-23 15:11:08.368   843   843 D SurfaceFlinger:      DEVICE | 0xb4000070050ece00 | 0100 | RGBA_8888    |    0.0    
+0.0 1080.0 2400.0 |    0    0 1080 2400 | com.example.gestaobilhares/com.example.gestaobilhares.MainActivity$_16008#0
+01-23 15:11:08.368   843   843 D SurfaceFlinger:      CLIENT | 0xb4000070050ed100 | 0100 | RGBA_8888    |    0.0    
+0.0 1088.0 1909.0 |   70  356 1001 1988 | com.example.gestaobilhares/com.example.gestaobilhares.MainActivity$_16008#1
+01-23 15:11:08.722  1391  1455 I WindowManager: Reparenting to original parent: Surface(name=ActivityRecord{f9b151c u0 
+com.example.gestaobilhares/.MainActivity t3254})/@0xdff1a27, destroy=true, surface=Surface(name=a98f2a1 
+com.example.gestaobilhares/com.example.gestaobilhares.MainActivity)/@0xb3d223
+01-23 15:11:08.739   843   843 I Layer   : id=16233 removedFromDrawingState Surface(name=a98f2a1 
+com.example.gestaobilhares/com.example.gestaobilhares.MainActivity)/@0xb3d223 - animation-leash of window_animation#0 
+(144)
+01-23 15:11:08.739   843   843 I SurfaceFlinger: id=16233 Removed Surface(name=a98f2a1 
+com.example.gestaobilhares/com.example.gestaobilhares.MainActivity)/@0xb3d223 - animation-leash of window_animation#0 
+(144)
+01-23 15:11:08.739   843   843 I Layer   : id=16233 Destroyed Surface(name=a98f2a1 
+com.example.gestaobilhares/com.example.gestaobilhares.MainActivity)/@0xb3d223 - animation-leash of window_animation#0
+01-23 15:11:09.924  1391  4229 W InputManager-JNI: Input channel object 'a98f2a1 
+com.example.gestaobilhares/com.example.gestaobilhares.MainActivity (client)' was disposed without first being removed 
+with the input manager!
+01-23 15:11:09.924  1391  4229 I WindowManager: Reparenting to leash, surface=Surface(name=a98f2a1 
+com.example.gestaobilhares/com.example.gestaobilhares.MainActivity)/@0xb3d223, 
+leashParent=Surface(name=ActivityRecord{f9b151c u0 com.example.gestaobilhares/.MainActivity t3254})/@0xdff1a27
+01-23 15:11:09.924   843   903 I SurfaceFlinger: id=16237 createSurf (0x0),-1 flag=24000, Surface(name=a98f2a1 
+com.example.gestaobilhares/com.example.gestaobilhares.MainActivity)/@0xb3d223 - animation-leash of window_animation#0
+01-23 15:11:09.926  1391  4229 D WindowManager: makeSurface duration=2 leash=Surface(name=Surface(name=a98f2a1 
+com.example.gestaobilhares/com.example.gestaobilhares.MainActivity)/@0xb3d223 - animation-leash of 
+window_animation)/@0x90bade4
+01-23 15:11:09.926  1391  4229 V WindowManager: removeIfPossible 2, Window{a98f2a1 u0 
+com.example.gestaobilhares/com.example.gestaobilhares.MainActivity}: mAnimatingExit=true 
+caller=com.android.server.wm.WindowState.removeIfPossible:2984 
+com.android.server.wm.WindowManagerService.removeWindow:2246 com.android.server.wm.Session.remove:225 
+android.view.IWindowSession$Stub.onTransact:746 com.android.server.wm.Session.onTransact:176 
+01-23 15:11:09.927  1391  4229 V WindowManager: Changing focus from Window{a98f2a1 u0 
+com.example.gestaobilhares/com.example.gestaobilhares.MainActivity EXITING} to Window{26d009 u0 
+com.example.gestaobilhares/com.example.gestaobilhares.MainActivity} displayId=0 
+Callers=com.android.server.wm.RootWindowContainer.updateFocusedWindowLocked:583 
+com.android.server.wm.WindowManagerService.updateFocusedWindowLocked:6477 
+com.android.server.wm.WindowState.setupWindowForRemoveOnExit:3175 
+com.android.server.wm.WindowState.removeIfPossible:3143 
+01-23 15:11:09.927  1391  4229 D MARsPolicyManager: onPackageResumedFG pkgName = com.example.gestaobilhares, userId = 0
+01-23 15:11:09.927   843   843 I BufferQueueProducer: [com.example.gestaobilhares/com.example.gestaobilhares.MainActivi
+ty$_16008#1](this:0xb400007005290948,id:-1,api:0,p:-1,c:843) queueBuffer: fps=11.09 dur=1623.78 max=803.58 min=16.52
+01-23 15:11:09.929  1391  4245 D InputDispatcher: Focus left window (0): a98f2a1 
+com.example.gestaobilhares/com.example.gestaobilhares.MainActivity
+01-23 15:11:09.940 16008 16008 D InsetsSourceConsumer: ensureControlAlpha: for ITYPE_NAVIGATION_BAR on 
+com.example.gestaobilhares/com.example.gestaobilhares.MainActivity
+01-23 15:11:09.941 16008 16008 D InsetsSourceConsumer: ensureControlAlpha: for ITYPE_STATUS_BAR on 
+com.example.gestaobilhares/com.example.gestaobilhares.MainActivity
+01-23 15:11:09.955 16008 16008 V Toast   : show: caller = 
+com.example.gestaobilhares.ui.settlement.SettlementFragment$mostrarSelecaoPano$1$1.invokeSuspend:1663 
+01-23 15:11:09.962  1391  4229 D InputDispatcher: Focus entered window (0): 26d009 
+com.example.gestaobilhares/com.example.gestaobilhares.MainActivity
+01-23 15:11:09.994   843   843 I BufferQueueProducer: [com.example.gestaobilhares/com.example.gestaobilhares.MainActivi
+ty$_16008#0](this:0xb400006ffd844948,id:-1,api:0,p:-1,c:843) queueBuffer: fps=8.96 dur=1674.00 max=1373.02 min=16.44
+01-23 15:11:10.038  3933  3933 I GoogleInputMethodService: GoogleInputMethodService.onStartInput():1349 
+onStartInput(EditorInfo{EditorInfo{packageName=com.example.gestaobilhares, inputType=2, inputTypeString=Number, 
+enableLearning=false, autoCorrection=false, autoComplete=false, imeOptions=48000005, privateImeOptions=null, 
+actionName=NEXT, actionLabel=null, initialSelStart=4, initialSelEnd=4, initialCapsMode=0, label=null, 
+fieldId=2131296771, fieldName=null, extras=Bundle[{android.support.text.emoji.emojiCompat_metadataVersion=11, 
+android.support.text.emoji.emojiCompat_replaceAll=false, displayId=0}], hintText=non-empty, hintLocales=[]}}, false)
+01-23 15:11:10.073   843   843 D SurfaceFlinger:      DEVICE | 0xb40000702b430b80 | 0100 | RGBA_8888    |    0.0    
+0.0 1080.0 2400.0 |    0    0 1080 2400 | com.example.gestaobilhares/com.example.gestaobilhares.MainActivity$_16008#0
+01-23 15:11:10.073   843   843 D SurfaceFlinger:      DEVICE | 0xb40000702b430280 | 0100 | RGBA_8888    |    4.0    
+0.0 1084.0 1909.0 |    0  222 1080 2131 | com.example.gestaobilhares/com.example.gestaobilhares.MainActivity$_16008#1
+01-23 15:11:10.078  1391  1455 I WindowManager: Reparenting to original parent: Surface(name=ActivityRecord{f9b151c u0 
+com.example.gestaobilhares/.MainActivity t3254})/@0xdff1a27, destroy=true, surface=Surface(name=a98f2a1 
+com.example.gestaobilhares/com.example.gestaobilhares.MainActivity)/@0xb3d223
+01-23 15:11:10.079  1391  1455 E WindowManager: win=Window{a98f2a1 u0 
+com.example.gestaobilhares/com.example.gestaobilhares.MainActivity EXITING} destroySurfaces: appStopped=false 
+win.mWindowRemovalAllowed=true win.mRemoveOnExit=true win.mViewVisibility=0 
+caller=com.android.server.wm.ActivityRecord.destroySurfaces:5873 
+com.android.server.wm.ActivityRecord.destroySurfaces:5854 com.android.server.wm.WindowState.onExitAnimationDone:5983 
+com.android.server.wm.WindowStateAnimator.onAnimationFinished:242 
+com.android.server.wm.WindowState.onAnimationFinished:6236 
+com.android.server.wm.WindowContainer$$ExternalSyntheticLambda0.onAnimationFinished:2 
+com.android.server.wm.SurfaceAnimator.lambda$getFinishedCallback$0$SurfaceAnimator:113 
+01-23 15:11:10.079  1391  1455 I WindowManager: Destroying surface 
+Surface(name=com.example.gestaobilhares/com.example.gestaobilhares.MainActivity$_16008)/@0x2985275 called by 
+com.android.server.wm.WindowStateAnimator.destroySurface:987 
+com.android.server.wm.WindowStateAnimator.destroySurfaceLocked:518 
+com.android.server.wm.WindowState.destroySurfaceUnchecked:4229 com.android.server.wm.WindowState.destroySurface:4203 
+com.android.server.wm.ActivityRecord.destroySurfaces:5873 com.android.server.wm.ActivityRecord.destroySurfaces:5854 
+com.android.server.wm.WindowState.onExitAnimationDone:5983 
+com.android.server.wm.WindowStateAnimator.onAnimationFinished:242 
+01-23 15:11:10.094   843   843 I Layer   : id=16232 removedFromDrawingState 
+com.example.gestaobilhares/com.example.gestaobilhares.MainActivity$_16008#1 (148)
+01-23 15:11:10.094   843   843 I Layer   : id=16229 removedFromDrawingState a98f2a1 
+com.example.gestaobilhares/com.example.gestaobilhares.MainActivity#0 (148)
+01-23 15:11:10.095   843   843 I Layer   : id=16237 removedFromDrawingState Surface(name=a98f2a1 
+com.example.gestaobilhares/com.example.gestaobilhares.MainActivity)/@0xb3d223 - animation-leash of window_animation#0 
+(148)
+01-23 15:11:10.095   843   843 I SurfaceFlinger: id=16229 Removed a98f2a1 
+com.example.gestaobilhares/com.example.gestaobilhares.MainActivity#0 (148)
+01-23 15:11:10.095   843   843 I SurfaceFlinger: id=16232 Removed 
+com.example.gestaobilhares/com.example.gestaobilhares.MainActivity$_16008#1 (148)
+01-23 15:11:10.095   843   843 I SurfaceFlinger: id=16237 Removed Surface(name=a98f2a1 
+com.example.gestaobilhares/com.example.gestaobilhares.MainActivity)/@0xb3d223 - animation-leash of window_animation#0 
+(148)
+01-23 15:11:10.096   843   843 I Layer   : id=16237 Destroyed Surface(name=a98f2a1 
+com.example.gestaobilhares/com.example.gestaobilhares.MainActivity)/@0xb3d223 - animation-leash of window_animation#0
+01-23 15:11:10.096   843   843 I Layer   : id=16229 Destroyed a98f2a1 
+com.example.gestaobilhares/com.example.gestaobilhares.MainActivity#0
+01-23 15:11:10.099   843   843 I BufferQueueDebug: [com.example.gestaobilhares/com.example.gestaobilhares.MainActivity$
+_16008#1](this:0xb400007005290948,id:-1,api:0,p:-1,c:843) onDestructor()
+01-23 15:11:10.099   843   843 I Layer   : id=16232 Destroyed 
+com.example.gestaobilhares/com.example.gestaobilhares.MainActivity$_16008#1
+01-23 15:11:10.103   843   843 D SurfaceFlinger:      DEVICE | 0xb4000070050ed700 | 0100 | RGBA_8888    |    0.0    
+0.0 1080.0 2400.0 |    0    0 1080 2400 | com.example.gestaobilhares/com.example.gestaobilhares.MainActivity$_16008#0
+01-23 15:11:10.999   843   843 I BufferQueueProducer: [com.example.gestaobilhares/com.example.gestaobilhares.MainActivi
+ty$_16008#0](this:0xb400006ffd844948,id:-1,api:0,p:-1,c:843) queueBuffer: fps=48.77 dur=1004.75 max=150.80 min=16.22
+01-23 15:11:11.612  1391  4229 D SGM:GameManager: identifyForegroundApp. com.example.gestaobilhares, mCurrentUserId: 
+0, callerUserId: 0
+01-23 15:11:11.612  1391  4229 D SGM:PkgDataHelper: getGamePkgData(). com.example.gestaobilhares
+01-23 15:11:12.004   843   843 I BufferQueueProducer: [com.example.gestaobilhares/com.example.gestaobilhares.MainActivi
+ty$_16008#0](this:0xb400006ffd844948,id:-1,api:0,p:-1,c:843) queueBuffer: fps=11.94 dur=1004.82 max=502.44 min=16.62
+01-23 15:11:12.172  1391  4245 D PhoneWindowManagerExt: f.b. a=false id=50052 he=true eme=false ksno=false uid=12022 
+callingPackage=com.example.gestaobilhares reason=null 
+Caller=com.android.server.policy.PhoneWindowManager.performHapticFeedback:6237 
+com.android.server.wm.Session.performHapticFeedback:285 android.view.IWindowSession$Stub.onTransact:920 
+com.android.server.wm.Session.onTransact:176 android.os.Binder.execTransactInternal:1215 
+01-23 15:11:12.306  1391  4245 W NotificationService: Toast already killed. pkg=com.example.gestaobilhares 
+token=android.os.BinderProxy@a91995c
+01-23 15:11:12.833   843   843 D SurfaceFlinger:      DEVICE | 0xb4000070050ed700 | 0100 | RGBA_8888    |    0.0    
+0.0 1080.0 2400.0 |    0    0 1080 2400 | com.example.gestaobilhares/com.example.gestaobilhares.MainActivity$_16008#0
+01-23 15:11:13.343   843   843 I BufferQueueProducer: [com.example.gestaobilhares/com.example.gestaobilhares.MainActivi
+ty$_16008#0](this:0xb400006ffd844948,id:-1,api:0,p:-1,c:843) queueBuffer: fps=38.83 dur=1339.17 max=351.47 min=9.52
+01-23 15:11:13.561 16008 16008 W ƒöì DB_POPULATION:    [2] 
+com.example.gestaobilhares.data.repository.domain.AcertoRepository.logDbInsertStart(AcertoRepository.kt:46)
+01-23 15:11:13.561 16008 16008 W ƒöì DB_POPULATION:    [3] 
+com.example.gestaobilhares.data.repository.domain.AcertoRepository.inserir(AcertoRepository.kt:26)
+01-23 15:11:13.561 16008 16008 W ƒöì DB_POPULATION:    [4] 
+com.example.gestaobilhares.data.repository.AppRepository.inserirAcerto(AppRepository.kt:296)
+01-23 15:11:13.561 16008 16008 W ƒöì DB_POPULATION:    [5] 
+com.example.gestaobilhares.ui.settlement.SettlementViewModel$salvarAcerto$1.invokeSuspend(SettlementViewModel.kt:508)
+01-23 15:11:14.527   843  2857 I SurfaceFlinger: [SF client] NEW(0xb400007005a02040) for 
+(16008:com.example.gestaobilhares)
+01-23 15:11:14.534   843  2857 I SurfaceFlinger: id=16247 createSurf (0x0),-1 flag=80004, 9a05f60 
+com.example.gestaobilhares/com.example.gestaobilhares.MainActivity#0
+01-23 15:11:14.538  1391  4245 V WindowManager: Changing focus from Window{26d009 u0 
+com.example.gestaobilhares/com.example.gestaobilhares.MainActivity} to Window{9a05f60 u0 
+com.example.gestaobilhares/com.example.gestaobilhares.MainActivity} displayId=0 
+Callers=com.android.server.wm.RootWindowContainer.updateFocusedWindowLocked:583 
+com.android.server.wm.WindowManagerService.updateFocusedWindowLocked:6477 
+com.android.server.wm.WindowManagerService.addWindow:2030 com.android.server.wm.Session.addToDisplayAsUser:211 
+01-23 15:11:14.538  1391  4245 D MARsPolicyManager: onPackageResumedFG pkgName = com.example.gestaobilhares, userId = 0
+01-23 15:11:14.590  1391  4245 V WindowManager: Relayout Window{9a05f60 u0 
+com.example.gestaobilhares/com.example.gestaobilhares.MainActivity}: viewVisibility=0 req=1024x1972 d0
+01-23 15:11:14.591   843  2857 E BufferQueueDebug: [com.example.gestaobilhares/com.example.gestaobilhares.MainActivity$
+_16008#1](this:0xb400007005268948,id:-1,api:0,p:-1,c:-1) id info cannot be read from 
+'com.example.gestaobilhares/com.example.gestaobilhares.MainActivity$_16008#1'
+01-23 15:11:14.592   843  2857 I BufferQueueDebug: [com.example.gestaobilhares/com.example.gestaobilhares.MainActivity$
+_16008#1](this:0xb400007005268948,id:-1,api:0,p:-1,c:-1) BufferQueue core=(843:/system/bin/surfaceflinger)
+01-23 15:11:14.592   843  2857 I SurfaceFlinger: id=16250 createSurf (169x169),-3 flag=40004, 
+com.example.gestaobilhares/com.example.gestaobilhares.MainActivity$_16008#1
+01-23 15:11:14.594  1391  4245 D WindowManager: makeSurface duration=5 
+name=com.example.gestaobilhares/com.example.gestaobilhares.MainActivity$_16008
+01-23 15:11:14.605 16008 16008 D InsetsSourceConsumer: ensureControlAlpha: for ITYPE_NAVIGATION_BAR on 
+com.example.gestaobilhares/com.example.gestaobilhares.MainActivity
+01-23 15:11:14.606 16008 16008 D InsetsSourceConsumer: ensureControlAlpha: for ITYPE_STATUS_BAR on 
+com.example.gestaobilhares/com.example.gestaobilhares.MainActivity
+01-23 15:11:14.634  1391  4245 D InputDispatcher: Focus request (0): 9a05f60 
+com.example.gestaobilhares/com.example.gestaobilhares.MainActivity but waiting because NOT_VISIBLE
+01-23 15:11:14.635  1391  4245 D InputDispatcher: Focus left window (0): 26d009 
+com.example.gestaobilhares/com.example.gestaobilhares.MainActivity
+01-23 15:11:14.665  1391  4229 D WindowManager: finishDrawingWindow: Window{9a05f60 u0 
+com.example.gestaobilhares/com.example.gestaobilhares.MainActivity} mDrawState=DRAW_PENDING
+01-23 15:11:14.673  1391  1455 I WindowManager: Reparenting to leash, surface=Surface(name=9a05f60 
+com.example.gestaobilhares/com.example.gestaobilhares.MainActivity)/@0x3beba78, 
+leashParent=Surface(name=ActivityRecord{f9b151c u0 com.example.gestaobilhares/.MainActivity t3254})/@0xdff1a27
+01-23 15:11:14.674   843   904 I SurfaceFlinger: id=16251 createSurf (0x0),-1 flag=24004, Surface(name=9a05f60 
+com.example.gestaobilhares/com.example.gestaobilhares.MainActivity)/@0x3beba78 - animation-leash of window_animation#0
+01-23 15:11:14.675  1391  1455 D WindowManager: makeSurface duration=2 leash=Surface(name=Surface(name=9a05f60 
+com.example.gestaobilhares/com.example.gestaobilhares.MainActivity)/@0x3beba78 - animation-leash of 
+window_animation)/@0x5d62551
+01-23 15:11:14.702  1391  4229 D InputDispatcher: Focus entered window (0): 9a05f60 
+com.example.gestaobilhares/com.example.gestaobilhares.MainActivity
+01-23 15:11:14.724   843   843 D SurfaceFlinger:      DEVICE | 0xb40000702b430b80 | 0100 | RGBA_8888    |    0.0    
+0.0 1080.0 2400.0 |    0    0 1080 2400 | com.example.gestaobilhares/com.example.gestaobilhares.MainActivity$_16008#0
+01-23 15:11:14.724   843   843 D SurfaceFlinger:      DEVICE | 0xb4000070050edd00 | 0100 | RGBA_8888    |   56.0    
+0.0 1136.0 2140.0 |    0  106 1080 2246 | com.example.gestaobilhares/com.example.gestaobilhares.MainActivity$_16008#1
+01-23 15:11:14.733   843   843 I BufferQueueProducer: [com.example.gestaobilhares/com.example.gestaobilhares.MainActivi
+ty$_16008#0](this:0xb400006ffd844948,id:-1,api:0,p:-1,c:843) queueBuffer: fps=25.90 dur=1390.13 max=753.96 min=16.56
+01-23 15:11:14.834  1391  1455 I WindowManager: Reparenting to original parent: Surface(name=ActivityRecord{f9b151c u0 
+com.example.gestaobilhares/.MainActivity t3254})/@0xdff1a27, destroy=true, surface=Surface(name=9a05f60 
+com.example.gestaobilhares/com.example.gestaobilhares.MainActivity)/@0x3beba78
+01-23 15:11:14.850   843   843 I Layer   : id=16251 removedFromDrawingState Surface(name=9a05f60 
+com.example.gestaobilhares/com.example.gestaobilhares.MainActivity)/@0x3beba78 - animation-leash of window_animation#0 
+(144)
+01-23 15:11:14.850   843   843 I SurfaceFlinger: id=16251 Removed Surface(name=9a05f60 
+com.example.gestaobilhares/com.example.gestaobilhares.MainActivity)/@0x3beba78 - animation-leash of window_animation#0 
+(144)
+01-23 15:11:14.851   843   843 I Layer   : id=16251 Destroyed Surface(name=9a05f60 
+com.example.gestaobilhares/com.example.gestaobilhares.MainActivity)/@0x3beba78 - animation-leash of window_animation#0
+01-23 15:11:16.848  1391  1442 W InputManager-JNI: Input channel object '9a05f60 
+com.example.gestaobilhares/com.example.gestaobilhares.MainActivity (client)' was disposed without first being removed 
+with the input manager!
+01-23 15:11:16.849  1391  1442 I WindowManager: Reparenting to leash, surface=Surface(name=9a05f60 
+com.example.gestaobilhares/com.example.gestaobilhares.MainActivity)/@0x3beba78, 
+leashParent=Surface(name=ActivityRecord{f9b151c u0 com.example.gestaobilhares/.MainActivity t3254})/@0xdff1a27
+01-23 15:11:16.849   843   903 I SurfaceFlinger: id=16254 createSurf (0x0),-1 flag=24000, Surface(name=9a05f60 
+com.example.gestaobilhares/com.example.gestaobilhares.MainActivity)/@0x3beba78 - animation-leash of window_animation#0
+01-23 15:11:16.851  1391  1442 D WindowManager: makeSurface duration=3 leash=Surface(name=Surface(name=9a05f60 
+com.example.gestaobilhares/com.example.gestaobilhares.MainActivity)/@0x3beba78 - animation-leash of 
+window_animation)/@0x36ff5cb
+01-23 15:11:16.852  1391  1442 V WindowManager: removeIfPossible 2, Window{9a05f60 u0 
+com.example.gestaobilhares/com.example.gestaobilhares.MainActivity}: mAnimatingExit=true 
+caller=com.android.server.wm.WindowState.removeIfPossible:2984 
+com.android.server.wm.WindowManagerService.removeWindow:2246 com.android.server.wm.Session.remove:225 
+android.view.IWindowSession$Stub.onTransact:746 com.android.server.wm.Session.onTransact:176 
+01-23 15:11:16.852  1391  1442 V WindowManager: Changing focus from Window{9a05f60 u0 
+com.example.gestaobilhares/com.example.gestaobilhares.MainActivity EXITING} to Window{26d009 u0 
+com.example.gestaobilhares/com.example.gestaobilhares.MainActivity} displayId=0 
+Callers=com.android.server.wm.RootWindowContainer.updateFocusedWindowLocked:583 
+com.android.server.wm.WindowManagerService.updateFocusedWindowLocked:6477 
+com.android.server.wm.WindowState.setupWindowForRemoveOnExit:3175 
+com.android.server.wm.WindowState.removeIfPossible:3143 
+01-23 15:11:16.852  1391  1442 D MARsPolicyManager: onPackageResumedFG pkgName = com.example.gestaobilhares, userId = 0
+01-23 15:11:16.860  1391  4245 D InputDispatcher: Focus left window (0): 9a05f60 
+com.example.gestaobilhares/com.example.gestaobilhares.MainActivity
+01-23 15:11:16.866 16008 16008 D InsetsSourceConsumer: ensureControlAlpha: for ITYPE_NAVIGATION_BAR on 
+com.example.gestaobilhares/com.example.gestaobilhares.MainActivity
+01-23 15:11:16.867 16008 16008 D InsetsSourceConsumer: ensureControlAlpha: for ITYPE_STATUS_BAR on 
+com.example.gestaobilhares/com.example.gestaobilhares.MainActivity
+01-23 15:11:16.893  1391  4245 D InputDispatcher: Focus entered window (0): 26d009 
+com.example.gestaobilhares/com.example.gestaobilhares.MainActivity
+01-23 15:11:16.943   843   843 I BufferQueueProducer: [com.example.gestaobilhares/com.example.gestaobilhares.MainActivi
+ty$_16008#0](this:0xb400006ffd844948,id:-1,api:0,p:-1,c:843) queueBuffer: fps=0.45 dur=2210.03 max=2210.03 min=2210.03
+01-23 15:11:17.010  1391  1455 I WindowManager: Reparenting to original parent: Surface(name=ActivityRecord{f9b151c u0 
+com.example.gestaobilhares/.MainActivity t3254})/@0xdff1a27, destroy=true, surface=Surface(name=9a05f60 
+com.example.gestaobilhares/com.example.gestaobilhares.MainActivity)/@0x3beba78
+01-23 15:11:17.011  1391  1455 E WindowManager: win=Window{9a05f60 u0 
+com.example.gestaobilhares/com.example.gestaobilhares.MainActivity EXITING} destroySurfaces: appStopped=false 
+win.mWindowRemovalAllowed=true win.mRemoveOnExit=true win.mViewVisibility=0 
+caller=com.android.server.wm.ActivityRecord.destroySurfaces:5873 
+com.android.server.wm.ActivityRecord.destroySurfaces:5854 com.android.server.wm.WindowState.onExitAnimationDone:5983 
+com.android.server.wm.WindowStateAnimator.onAnimationFinished:242 
+com.android.server.wm.WindowState.onAnimationFinished:6236 
+com.android.server.wm.WindowContainer$$ExternalSyntheticLambda0.onAnimationFinished:2 
+com.android.server.wm.SurfaceAnimator.lambda$getFinishedCallback$0$SurfaceAnimator:113 
+01-23 15:11:17.011  1391  1455 I WindowManager: Destroying surface 
+Surface(name=com.example.gestaobilhares/com.example.gestaobilhares.MainActivity$_16008)/@0x8af0dc0 called by 
+com.android.server.wm.WindowStateAnimator.destroySurface:987 
+com.android.server.wm.WindowStateAnimator.destroySurfaceLocked:518 
+com.android.server.wm.WindowState.destroySurfaceUnchecked:4229 com.android.server.wm.WindowState.destroySurface:4203 
+com.android.server.wm.ActivityRecord.destroySurfaces:5873 com.android.server.wm.ActivityRecord.destroySurfaces:5854 
+com.android.server.wm.WindowState.onExitAnimationDone:5983 
+com.android.server.wm.WindowStateAnimator.onAnimationFinished:242 
+01-23 15:11:17.026   843   843 I Layer   : id=16250 removedFromDrawingState 
+com.example.gestaobilhares/com.example.gestaobilhares.MainActivity$_16008#1 (144)
+01-23 15:11:17.026   843   843 I Layer   : id=16247 removedFromDrawingState 9a05f60 
+com.example.gestaobilhares/com.example.gestaobilhares.MainActivity#0 (144)
+01-23 15:11:17.027   843   843 I Layer   : id=16254 removedFromDrawingState Surface(name=9a05f60 
+com.example.gestaobilhares/com.example.gestaobilhares.MainActivity)/@0x3beba78 - animation-leash of window_animation#0 
+(144)
+01-23 15:11:17.027   843   843 I SurfaceFlinger: id=16247 Removed 9a05f60 
+com.example.gestaobilhares/com.example.gestaobilhares.MainActivity#0 (144)
+01-23 15:11:17.027   843   843 I SurfaceFlinger: id=16250 Removed 
+com.example.gestaobilhares/com.example.gestaobilhares.MainActivity$_16008#1 (144)
+01-23 15:11:17.027   843   843 I SurfaceFlinger: id=16254 Removed Surface(name=9a05f60 
+com.example.gestaobilhares/com.example.gestaobilhares.MainActivity)/@0x3beba78 - animation-leash of window_animation#0 
+(144)
+01-23 15:11:17.028   843   843 I Layer   : id=16254 Destroyed Surface(name=9a05f60 
+com.example.gestaobilhares/com.example.gestaobilhares.MainActivity)/@0x3beba78 - animation-leash of window_animation#0
+01-23 15:11:17.028   843   843 I Layer   : id=16247 Destroyed 9a05f60 
+com.example.gestaobilhares/com.example.gestaobilhares.MainActivity#0
+01-23 15:11:17.030   843   843 I BufferQueueDebug: [com.example.gestaobilhares/com.example.gestaobilhares.MainActivity$
+_16008#1](this:0xb400007005268948,id:-1,api:0,p:-1,c:843) onDestructor()
+01-23 15:11:17.030   843   843 I Layer   : id=16250 Destroyed 
+com.example.gestaobilhares/com.example.gestaobilhares.MainActivity$_16008#1
+01-23 15:11:17.034   843   843 D SurfaceFlinger:      DEVICE | 0xb4000070050ed700 | 0100 | RGBA_8888    |    0.0    
+0.0 1080.0 2400.0 |    0    0 1080 2400 | com.example.gestaobilhares/com.example.gestaobilhares.MainActivity$_16008#0
+01-23 15:11:17.708   843   903 I SurfaceFlinger: [SF client] NEW(0xb400007005e75f00) for 
+(16008:com.example.gestaobilhares)
+01-23 15:11:17.714   843  1642 I SurfaceFlinger: id=16258 createSurf (0x0),-1 flag=80004, 30fbc4a 
+com.example.gestaobilhares/com.example.gestaobilhares.MainActivity#0
+01-23 15:11:17.715  1391  4229 V WindowManager: Changing focus from Window{26d009 u0 
+com.example.gestaobilhares/com.example.gestaobilhares.MainActivity} to Window{30fbc4a u0 
+com.example.gestaobilhares/com.example.gestaobilhares.MainActivity} displayId=0 
+Callers=com.android.server.wm.RootWindowContainer.updateFocusedWindowLocked:583 
+com.android.server.wm.WindowManagerService.updateFocusedWindowLocked:6477 
+com.android.server.wm.WindowManagerService.addWindow:2030 com.android.server.wm.Session.addToDisplayAsUser:211 
+01-23 15:11:17.715  1391  4229 D MARsPolicyManager: onPackageResumedFG pkgName = com.example.gestaobilhares, userId = 0
+01-23 15:11:17.828  1391  4229 V WindowManager: Relayout Window{30fbc4a u0 
+com.example.gestaobilhares/com.example.gestaobilhares.MainActivity}: viewVisibility=0 req=1024x1400 d0
+01-23 15:11:17.829   843  1642 E BufferQueueDebug: [com.example.gestaobilhares/com.example.gestaobilhares.MainActivity$
+_16008#1](this:0xb4000070052a9948,id:-1,api:0,p:-1,c:-1) id info cannot be read from 
+'com.example.gestaobilhares/com.example.gestaobilhares.MainActivity$_16008#1'
+01-23 15:11:17.830   843  1642 I BufferQueueDebug: [com.example.gestaobilhares/com.example.gestaobilhares.MainActivity$
+_16008#1](this:0xb4000070052a9948,id:-1,api:0,p:-1,c:-1) BufferQueue core=(843:/system/bin/surfaceflinger)
+01-23 15:11:17.830   843  1642 I SurfaceFlinger: id=16261 createSurf (65x65),-3 flag=40004, 
+com.example.gestaobilhares/com.example.gestaobilhares.MainActivity$_16008#1
+01-23 15:11:17.831  1391  4229 D WindowManager: makeSurface duration=3 
+name=com.example.gestaobilhares/com.example.gestaobilhares.MainActivity$_16008
+01-23 15:11:17.837 16008 16008 D InsetsSourceConsumer: ensureControlAlpha: for ITYPE_NAVIGATION_BAR on 
+com.example.gestaobilhares/com.example.gestaobilhares.MainActivity
+01-23 15:11:17.838 16008 16008 D InsetsSourceConsumer: ensureControlAlpha: for ITYPE_STATUS_BAR on 
+com.example.gestaobilhares/com.example.gestaobilhares.MainActivity
+01-23 15:11:17.856  1391  4229 D WindowManager: finishDrawingWindow: Window{30fbc4a u0 
+com.example.gestaobilhares/com.example.gestaobilhares.MainActivity} mDrawState=DRAW_PENDING
+01-23 15:11:17.860  1391  1455 I WindowManager: Reparenting to leash, surface=Surface(name=30fbc4a 
+com.example.gestaobilhares/com.example.gestaobilhares.MainActivity)/@0x3026684, 
+leashParent=Surface(name=ActivityRecord{f9b151c u0 com.example.gestaobilhares/.MainActivity t3254})/@0xdff1a27
+01-23 15:11:17.860   843  1642 I SurfaceFlinger: id=16262 createSurf (0x0),-1 flag=24004, Surface(name=30fbc4a 
+com.example.gestaobilhares/com.example.gestaobilhares.MainActivity)/@0x3026684 - animation-leash of window_animation#0
+01-23 15:11:17.862  1391  1455 D WindowManager: makeSurface duration=2 leash=Surface(name=Surface(name=30fbc4a 
+com.example.gestaobilhares/com.example.gestaobilhares.MainActivity)/@0x3026684 - animation-leash of 
+window_animation)/@0x15a0e6d
+01-23 15:11:17.867  1391  4245 D InputDispatcher: Focus request (0): 30fbc4a 
+com.example.gestaobilhares/com.example.gestaobilhares.MainActivity but waiting because NOT_VISIBLE
+01-23 15:11:17.867  1391  4245 D InputDispatcher: Focus left window (0): 26d009 
+com.example.gestaobilhares/com.example.gestaobilhares.MainActivity
+01-23 15:11:17.883  1391  4229 D InputDispatcher: Focus entered window (0): 30fbc4a 
+com.example.gestaobilhares/com.example.gestaobilhares.MainActivity
+01-23 15:11:17.907   843   843 D SurfaceFlinger:      DEVICE | 0xb4000070050ed700 | 0100 | RGBA_8888    |    0.0    
+0.0 1080.0 2400.0 |    0    0 1080 2400 | com.example.gestaobilhares/com.example.gestaobilhares.MainActivity$_16008#0
+01-23 15:11:17.907   843   843 D SurfaceFlinger:      CLIENT | 0xb4000070050ede80 | 0100 | RGBA_8888    |    0.0    
+0.0 1088.0 1464.0 |   69  543 1002 1800 | com.example.gestaobilhares/com.example.gestaobilhares.MainActivity$_16008#1
+01-23 15:11:17.927   843   843 D SurfaceFlinger:      DEVICE | 0xb40000702b430b80 | 0100 | RGBA_8888    |    0.0    
+0.0 1080.0 2400.0 |    0    0 1080 2400 | com.example.gestaobilhares/com.example.gestaobilhares.MainActivity$_16008#0
+01-23 15:11:17.927   843   843 D SurfaceFlinger:      CLIENT | 0xb40000700520ef00 | 0100 | RGBA_8888    |    0.0    
+0.0 1088.0 1464.0 |   47  514 1027 1832 | com.example.gestaobilhares/com.example.gestaobilhares.MainActivity$_16008#1
+01-23 15:11:17.947   843  1642 I SurfaceFlinger: [SF client] NEW(0xb400007005b263c0) for 
+(16008:com.example.gestaobilhares)
+01-23 15:11:17.951   843   904 I SurfaceFlinger: id=16265 createSurf (0x0),-1 flag=80004, a4a2f8f 
+com.example.gestaobilhares/com.example.gestaobilhares.MainActivity#0
+01-23 15:11:17.953  1391  4245 V WindowManager: Changing focus from Window{30fbc4a u0 
+com.example.gestaobilhares/com.example.gestaobilhares.MainActivity} to Window{a4a2f8f u0 
+com.example.gestaobilhares/com.example.gestaobilhares.MainActivity} displayId=0 
+Callers=com.android.server.wm.RootWindowContainer.updateFocusedWindowLocked:583 
+com.android.server.wm.WindowManagerService.updateFocusedWindowLocked:6477 
+com.android.server.wm.WindowManagerService.addWindow:2030 com.android.server.wm.Session.addToDisplayAsUser:211 
+01-23 15:11:17.953  1391  4245 D MARsPolicyManager: onPackageResumedFG pkgName = com.example.gestaobilhares, userId = 0
+01-23 15:11:17.972  1391  4245 V WindowManager: Relayout Window{a4a2f8f u0 
+com.example.gestaobilhares/com.example.gestaobilhares.MainActivity}: viewVisibility=0 req=1024x1400 d0
+01-23 15:11:17.972   843   904 E BufferQueueDebug: [com.example.gestaobilhares/com.example.gestaobilhares.MainActivity$
+_16008#2](this:0xb4000070051db948,id:-1,api:0,p:-1,c:-1) id info cannot be read from 
+'com.example.gestaobilhares/com.example.gestaobilhares.MainActivity$_16008#2'
+01-23 15:11:17.973   843   904 I BufferQueueDebug: [com.example.gestaobilhares/com.example.gestaobilhares.MainActivity$
+_16008#2](this:0xb4000070051db948,id:-1,api:0,p:-1,c:-1) BufferQueue core=(843:/system/bin/surfaceflinger)
+01-23 15:11:17.973   843   904 I SurfaceFlinger: id=16268 createSurf (65x65),-3 flag=40004, 
+com.example.gestaobilhares/com.example.gestaobilhares.MainActivity$_16008#2
+01-23 15:11:17.974  1391  4245 D WindowManager: makeSurface duration=3 
+name=com.example.gestaobilhares/com.example.gestaobilhares.MainActivity$_16008
+01-23 15:11:17.980 16008 16008 D InsetsSourceConsumer: ensureControlAlpha: for ITYPE_NAVIGATION_BAR on 
+com.example.gestaobilhares/com.example.gestaobilhares.MainActivity
+01-23 15:11:17.981 16008 16008 D InsetsSourceConsumer: ensureControlAlpha: for ITYPE_STATUS_BAR on 
+com.example.gestaobilhares/com.example.gestaobilhares.MainActivity
+01-23 15:11:18.000  1391  1442 D InputDispatcher: Focus request (0): a4a2f8f 
+com.example.gestaobilhares/com.example.gestaobilhares.MainActivity but waiting because NOT_VISIBLE
+01-23 15:11:18.000  1391  1442 D InputDispatcher: Focus left window (0): 30fbc4a 
+com.example.gestaobilhares/com.example.gestaobilhares.MainActivity
+01-23 15:11:18.002  1391  1442 D WindowManager: finishDrawingWindow: Window{a4a2f8f u0 
+com.example.gestaobilhares/com.example.gestaobilhares.MainActivity} mDrawState=DRAW_PENDING
+01-23 15:11:18.004  1391  1455 I WindowManager: Reparenting to leash, surface=Surface(name=a4a2f8f 
+com.example.gestaobilhares/com.example.gestaobilhares.MainActivity)/@0x654f7a1, 
+leashParent=Surface(name=ActivityRecord{f9b151c u0 com.example.gestaobilhares/.MainActivity t3254})/@0xdff1a27
+01-23 15:11:18.005   843  1642 I SurfaceFlinger: id=16269 createSurf (0x0),-1 flag=24004, Surface(name=a4a2f8f 
+com.example.gestaobilhares/com.example.gestaobilhares.MainActivity)/@0x654f7a1 - animation-leash of window_animation#0
+01-23 15:11:18.006  1391  1455 D WindowManager: makeSurface duration=1 leash=Surface(name=Surface(name=a4a2f8f 
+com.example.gestaobilhares/com.example.gestaobilhares.MainActivity)/@0x654f7a1 - animation-leash of 
+window_animation)/@0xd26adc6
+01-23 15:11:18.017  1391  1442 D InputDispatcher: Focus entered window (0): a4a2f8f 
+com.example.gestaobilhares/com.example.gestaobilhares.MainActivity
+01-23 15:11:18.028   843   843 D SurfaceFlinger:      DEVICE | 0xb40000702b430b80 | 0100 | RGBA_8888    |    0.0    
+0.0 1080.0 2400.0 |    0    0 1080 2400 | com.example.gestaobilhares/com.example.gestaobilhares.MainActivity$_16008#0
+01-23 15:11:18.028   843   843 D SurfaceFlinger:      CLIENT | 0xb40000700520ef00 | 0100 | RGBA_8888    |    0.0    
+0.0 1088.0 1464.0 |    8  461 1070 1890 | com.example.gestaobilhares/com.example.gestaobilhares.MainActivity$_16008#1
+01-23 15:11:18.060   843   843 D SurfaceFlinger:      DEVICE | 0xb40000702b430b80 | 0100 | RGBA_8888    |    0.0    
+0.0 1080.0 2400.0 |    0    0 1080 2400 | com.example.gestaobilhares/com.example.gestaobilhares.MainActivity$_16008#0
+01-23 15:11:18.060   843   843 D SurfaceFlinger:      CLIENT | 0xb40000700520ed80 | 0100 | RGBA_8888    |    0.0    
+0.0 1088.0 1464.0 |    4  455 1075 1896 | com.example.gestaobilhares/com.example.gestaobilhares.MainActivity$_16008#1
+01-23 15:11:18.060   843   843 D SurfaceFlinger:      CLIENT | 0xb40000700520fb00 | 0100 | RGBA_8888    |    0.0    
+0.0 1088.0 1464.0 |   69  543 1002 1800 | com.example.gestaobilhares/com.example.gestaobilhares.MainActivity$_16008#2
+01-23 15:11:18.267  1391  1455 I WindowManager: Reparenting to original parent: Surface(name=ActivityRecord{f9b151c u0 
+com.example.gestaobilhares/.MainActivity t3254})/@0xdff1a27, destroy=true, surface=Surface(name=30fbc4a 
+com.example.gestaobilhares/com.example.gestaobilhares.MainActivity)/@0x3026684
+01-23 15:11:18.282   843   843 I Layer   : id=16262 removedFromDrawingState Surface(name=30fbc4a 
+com.example.gestaobilhares/com.example.gestaobilhares.MainActivity)/@0x3026684 - animation-leash of window_animation#0 
+(147)
+01-23 15:11:18.282   843   843 I SurfaceFlinger: id=16262 Removed Surface(name=30fbc4a 
+com.example.gestaobilhares/com.example.gestaobilhares.MainActivity)/@0x3026684 - animation-leash of window_animation#0 
+(147)
+01-23 15:11:18.283   843   843 I Layer   : id=16262 Destroyed Surface(name=30fbc4a 
+com.example.gestaobilhares/com.example.gestaobilhares.MainActivity)/@0x3026684 - animation-leash of window_animation#0
+01-23 15:11:18.417  1391  1455 I WindowManager: Reparenting to original parent: Surface(name=ActivityRecord{f9b151c u0 
+com.example.gestaobilhares/.MainActivity t3254})/@0xdff1a27, destroy=true, surface=Surface(name=a4a2f8f 
+com.example.gestaobilhares/com.example.gestaobilhares.MainActivity)/@0x654f7a1
+01-23 15:11:18.436   843   843 I Layer   : id=16269 removedFromDrawingState Surface(name=a4a2f8f 
+com.example.gestaobilhares/com.example.gestaobilhares.MainActivity)/@0x654f7a1 - animation-leash of window_animation#0 
+(145)
+01-23 15:11:18.436   843   843 I SurfaceFlinger: id=16269 Removed Surface(name=a4a2f8f 
+com.example.gestaobilhares/com.example.gestaobilhares.MainActivity)/@0x654f7a1 - animation-leash of window_animation#0 
+(145)
+01-23 15:11:18.436   843   843 I Layer   : id=16269 Destroyed Surface(name=a4a2f8f 
+com.example.gestaobilhares/com.example.gestaobilhares.MainActivity)/@0x654f7a1 - animation-leash of window_animation#0
+01-23 15:11:18.780  1391  2006 W InputManager-JNI: Input channel object 'a4a2f8f 
+com.example.gestaobilhares/com.example.gestaobilhares.MainActivity (client)' was disposed without first being removed 
+with the input manager!
+01-23 15:11:18.780  1391  2006 I WindowManager: Reparenting to leash, surface=Surface(name=a4a2f8f 
+com.example.gestaobilhares/com.example.gestaobilhares.MainActivity)/@0x654f7a1, 
+leashParent=Surface(name=ActivityRecord{f9b151c u0 com.example.gestaobilhares/.MainActivity t3254})/@0xdff1a27
+01-23 15:11:18.781   843  2857 I SurfaceFlinger: id=16270 createSurf (0x0),-1 flag=24000, Surface(name=a4a2f8f 
+com.example.gestaobilhares/com.example.gestaobilhares.MainActivity)/@0x654f7a1 - animation-leash of window_animation#0
+01-23 15:11:18.782  1391  2006 D WindowManager: makeSurface duration=1 leash=Surface(name=Surface(name=a4a2f8f 
+com.example.gestaobilhares/com.example.gestaobilhares.MainActivity)/@0x654f7a1 - animation-leash of 
+window_animation)/@0x6c3f9d9
+01-23 15:11:18.783  1391  2006 V WindowManager: removeIfPossible 2, Window{a4a2f8f u0 
+com.example.gestaobilhares/com.example.gestaobilhares.MainActivity}: mAnimatingExit=true 
+caller=com.android.server.wm.WindowState.removeIfPossible:2984 
+com.android.server.wm.WindowManagerService.removeWindow:2246 com.android.server.wm.Session.remove:225 
+android.view.IWindowSession$Stub.onTransact:746 com.android.server.wm.Session.onTransact:176 
+01-23 15:11:18.783  1391  2006 V WindowManager: Changing focus from Window{a4a2f8f u0 
+com.example.gestaobilhares/com.example.gestaobilhares.MainActivity EXITING} to Window{30fbc4a u0 
+com.example.gestaobilhares/com.example.gestaobilhares.MainActivity} displayId=0 
+Callers=com.android.server.wm.RootWindowContainer.updateFocusedWindowLocked:583 
+com.android.server.wm.WindowManagerService.updateFocusedWindowLocked:6477 
+com.android.server.wm.WindowState.setupWindowForRemoveOnExit:3175 
+com.android.server.wm.WindowState.removeIfPossible:3143 
+01-23 15:11:18.783  1391  2006 D MARsPolicyManager: onPackageResumedFG pkgName = com.example.gestaobilhares, userId = 0
+01-23 15:11:18.786  1391  4245 D InputDispatcher: Focus left window (0): a4a2f8f 
+com.example.gestaobilhares/com.example.gestaobilhares.MainActivity
+01-23 15:11:18.793 16008 16008 D InsetsSourceConsumer: ensureControlAlpha: for ITYPE_NAVIGATION_BAR on 
+com.example.gestaobilhares/com.example.gestaobilhares.MainActivity
+01-23 15:11:18.794 16008 16008 D InsetsSourceConsumer: ensureControlAlpha: for ITYPE_STATUS_BAR on 
+com.example.gestaobilhares/com.example.gestaobilhares.MainActivity
+01-23 15:11:18.815   843   843 D SurfaceFlinger:      DEVICE | 0xb40000702b430b80 | 0100 | RGBA_8888    |    0.0    
+0.0 1080.0 2400.0 |    0    0 1080 2400 | com.example.gestaobilhares/com.example.gestaobilhares.MainActivity$_16008#0
+01-23 15:11:18.815   843   843 D SurfaceFlinger:      DEVICE | 0xb40000700520ed80 | 0100 | RGBA_8888    |    4.0    
+0.0 1084.0 1464.0 |    0  444 1080 1908 | com.example.gestaobilhares/com.example.gestaobilhares.MainActivity$_16008#1
+01-23 15:11:18.815   843   843 D SurfaceFlinger:      CLIENT | 0xb40000700520f080 | 0100 | RGBA_8888    |    4.0    
+0.0 1084.0 1464.0 |    0  444 1080 1908 | com.example.gestaobilhares/com.example.gestaobilhares.MainActivity$_16008#2
+01-23 15:11:18.819  1391  2006 D InputDispatcher: Focus entered window (0): 30fbc4a 
+com.example.gestaobilhares/com.example.gestaobilhares.MainActivity
+01-23 15:11:18.935  1391  1455 I WindowManager: Reparenting to original parent: Surface(name=ActivityRecord{f9b151c u0 
+com.example.gestaobilhares/.MainActivity t3254})/@0xdff1a27, destroy=true, surface=Surface(name=a4a2f8f 
+com.example.gestaobilhares/com.example.gestaobilhares.MainActivity)/@0x654f7a1
+01-23 15:11:18.936  1391  1455 E WindowManager: win=Window{a4a2f8f u0 
+com.example.gestaobilhares/com.example.gestaobilhares.MainActivity EXITING} destroySurfaces: appStopped=false 
+win.mWindowRemovalAllowed=true win.mRemoveOnExit=true win.mViewVisibility=0 
+caller=com.android.server.wm.ActivityRecord.destroySurfaces:5873 
+com.android.server.wm.ActivityRecord.destroySurfaces:5854 com.android.server.wm.WindowState.onExitAnimationDone:5983 
+com.android.server.wm.WindowStateAnimator.onAnimationFinished:242 
+com.android.server.wm.WindowState.onAnimationFinished:6236 
+com.android.server.wm.WindowContainer$$ExternalSyntheticLambda0.onAnimationFinished:2 
+com.android.server.wm.SurfaceAnimator.lambda$getFinishedCallback$0$SurfaceAnimator:113 
+01-23 15:11:18.936  1391  1455 I WindowManager: Destroying surface 
+Surface(name=com.example.gestaobilhares/com.example.gestaobilhares.MainActivity$_16008)/@0x76f9f38 called by 
+com.android.server.wm.WindowStateAnimator.destroySurface:987 
+com.android.server.wm.WindowStateAnimator.destroySurfaceLocked:518 
+com.android.server.wm.WindowState.destroySurfaceUnchecked:4229 com.android.server.wm.WindowState.destroySurface:4203 
+com.android.server.wm.ActivityRecord.destroySurfaces:5873 com.android.server.wm.ActivityRecord.destroySurfaces:5854 
+com.android.server.wm.WindowState.onExitAnimationDone:5983 
+com.android.server.wm.WindowStateAnimator.onAnimationFinished:242 
+01-23 15:11:18.952   843   843 I Layer   : id=16268 removedFromDrawingState 
+com.example.gestaobilhares/com.example.gestaobilhares.MainActivity$_16008#2 (145)
+01-23 15:11:18.952   843   843 I Layer   : id=16265 removedFromDrawingState a4a2f8f 
+com.example.gestaobilhares/com.example.gestaobilhares.MainActivity#0 (145)
+01-23 15:11:18.952   843   843 I Layer   : id=16270 removedFromDrawingState Surface(name=a4a2f8f 
+com.example.gestaobilhares/com.example.gestaobilhares.MainActivity)/@0x654f7a1 - animation-leash of window_animation#0 
+(145)
+01-23 15:11:18.952   843   843 I SurfaceFlinger: id=16265 Removed a4a2f8f 
+com.example.gestaobilhares/com.example.gestaobilhares.MainActivity#0 (145)
+01-23 15:11:18.952   843   843 I SurfaceFlinger: id=16268 Removed 
+com.example.gestaobilhares/com.example.gestaobilhares.MainActivity$_16008#2 (145)
+01-23 15:11:18.952   843   843 I SurfaceFlinger: id=16270 Removed Surface(name=a4a2f8f 
+com.example.gestaobilhares/com.example.gestaobilhares.MainActivity)/@0x654f7a1 - animation-leash of window_animation#0 
+(145)
+01-23 15:11:18.953   843   843 I Layer   : id=16270 Destroyed Surface(name=a4a2f8f 
+com.example.gestaobilhares/com.example.gestaobilhares.MainActivity)/@0x654f7a1 - animation-leash of window_animation#0
+01-23 15:11:18.953   843   843 I Layer   : id=16265 Destroyed a4a2f8f 
+com.example.gestaobilhares/com.example.gestaobilhares.MainActivity#0
+01-23 15:11:18.955   843   843 I BufferQueueDebug: [com.example.gestaobilhares/com.example.gestaobilhares.MainActivity$
+_16008#2](this:0xb4000070051db948,id:-1,api:0,p:-1,c:843) onDestructor()
+01-23 15:11:18.955   843   843 I Layer   : id=16268 Destroyed 
+com.example.gestaobilhares/com.example.gestaobilhares.MainActivity$_16008#2
+01-23 15:11:18.964   843   843 D SurfaceFlinger:      DEVICE | 0xb40000702b430b80 | 0100 | RGBA_8888    |    0.0    
+0.0 1080.0 2400.0 |    0    0 1080 2400 | com.example.gestaobilhares/com.example.gestaobilhares.MainActivity$_16008#0
+01-23 15:11:18.964   843   843 D SurfaceFlinger:      DEVICE | 0xb4000070050ede80 | 0100 | RGBA_8888    |    4.0    
+0.0 1084.0 1464.0 |    0  444 1080 1908 | com.example.gestaobilhares/com.example.gestaobilhares.MainActivity$_16008#1
+01-23 15:11:19.555  1391  1442 W InputManager-JNI: Input channel object '30fbc4a 
+com.example.gestaobilhares/com.example.gestaobilhares.MainActivity (client)' was disposed without first being removed 
+with the input manager!
+01-23 15:11:19.555   843   843 I BufferQueueProducer: [com.example.gestaobilhares/com.example.gestaobilhares.MainActivi
+ty$_16008#1](this:0xb4000070052a9948,id:-1,api:0,p:-1,c:843) queueBuffer: fps=2.96 dur=1690.95 max=819.98 min=17.34
+01-23 15:11:19.555  1391  1442 I WindowManager: Reparenting to leash, surface=Surface(name=30fbc4a 
+com.example.gestaobilhares/com.example.gestaobilhares.MainActivity)/@0x3026684, 
+leashParent=Surface(name=ActivityRecord{f9b151c u0 com.example.gestaobilhares/.MainActivity t3254})/@0xdff1a27
+01-23 15:11:19.555   843  2857 I SurfaceFlinger: id=16273 createSurf (0x0),-1 flag=24000, Surface(name=30fbc4a 
+com.example.gestaobilhares/com.example.gestaobilhares.MainActivity)/@0x3026684 - animation-leash of window_animation#0
+01-23 15:11:19.557  1391  1442 D WindowManager: makeSurface duration=2 leash=Surface(name=Surface(name=30fbc4a 
+com.example.gestaobilhares/com.example.gestaobilhares.MainActivity)/@0x3026684 - animation-leash of 
+window_animation)/@0x34da77
+01-23 15:11:19.557  1391  1442 V WindowManager: removeIfPossible 2, Window{30fbc4a u0 
+com.example.gestaobilhares/com.example.gestaobilhares.MainActivity}: mAnimatingExit=true 
+caller=com.android.server.wm.WindowState.removeIfPossible:2984 
+com.android.server.wm.WindowManagerService.removeWindow:2246 com.android.server.wm.Session.remove:225 
+android.view.IWindowSession$Stub.onTransact:746 com.android.server.wm.Session.onTransact:176 
+01-23 15:11:19.558  1391  1442 V WindowManager: Changing focus from Window{30fbc4a u0 
+com.example.gestaobilhares/com.example.gestaobilhares.MainActivity EXITING} to Window{26d009 u0 
+com.example.gestaobilhares/com.example.gestaobilhares.MainActivity} displayId=0 
+Callers=com.android.server.wm.RootWindowContainer.updateFocusedWindowLocked:583 
+com.android.server.wm.WindowManagerService.updateFocusedWindowLocked:6477 
+com.android.server.wm.WindowState.setupWindowForRemoveOnExit:3175 
+com.android.server.wm.WindowState.removeIfPossible:3143 
+01-23 15:11:19.558  1391  1442 D MARsPolicyManager: onPackageResumedFG pkgName = com.example.gestaobilhares, userId = 0
+01-23 15:11:19.569 16008 16008 D InsetsSourceConsumer: ensureControlAlpha: for ITYPE_NAVIGATION_BAR on 
+com.example.gestaobilhares/com.example.gestaobilhares.MainActivity
+01-23 15:11:19.570 16008 16008 D InsetsSourceConsumer: ensureControlAlpha: for ITYPE_STATUS_BAR on 
+com.example.gestaobilhares/com.example.gestaobilhares.MainActivity
+01-23 15:11:19.574  1391  1442 D InputDispatcher: Focus left window (0): 30fbc4a 
+com.example.gestaobilhares/com.example.gestaobilhares.MainActivity
+01-23 15:11:19.589  1391  4245 D InputDispatcher: Focus entered window (0): 26d009 
+com.example.gestaobilhares/com.example.gestaobilhares.MainActivity
+01-23 15:11:19.596  3933  3933 I GoogleInputMethodService: GoogleInputMethodService.onStartInput():1349 
+onStartInput(EditorInfo{EditorInfo{packageName=com.example.gestaobilhares, inputType=0, inputTypeString=NULL, 
+enableLearning=false, autoCorrection=false, autoComplete=false, imeOptions=0, privateImeOptions=null, 
+actionName=UNSPECIFIED, actionLabel=null, initialSelStart=-1, initialSelEnd=-1, initialCapsMode=0, label=null, 
+fieldId=-1, fieldName=null, extras=Bundle[{displayId=0}], hintText=null, hintLocales=[]}}, false)
+01-23 15:11:19.622   843   843 I BufferQueueProducer: [com.example.gestaobilhares/com.example.gestaobilhares.MainActivi
+ty$_16008#0](this:0xb400006ffd844948,id:-1,api:0,p:-1,c:843) queueBuffer: fps=1.87 dur=2678.63 max=1707.96 min=16.61
+01-23 15:11:19.724  1391  1455 I WindowManager: Reparenting to original parent: Surface(name=ActivityRecord{f9b151c u0 
+com.example.gestaobilhares/.MainActivity t3254})/@0xdff1a27, destroy=true, surface=Surface(name=30fbc4a 
+com.example.gestaobilhares/com.example.gestaobilhares.MainActivity)/@0x3026684
+01-23 15:11:19.726  1391  1455 E WindowManager: win=Window{30fbc4a u0 
+com.example.gestaobilhares/com.example.gestaobilhares.MainActivity EXITING} destroySurfaces: appStopped=false 
+win.mWindowRemovalAllowed=true win.mRemoveOnExit=true win.mViewVisibility=0 
+caller=com.android.server.wm.ActivityRecord.destroySurfaces:5873 
+com.android.server.wm.ActivityRecord.destroySurfaces:5854 com.android.server.wm.WindowState.onExitAnimationDone:5983 
+com.android.server.wm.WindowStateAnimator.onAnimationFinished:242 
+com.android.server.wm.WindowState.onAnimationFinished:6236 
+com.android.server.wm.WindowContainer$$ExternalSyntheticLambda0.onAnimationFinished:2 
+com.android.server.wm.SurfaceAnimator.lambda$getFinishedCallback$0$SurfaceAnimator:113 
+01-23 15:11:19.727  1391  1455 I WindowManager: Destroying surface 
+Surface(name=com.example.gestaobilhares/com.example.gestaobilhares.MainActivity$_16008)/@0x35f1305 called by 
+com.android.server.wm.WindowStateAnimator.destroySurface:987 
+com.android.server.wm.WindowStateAnimator.destroySurfaceLocked:518 
+com.android.server.wm.WindowState.destroySurfaceUnchecked:4229 com.android.server.wm.WindowState.destroySurface:4203 
+com.android.server.wm.ActivityRecord.destroySurfaces:5873 com.android.server.wm.ActivityRecord.destroySurfaces:5854 
+com.android.server.wm.WindowState.onExitAnimationDone:5983 
+com.android.server.wm.WindowStateAnimator.onAnimationFinished:242 
+01-23 15:11:19.739   843   843 I Layer   : id=16261 removedFromDrawingState 
+com.example.gestaobilhares/com.example.gestaobilhares.MainActivity$_16008#1 (144)
+01-23 15:11:19.739   843   843 I Layer   : id=16258 removedFromDrawingState 30fbc4a 
+com.example.gestaobilhares/com.example.gestaobilhares.MainActivity#0 (144)
+01-23 15:11:19.739   843   843 I Layer   : id=16273 removedFromDrawingState Surface(name=30fbc4a 
+com.example.gestaobilhares/com.example.gestaobilhares.MainActivity)/@0x3026684 - animation-leash of window_animation#0 
+(144)
+01-23 15:11:19.739   843   843 I SurfaceFlinger: id=16258 Removed 30fbc4a 
+com.example.gestaobilhares/com.example.gestaobilhares.MainActivity#0 (144)
+01-23 15:11:19.739   843   843 I SurfaceFlinger: id=16261 Removed 
+com.example.gestaobilhares/com.example.gestaobilhares.MainActivity$_16008#1 (144)
+01-23 15:11:19.740   843   843 I SurfaceFlinger: id=16273 Removed Surface(name=30fbc4a 
+com.example.gestaobilhares/com.example.gestaobilhares.MainActivity)/@0x3026684 - animation-leash of window_animation#0 
+(144)
+01-23 15:11:19.740   843   843 I Layer   : id=16273 Destroyed Surface(name=30fbc4a 
+com.example.gestaobilhares/com.example.gestaobilhares.MainActivity)/@0x3026684 - animation-leash of window_animation#0
+01-23 15:11:19.740   843   843 I Layer   : id=16258 Destroyed 30fbc4a 
+com.example.gestaobilhares/com.example.gestaobilhares.MainActivity#0
+01-23 15:11:19.743   843   843 I BufferQueueDebug: [com.example.gestaobilhares/com.example.gestaobilhares.MainActivity$
+_16008#1](this:0xb4000070052a9948,id:-1,api:0,p:-1,c:843) onDestructor()
+01-23 15:11:19.743   843   843 I Layer   : id=16261 Destroyed 
+com.example.gestaobilhares/com.example.gestaobilhares.MainActivity$_16008#1
+01-23 15:11:19.746   843   843 D SurfaceFlinger:      DEVICE | 0xb4000070050ece00 | 0100 | RGBA_8888    |    0.0    
+0.0 1080.0 2400.0 |    0    0 1080 2400 | com.example.gestaobilhares/com.example.gestaobilhares.MainActivity$_16008#0
+01-23 15:11:19.754  1391  4245 D SGM:GameManager: identifyForegroundApp. com.example.gestaobilhares, mCurrentUserId: 
+0, callerUserId: 0
+01-23 15:11:19.755  1391  4245 D SGM:PkgDataHelper: getGamePkgData(). com.example.gestaobilhares
+01-23 15:11:22.902   843   843 I BufferQueueProducer: [com.example.gestaobilhares/com.example.gestaobilhares.MainActivi
+ty$_16008#0](this:0xb400006ffd844948,id:-1,api:0,p:-1,c:843) queueBuffer: fps=0.30 dur=3280.74 max=3280.74 min=3280.74
+01-23 15:11:24.142   843   843 I BufferQueueProducer: [com.example.gestaobilhares/com.example.gestaobilhares.MainActivi
+ty$_16008#0](this:0xb400006ffd844948,id:-1,api:0,p:-1,c:843) queueBuffer: fps=1.61 dur=1239.72 max=1223.26 min=16.46
+01-23 15:11:25.715   843   843 I BufferQueueProducer: [com.example.gestaobilhares/com.example.gestaobilhares.MainActivi
+ty$_16008#0](this:0xb400006ffd844948,id:-1,api:0,p:-1,c:843) queueBuffer: fps=1.27 dur=1573.47 max=1489.85 min=83.61
+01-23 15:11:28.195   843   843 I BufferQueueProducer: [com.example.gestaobilhares/com.example.gestaobilhares.MainActivi
+ty$_16008#0](this:0xb400006ffd844948,id:-1,api:0,p:-1,c:843) queueBuffer: fps=12.90 dur=2479.88 max=1959.09 min=16.30
+01-23 15:11:49.766  1391  2006 D SGM:GameManager: identifyForegroundApp. com.example.gestaobilhares, mCurrentUserId: 
+0, callerUserId: 0
+01-23 15:11:49.766  1391  2006 D SGM:PkgDataHelper: getGamePkgData(). com.example.gestaobilhares
+
+

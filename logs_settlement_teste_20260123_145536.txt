@@ -1,0 +1,14 @@
+﻿
+01-23 14:52:14.764  3684  3684 D SettlementViewModel: SettlementViewModel
+01-23 14:52:14.765  3684  3684 D SettlementViewModel: SettlementViewModel
+01-23 14:52:14.765  3684  3684 D SettlementViewModel: SettlementViewModel
+01-23 14:52:14.768  3684  3684 D SettlementViewModel: SettlementViewModel
+01-23 14:52:14.921  3684  3684 D SettlementViewModel: SettlementViewModel
+01-23 14:52:23.496  3684  3684 D SettlementViewModel: SettlementViewModel
+01-23 14:52:23.513  3684  3684 D SettlementViewModel: SettlementViewModel
+01-23 14:52:23.520  3684  3684 D SettlementViewModel: SettlementViewModel
+01-23 14:52:23.520  3684  3684 D SettlementViewModel: SettlementViewModel
+01-23 14:52:23.526  3684  3684 D SettlementViewModel: SettlementViewModel
+01-23 14:52:23.620  3684  3684 D SettlementViewModel: SettlementViewModel
+
+

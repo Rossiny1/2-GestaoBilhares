@@ -66,6 +66,8 @@ class CycleHistoryViewModel @Inject constructor(
     
     // ✅ NOVO: Flow para rotaId atual para observação reativa
     private val _rotaIdFlow = MutableStateFlow<Long?>(null)
+    private val _dataFiltroInicio = MutableStateFlow<Long?>(null)
+    private val _dataFiltroFim = MutableStateFlow<Long?>(null)
 
     private val _ciclos = MutableStateFlow<List<CycleHistoryItem>>(emptyList())
     val ciclos: StateFlow<List<CycleHistoryItem>> = _ciclos.asStateFlow()
@@ -81,14 +83,23 @@ class CycleHistoryViewModel @Inject constructor(
     init {
         // ✅ NOVO: Observar mudanças em ciclos, despesas e acertos para atualização automática
         viewModelScope.launch {
-            _rotaIdFlow
-                .flatMapLatest { rotaId ->
+            combine(_rotaIdFlow, _dataFiltroInicio, _dataFiltroFim) { rotaId, dataInicio, dataFim ->
+                Triple(rotaId, dataInicio, dataFim)
+            }.flatMapLatest { (rotaId, dataInicio, dataFim) ->
                     if (rotaId == null) {
                         return@flatMapLatest flowOf(emptyList<CycleHistoryItem>())
                     }
                     
+                    val ciclosFlow = if (dataInicio != null && dataFim != null) {
+                        cicloAcertoRepository.buscarCiclosPorRotaPeriodo(rotaId, dataInicio, dataFim)
+                    } else if (dataInicio != null) {
+                        cicloAcertoRepository.buscarCiclosPorRotaAposData(rotaId, dataInicio)
+                    } else {
+                        cicloAcertoRepository.buscarCiclosPorRotaFlow(rotaId)
+                    }
+
                     // Observar ciclos da rota
-                    cicloAcertoRepository.buscarCiclosPorRotaFlow(rotaId)
+                    ciclosFlow
                         .flatMapLatest { ciclosEntity ->
                             if (ciclosEntity.isEmpty()) {
                                 return@flatMapLatest flowOf(emptyList<CycleHistoryItem>())
@@ -214,6 +225,7 @@ class CycleHistoryViewModel @Inject constructor(
      */
     fun carregarHistoricoCiclos(rotaId: Long) {
         _rotaIdFlow.value = rotaId
+        aplicarFiltroUltimos12Meses()
         viewModelScope.launch {
             try {
                 showLoading()
@@ -306,13 +318,13 @@ class CycleHistoryViewModel @Inject constructor(
         viewModelScope.launch {
             try {
                 showLoading()
-                
-                val ciclosFiltrados = _ciclos.value.filter { ciclo ->
-                    ciclo.dataInicio >= dataInicio && ciclo.dataFim <= dataFim
-                }
-                
-                _ciclos.value = ciclosFiltrados
-                calcularEstatisticas(cicloAcertoRepository.buscarCiclosPorRota(rotaId))
+                _dataFiltroInicio.value = dataInicio.time
+                _dataFiltroFim.value = dataFim.time
+                val ciclosFiltrados = cicloAcertoRepository.buscarCiclosPorRota(rotaId)
+                    .filter { ciclo ->
+                        ciclo.dataInicio >= dataInicio.time && ciclo.dataFim <= dataFim.time
+                    }
+                calcularEstatisticas(ciclosFiltrados)
                 
             } catch (e: Exception) {
                 android.util.Log.e("CycleHistoryViewModel", "Erro ao filtrar: "+e.message)
@@ -327,7 +339,16 @@ class CycleHistoryViewModel @Inject constructor(
      * Limpa filtros e restaura lista completa
      */
     fun limparFiltros(rotaId: Long) {
+        _dataFiltroInicio.value = null
+        _dataFiltroFim.value = null
         carregarHistoricoCiclos(rotaId)
+    }
+
+    private fun aplicarFiltroUltimos12Meses() {
+        val calendar = java.util.Calendar.getInstance()
+        calendar.add(java.util.Calendar.YEAR, -1)
+        _dataFiltroInicio.value = calendar.timeInMillis
+        _dataFiltroFim.value = null
     }
 
     /**

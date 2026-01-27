@@ -36,6 +36,9 @@ class AditivoPdfGenerator(private val context: Context) {
         mesas: List<Mesa>,
         representanteLegal: AssinaturaRepresentanteLegal? = null
     ): File {
+        if (aditivo.assinaturaLocatario.isNullOrBlank()) {
+            throw IllegalStateException("Assinatura obrigatória")
+        }
         // Criar diretório dedicado para cada aditivo (evita ENOENT ao salvar)
         val aditivoDirName = "aditivo_${aditivo.numeroAditivo}"
         val aditivoDir = File(context.getExternalFilesDir(null), aditivoDirName)

@@ -71,12 +71,34 @@ function normalizarTexto(texto) {
 }
 
 /**
+ * Formata nome próprio com conectivos em minúscula.
+ */
+function formatarNome(nome) {
+    if (!nome) return nome;
+
+    const conectivos = new Set(['da', 'de', 'do', 'dos', 'das', 'e']);
+
+    return nome
+        .toLowerCase()
+        .split(' ')
+        .filter(parte => parte.length > 0)
+        .map((parte, index) => {
+            if (index > 0 && conectivos.has(parte)) {
+                return parte;
+            }
+            return parte.charAt(0).toUpperCase() + parte.slice(1);
+        })
+        .join(' ');
+}
+
+/**
  * Mapeia linha do CSV para documento Firebase
  */
 function mapearLinhaParaCliente(linha, rotaId, clienteId) {
     const campos = linha.split(';');
 
-    const nome = normalizarTexto(campos[1] ? campos[1].replace(/"/g, '').trim() : '');
+    const nomeBruto = normalizarTexto(campos[1] ? campos[1].replace(/"/g, '').trim() : '');
+    const nome = formatarNome(nomeBruto);
     const cpfCnpj = normalizarTexto(campos[2] ? campos[2].replace(/"/g, '').trim() : '');
     const endereco = normalizarTexto(campos[3] ? campos[3].replace(/"/g, '').trim() : '');
     const cidade = normalizarTexto(campos[4] ? campos[4].replace(/"/g, '').trim() : '');

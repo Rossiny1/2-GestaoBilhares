@@ -39,6 +39,49 @@ class SyncRepository @Inject constructor(
     companion object {
         private const val TAG = "SyncRepository"
     }
+
+    /**
+     * ✅ NOVO: Sincroniza todas as entidades emitindo progresso incremental.
+     */
+    suspend fun syncAllEntitiesWithProgress(): SyncResult {
+        _syncState.value = SyncState.SYNCING
+        _syncProgress.value = 0
+        _syncMessage.value = "Iniciando sincronização completa..."
+
+        return try {
+            val orchestrationResult = syncOrchestration.syncAllWithProgress { percent, status ->
+                _syncProgress.value = percent.coerceIn(0, 100)
+                _syncMessage.value = status
+            }
+
+            val result = SyncResult(
+                success = orchestrationResult.success,
+                syncedCount = orchestrationResult.syncedCount,
+                durationMs = orchestrationResult.durationMs,
+                errors = orchestrationResult.errors
+            )
+
+            if (result.success) {
+                _syncState.value = SyncState.SUCCESS
+                _syncProgress.value = 100
+                _syncMessage.value = "Sincronização concluída com sucesso"
+            } else {
+                _syncState.value = SyncState.ERROR
+                _syncMessage.value = "Erro na sincronização: ${result.errors.joinToString(", ")}" 
+            }
+
+            result
+        } catch (e: Exception) {
+            _syncState.value = SyncState.ERROR
+            _syncMessage.value = "Erro crítico: ${e.message}"
+            SyncResult(
+                success = false,
+                syncedCount = 0,
+                durationMs = 0,
+                errors = listOf("Erro crítico: ${e.message}")
+            )
+        }
+    }
     
     // Estado da sincronização
     private val _syncState = MutableStateFlow(SyncState.IDLE)

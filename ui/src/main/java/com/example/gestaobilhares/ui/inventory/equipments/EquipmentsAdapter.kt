@@ -8,7 +8,8 @@ import androidx.recyclerview.widget.RecyclerView
 import com.example.gestaobilhares.ui.databinding.ItemEquipmentBinding
 
 class EquipmentsAdapter(
-    private val onEquipmentClick: (Equipment) -> Unit
+    private val onEquipmentClick: (Equipment) -> Unit,
+    private val onEditClick: (Equipment) -> Unit
 ) : ListAdapter<Equipment, EquipmentsAdapter.EquipmentViewHolder>(EquipmentDiffCallback()) {
 
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): EquipmentViewHolder {
@@ -17,7 +18,7 @@ class EquipmentsAdapter(
             parent,
             false
         )
-        return EquipmentViewHolder(binding, onEquipmentClick)
+        return EquipmentViewHolder(binding, onEquipmentClick, onEditClick)
     }
 
     override fun onBindViewHolder(holder: EquipmentViewHolder, position: Int) {
@@ -26,7 +27,8 @@ class EquipmentsAdapter(
 
     class EquipmentViewHolder(
         private val binding: ItemEquipmentBinding,
-        private val onEquipmentClick: (Equipment) -> Unit
+        private val onEquipmentClick: (Equipment) -> Unit,
+        private val onEditClick: (Equipment) -> Unit
     ) : RecyclerView.ViewHolder(binding.root) {
 
         fun bind(equipment: Equipment) {
@@ -38,6 +40,10 @@ class EquipmentsAdapter(
                 
                 root.setOnClickListener {
                     onEquipmentClick(equipment)
+                }
+                
+                btnEditEquipment.setOnClickListener {
+                    onEditClick(equipment)
                 }
             }
         }

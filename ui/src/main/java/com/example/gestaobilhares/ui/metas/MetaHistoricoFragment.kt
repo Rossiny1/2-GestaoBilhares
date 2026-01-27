@@ -225,8 +225,10 @@ class MetaHistoricoFragment : Fragment() {
                 }
                 
                 if (metasPorRota.isEmpty()) {
+                    android.util.Log.d("MetaHistoricoFragment", "Nenhuma meta encontrada para o ciclo selecionado")
                     mostrarEstadoVazio()
                 } else {
+                    android.util.Log.d("MetaHistoricoFragment", "Encontradas ${metasPorRota.size} rotas com metas")
                     binding.layoutEmptyState.visibility = View.GONE
                     binding.recyclerViewMetas.visibility = View.VISIBLE
                     metasAdapter.atualizarMetas(metasPorRota)

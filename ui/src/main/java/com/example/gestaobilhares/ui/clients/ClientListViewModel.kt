@@ -34,6 +34,15 @@ enum class FiltroCliente {
 }
 
 /**
+ * Filtros gerais para dialog (Ativos/Inativos baseados em mesa e débito)
+ */
+enum class FiltroGeralCliente {
+    ATIVOS,     // Clientes com mesa OU com débito
+    INATIVOS,   // Clientes sem mesa E sem débito
+    TODOS       // Todos os clientes
+}
+
+/**
  * Tipos de pesquisa avançada disponíveis
  */
 enum class SearchType(val label: String, val hint: String) {
@@ -95,6 +104,10 @@ class ClientListViewModel @Inject constructor(
     private val _clientesTodos = MutableStateFlow<List<Cliente>>(emptyList())
     private val _filtroAtual = MutableStateFlow(FiltroCliente.NAO_ACERTADOS)
     val filtroAtual: StateFlow<FiltroCliente> = _filtroAtual.asStateFlow()
+    
+    // ✅ NOVO: Filtro geral para dialog (Ativos/Inativos/Todos)
+    private val _filtroGeral = MutableStateFlow(FiltroGeralCliente.TODOS)
+    val filtroGeral: StateFlow<FiltroGeralCliente> = _filtroGeral.asStateFlow()
     
     // ✅ FASE 9B: Lista de clientes filtrados
     private val _clientes = MutableStateFlow<List<Cliente>>(emptyList())
@@ -1106,6 +1119,63 @@ class ClientListViewModel @Inject constructor(
      */
     fun getFiltroAtual(): FiltroCliente {
         return _filtroAtual.value
+    }
+
+    /**
+     * ✅ NOVO: Aplica filtro geral (Ativos/Inativos/Todos) para dialog
+     * Usa conceitos diferentes dos filtros de abas:
+     * - ATIVOS: Clientes com mesa OU com débito
+     * - INATIVOS: Clientes sem mesa E sem débito
+     * - TODOS: Todos os clientes
+     */
+    fun aplicarFiltroGeral(filtro: FiltroGeralCliente) {
+        viewModelScope.launch {
+            try {
+                _filtroGeral.value = filtro
+                showLoading()
+                
+                val rotaId = _rotaInfo.value?.id
+                if (rotaId == null) {
+                    Timber.e("ClientListViewModel", "rotaId é null para aplicar filtro geral")
+                    hideLoading()
+                    return@launch
+                }
+                
+                Timber.d("ClientListViewModel", "🔍 Aplicando filtro geral: $filtro para rotaId: $rotaId")
+                
+                val clientesFlow = when (filtro) {
+                    FiltroGeralCliente.ATIVOS -> {
+                        Timber.d("ClientListViewModel", "   → Buscando clientes ATIVOS (com mesa OU débito)")
+                        appRepository.buscarClientesAtivos(rotaId)
+                    }
+                    FiltroGeralCliente.INATIVOS -> {
+                        Timber.d("ClientListViewModel", "   → Buscando clientes INATIVOS (sem mesa E sem débito)")
+                        appRepository.buscarClientesInativos(rotaId)
+                    }
+                    FiltroGeralCliente.TODOS -> {
+                        Timber.d("ClientListViewModel", "   → Buscando TODOS os clientes")
+                        appRepository.obterClientesPorRotaComDebitoAtual(rotaId)
+                    }
+                }
+                
+                // Coletar e atualizar a lista
+                clientesFlow.collect { clientes ->
+                    _clientes.value = clientes
+                    _clientesTodos.value = clientes // Atualizar também a lista base
+                    hideLoading()
+                    
+                    Timber.d("ClientListViewModel", "✅ Filtro geral aplicado: ${clientes.size} clientes encontrados")
+                    clientes.forEach { cliente ->
+                        Timber.d("ClientListViewModel", "   - ${cliente.nome} (débito: R$ ${cliente.debitoAtual})")
+                    }
+                }
+                
+            } catch (e: Exception) {
+                Timber.e("ClientListViewModel", "Erro ao aplicar filtro geral: ${e.message}", e)
+                showError("Erro ao aplicar filtro: ${e.message}")
+                hideLoading()
+            }
+        }
     }
 
     /**

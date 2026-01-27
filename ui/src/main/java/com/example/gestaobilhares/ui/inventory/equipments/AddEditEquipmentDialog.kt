@@ -23,21 +23,39 @@ class AddEditEquipmentDialog : DialogFragment() {
     private val viewModel: EquipmentsViewModel by viewModels()
 
     companion object {
-        fun newInstance(): AddEditEquipmentDialog {
-            return AddEditEquipmentDialog()
+        private const val ARG_EQUIPMENT = "equipment"
+        
+        fun newInstance(equipment: Equipment? = null): AddEditEquipmentDialog {
+            val dialog = AddEditEquipmentDialog()
+            equipment?.let {
+                val args = Bundle()
+                args.putSerializable(ARG_EQUIPMENT, it)
+                dialog.arguments = args
+            }
+            return dialog
         }
     }
 
     override fun onCreateDialog(savedInstanceState: Bundle?): Dialog {
         _binding = DialogAddEditEquipmentBinding.inflate(layoutInflater)
         
-
+        // Verificar se é edição
+        val equipment = arguments?.getSerializable(ARG_EQUIPMENT) as? Equipment
+        val isEditMode = equipment != null
+        
+        // Preencher campos se for edição
+        equipment?.let {
+            binding.etEquipmentName.setText(it.name)
+            binding.etDescription.setText(it.description)
+            binding.etQuantity.setText(it.quantity.toString())
+            binding.etLocation.setText(it.location)
+        }
         
         return MaterialAlertDialogBuilder(requireContext())
             .setView(binding.root)
-            .setTitle("Adicionar Equipamento")
+            .setTitle(if (isEditMode) "Editar Equipamento" else "Adicionar Equipamento")
             .setPositiveButton("Salvar") { _, _ ->
-                saveEquipment()
+                saveEquipment(isEditMode, equipment)
             }
             .setNegativeButton("Cancelar", null)
             .create()
@@ -47,7 +65,7 @@ class AddEditEquipmentDialog : DialogFragment() {
      * Valida e salva os dados do equipamento no banco de dados.
      * Verifica se os campos obrigatórios foram preenchidos.
      */
-    private fun saveEquipment() {
+    private fun saveEquipment(isEditMode: Boolean, existingEquipment: Equipment?) {
         val name = binding.etEquipmentName.text.toString().trim()
         val description = binding.etDescription.text.toString().trim()
         val quantityText = binding.etQuantity.text.toString().trim()
@@ -79,19 +97,23 @@ class AddEditEquipmentDialog : DialogFragment() {
 
         try {
             val equipment = Equipment(
+                id = existingEquipment?.id ?: 0L,
                 name = name,
                 description = description,
                 quantity = quantity,
                 location = location
             )
             
-            // ✅ CORRIGIDO: Salvar via ViewModel (StateFlow compartilhado atualiza automaticamente)
-            viewModel.adicionarEquipment(equipment)
+            if (isEditMode && existingEquipment != null) {
+                // Editar equipamento existente
+                viewModel.atualizarEquipment(equipment)
+                Toast.makeText(requireContext(), "Equipamento atualizado com sucesso!", Toast.LENGTH_SHORT).show()
+            } else {
+                // Adicionar novo equipamento
+                viewModel.adicionarEquipment(equipment)
+                Toast.makeText(requireContext(), "Equipamento adicionado com sucesso!", Toast.LENGTH_SHORT).show()
+            }
             
-            // Mostrar sucesso e fechar diálogo
-            Toast.makeText(requireContext(), "Equipamento adicionado com sucesso!", Toast.LENGTH_SHORT).show()
-            
-            // ✅ CORRIGIDO: O StateFlow já atualiza automaticamente, não precisa de callback
             dismiss()
             
         } catch (e: Exception) {

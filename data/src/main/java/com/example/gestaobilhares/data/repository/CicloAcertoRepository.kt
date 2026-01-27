@@ -177,6 +177,20 @@ class CicloAcertoRepository @Inject constructor(
     }
 
     /**
+     * ✅ NOVO: Lista ciclos de uma rota a partir de uma data inicial.
+     */
+    fun buscarCiclosPorRotaAposData(rotaId: Long, dataInicio: Long): Flow<List<CicloAcertoEntity>> {
+        return cicloAcertoDao.listarPorRotaAposData(rotaId, dataInicio)
+    }
+
+    /**
+     * ✅ NOVO: Lista ciclos de uma rota por período (data início/fim).
+     */
+    fun buscarCiclosPorRotaPeriodo(rotaId: Long, dataInicio: Long, dataFim: Long): Flow<List<CicloAcertoEntity>> {
+        return cicloAcertoDao.listarPorRotaPeriodo(rotaId, dataInicio, dataFim)
+    }
+
+    /**
      * ✅ NOVO: Lista todos os ciclos existentes (todas as rotas)
      */
     fun listarTodosCiclos(): Flow<List<CicloAcertoEntity>> {

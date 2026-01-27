@@ -70,7 +70,7 @@ class StockFragment : Fragment() {
         viewLifecycleOwner.lifecycleScope.launch {
             viewModel.stockItems.collect { items ->
                 android.util.Log.d("StockFragment", "Itens genéricos recebidos: ${items.size}")
-                adapter.submitList(items)
+                adapter.submitList(items.toList())
             }
         }
 
@@ -78,7 +78,7 @@ class StockFragment : Fragment() {
         viewLifecycleOwner.lifecycleScope.launch {
             viewModel.panoGroups.collect { panoGroups ->
                 android.util.Log.d("StockFragment", "Grupos de panos recebidos: ${panoGroups.size}")
-                panoGroupAdapter.submitList(panoGroups)
+                panoGroupAdapter.submitList(panoGroups.toList())
             }
         }
     }

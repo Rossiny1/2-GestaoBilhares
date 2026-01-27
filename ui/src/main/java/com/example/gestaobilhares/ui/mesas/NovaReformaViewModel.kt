@@ -51,12 +51,17 @@ class NovaReformaViewModel @Inject constructor(
         }
     }
 
+    /**
+     * ✅ ATUALIZADO: Simplificado - use case agora cuida de criar MesaReformada
+     * Mantido apenas para compatibilidade, mas não cria duplicidade.
+     */
     fun salvarReforma(mesaReformada: MesaReformada) {
         viewModelScope.launch {
             try {
                 showLoading()
-                appRepository.inserirMesaReformada(mesaReformada)
-                _successMessage.value = "Reforma salva com sucesso!"
+                // ✅ REMOVIDO: Não inserir MesaReformada aqui pois use case já cuida
+                // appRepository.inserirMesaReformada(mesaReformada)
+                _successMessage.value = "Reforma processada com sucesso!"
             } catch (e: Exception) {
                 _errorMessage.value = "Erro ao salvar reforma: ${e.message}"
             } finally {

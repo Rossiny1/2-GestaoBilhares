@@ -1,0 +1,20 @@
+﻿--------- beginning of main
+01-23 15:06:18.238   769 15577 W AudioALSACaptureDataProviderNormal: readThread, latency_in_s,0.000003,0.039696,0.000082, totalTime 0.039781 > logTimeout 0.022000 TIMEOUT!!
+--------- beginning of system
+01-23 15:06:18.402  1391  1484 D PowerManagerService: UserActivityStateListenerState: 0
+01-23 15:06:18.418   769 15577 W AudioALSACaptureDataProviderNormal: readThread, latency_in_s,0.000005,0.039330,0.000070, totalTime 0.039405 > logTimeout 0.022000 TIMEOUT!!
+01-23 15:06:18.458   769 15577 W AudioALSACaptureDataProviderNormal: readThread, latency_in_s,0.000004,0.039653,0.000155, totalTime 0.039812 > logTimeout 0.022000 TIMEOUT!!
+01-23 15:06:18.482  1391  1745 D SemNscXgbMsL1: Probability - Cloud gaming: [0.019963576]
+01-23 15:06:18.485  1391  1745 D SemNscXgbMsL1: Probability - Real time: [0.026483454]
+01-23 15:06:18.485  1391  1745 D SemNscXgbMsL1: Probability - Non real time: [0.7934382]
+01-23 15:06:18.485  1391  1745 D SemNscXgbMsL1: 1 sample inference time: 3.456923 msecs
+01-23 15:06:18.487  1391  1745 D SemNscXgbL2Rt: L2 RT 1 sample inference time: 1.959615 msecs
+01-23 15:06:18.490  1391  1745 D SemNscXgbL2Nrt: L2 NRT 1 sample inference time: 1.899692 msecs
+01-23 15:06:18.598   769 15577 W AudioALSACaptureDataProviderNormal: readThread, latency_in_s,0.000005,0.039357,0.000118, totalTime 0.039481 > logTimeout 0.022000 TIMEOUT!!
+01-23 15:06:18.669  1849  1975 D MobileStatusTracker(1/8): onSignalStrengthsChanged signalStrength=SignalStrength:{mCdma=Invalid,mGsm=Invalid,mWcdma=Invalid,mTdscdma=Invalid,mLte=CellSignalStrengthLte: rssi=-105 rsrp=-105 rsrq=-13 rssnr=0 cqiTableIndex=2147483647 cqi=2147483647 ta=2147483647 level=3 parametersUseForLevel=0,mNr=Invalid,SignalBarInfo{ lteLevel=2 },rat=14,primary=CellSignalStrengthLte} level=2
+01-23 15:06:18.671  1849  1975 D LatinUtil(1/8): : isGsmLATIN(): 13
+01-23 15:06:18.673  1849  1975 D NetworkController: SignalStrength from intent slotId=1
+01-23 15:06:18.698   769 15577 W AudioALSACaptureDataProviderNormal: readThread, latency_in_s,0.000005,0.039618,0.000083, totalTime 0.039706 > logTimeout 0.022000 TIMEOUT!!
+01-23 15:06:18.736  1837  1952 D ScanFilter: manu data matches
+01-23 15:06:18.737  1837  1952 D BtGatt.GattService: onScanResult to scannerId: 11- eventType=0x10, addressType=0, address=C8120B_F, primaryPhy=1, secondaryPhy=0, advertisingSid=0xff, txPower=127, rssi=-94, periodicAdvInt=0x0
+01-23 15:06:18.745 16254 16712 I [-0300]oneconnect[1.8.41.23_01][CORE]: DataConvert.parseBleVd - deviceBle : |name:|deviceType:TV|discoverType:_BLE|services:None|connected:false[TvStatusString]POWER_OFF[TvStatus]-128[TvService]102[TvMirrorChannel]1[TvRegisteredDB][0, 0, 0, 0, 0, 0][TvYear]2016[TvOcfInfo]0[TvAcmStatus]0[ExTvStatus]0[ExtendedStatus]-1[ModuloSn]-1

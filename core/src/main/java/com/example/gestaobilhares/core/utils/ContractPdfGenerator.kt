@@ -72,6 +72,9 @@ class ContractPdfGenerator(
         representanteLegal: AssinaturaRepresentanteLegal? = null,
         emissionMetadata: ContractEmissionMetadata? = null
     ): Pair<File, String?> {
+        if (contrato.assinaturaLocatario.isNullOrBlank()) {
+            throw IllegalStateException("Assinatura obrigatória")
+        }
         val fileName = "contrato_${contrato.numeroContrato}_${System.currentTimeMillis()}.pdf"
         val file = File(context.getExternalFilesDir(null), fileName)
         
@@ -145,6 +148,9 @@ class ContractPdfGenerator(
         representanteLegal: AssinaturaRepresentanteLegal? = null,
         emissionMetadata: ContractEmissionMetadata? = null
     ): File {
+        if (contrato.distratoAssinaturaLocatario.isNullOrBlank()) {
+            throw IllegalStateException("Assinatura obrigatória")
+        }
         val dir = File(context.getExternalFilesDir(null), "distratos_${contrato.numeroContrato}")
         if (!dir.exists()) dir.mkdirs()
         val file = File(dir, "distrato_${System.currentTimeMillis()}.pdf")

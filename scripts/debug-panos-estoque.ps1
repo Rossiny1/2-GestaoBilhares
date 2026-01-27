@@ -6,8 +6,8 @@ Write-Host "=== DEBUG DE PANOS NO ESTOQUE ===" -ForegroundColor Yellow
 Write-Host "Objetivo: Identificar por que os cards de panos não aparecem após criação" -ForegroundColor Cyan
 Write-Host ""
 
-# Caminho do ADB (conforme documentação do projeto)
-$ADB = "c:\Users\Rossiny\Desktop\2-GestaoBilhares\android-sdk\platform-tools\adb"
+# Caminho do ADB (mesmo padrão dos outros scripts)
+$ADB = "C:\Users\$($env:USERNAME)\AppData\Local\Android\Sdk\platform-tools\adb.exe"
 
 # Verificar se o ADB existe
 if (!(Test-Path $ADB)) {

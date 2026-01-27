@@ -806,13 +806,13 @@ class ClientListFragment : Fragment() {
      */
     private fun mostrarDialogoFiltros() {
         try {
-            val filtroAtual = viewModel.getFiltroAtual()
+            val filtroAtual = viewModel.filtroGeral.value
             ClientFilterDialog.show(
                 context = requireContext(),
                 currentFilter = filtroAtual,
                 onFilterSelected = { filtroSelecionado ->
-                    viewModel.aplicarFiltro(filtroSelecionado)
-                    mostrarFeedback("Filtro aplicado: ${getNomeFiltro(filtroSelecionado)}", Snackbar.LENGTH_SHORT)
+                    viewModel.aplicarFiltroGeral(filtroSelecionado)
+                    mostrarFeedback("Filtro aplicado: ${getNomeFiltroGeral(filtroSelecionado)}", Snackbar.LENGTH_SHORT)
                 }
             )
         } catch (e: Exception) {
@@ -848,6 +848,14 @@ class ClientListFragment : Fragment() {
                 FiltroCliente.NAO_ACERTADOS -> "Em aberto"
                 FiltroCliente.TODOS -> "Todos"
                 FiltroCliente.PENDENCIAS -> "Pendências"
+            }
+        }
+        
+        private fun getNomeFiltroGeral(filtro: FiltroGeralCliente): String {
+            return when (filtro) {
+                FiltroGeralCliente.ATIVOS -> "Ativos"
+                FiltroGeralCliente.INATIVOS -> "Inativos"
+                FiltroGeralCliente.TODOS -> "Todos"
             }
         }
 

@@ -1,26 +1,30 @@
 package com.example.gestaobilhares.ui.settlement
 
+import android.util.Log
 import androidx.lifecycle.viewModelScope
-import kotlinx.coroutines.flow.MutableStateFlow
-import kotlinx.coroutines.flow.StateFlow
-import kotlinx.coroutines.flow.asStateFlow
+import androidx.lifecycle.MutableLiveData
+import androidx.lifecycle.LiveData
 import kotlinx.coroutines.launch
-import androidx.lifecycle.ViewModel
-import com.example.gestaobilhares.ui.common.BaseViewModel
-import timber.log.Timber
-// BuildConfig não disponível em módulos de biblioteca
+import kotlinx.coroutines.withContext
+import kotlinx.coroutines.Dispatchers
+import com.example.gestaobilhares.data.entities.Acerto
 import com.example.gestaobilhares.data.entities.Mesa
 import com.example.gestaobilhares.data.entities.PanoEstoque
 import com.example.gestaobilhares.data.repository.AppRepository
-import com.example.gestaobilhares.data.entities.Acerto
-import java.util.Date
-import kotlinx.coroutines.flow.Flow
-import kotlinx.coroutines.flow.first
-import com.example.gestaobilhares.data.entities.HistoricoManutencaoMesa
-import com.example.gestaobilhares.data.entities.TipoManutencao
+import com.example.gestaobilhares.ui.common.BaseViewModel
+import com.example.gestaobilhares.ui.mesas.usecases.OrigemTrocaPano
+import com.example.gestaobilhares.ui.mesas.usecases.RegistrarTrocaPanoUseCase
+import com.example.gestaobilhares.ui.mesas.usecases.TrocaPanoParams
+import com.example.gestaobilhares.core.utils.UserSessionManager
 import com.google.gson.Gson
-import com.google.gson.reflect.TypeToken
 import dagger.hilt.android.lifecycle.HiltViewModel
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.first
+import kotlinx.coroutines.launch
+import timber.log.Timber
+import java.util.Date
 import javax.inject.Inject
 
 /**
@@ -29,7 +33,9 @@ import javax.inject.Inject
  */
 @HiltViewModel
 class SettlementViewModel @Inject constructor(
-    private val appRepository: AppRepository
+    private val appRepository: AppRepository,
+    private val registrarTrocaPanoUseCase: RegistrarTrocaPanoUseCase,
+    private val userSessionManager: UserSessionManager
 ) : BaseViewModel() {
 
     /**
@@ -87,7 +93,9 @@ class SettlementViewModel @Inject constructor(
         val mediaFichasJogadas: Double = 0.0,
         // ✅ NOVO: Campos para fotos
         val fotoRelogioFinal: String? = null,
-        val dataFoto: java.util.Date? = null
+        val dataFoto: java.util.Date? = null,
+        // ✅ NOVO: Campo para identificar troca de pano (fonte da verdade)
+        val panoNovoId: Long? = null
     )
 
     private val _clienteId = MutableStateFlow<Long?>(null)
@@ -619,18 +627,34 @@ class SettlementViewModel @Inject constructor(
                 appRepository.atualizarDebitoAtualCliente(clienteId, debitoAtual)
                 logOperation("SETTLEMENT", "Débito atual atualizado na tabela clientes: R$ $debitoAtual")
                 
-                // ✅ CORREÇÃO: Emitir resultado IMEDIATAMENTE para não bloquear a UI
-                // O diálogo de resumo deve aparecer instantaneamente
-                _resultadoSalvamento.value = ResultadoSalvamento.Sucesso(acertoId)
-                logOperation("SETTLEMENT", "✅ Resultado de salvamento emitido - diálogo será exibido imediatamente")
-                
-                // ✅ NOVO: Processar uploads e sync em background (sem bloquear UI)
-                // Isso permite que o diálogo apareça imediatamente enquanto o sync acontece em background
-                viewModelScope.launch sync@{
+                // ════════════════════════════════════════════════════════════════
+                // SOLUÇÃO DEFINITIVA: Usar dados estruturados (panoNovoId), não string UI
+                // ════════════════════════════════════════════════════════════════
+
+                // 1. FONTE DA VERDADE: Se mesa tem panoNovoId, houve troca
+                val mesasComPanoNovo = dadosAcerto.mesas.filter { 
+                    it.panoNovoId != null && it.panoNovoId > 0 
+                }
+
+                Log.d("DEBUG_FIX", "═══════════════════════════════════════")
+                Log.d("DEBUG_FIX", "🔍 DIAGNÓSTICO TROCA DE PANO:")
+                Log.d("DEBUG_FIX", "   Flag panoTrocado (UI): ${dadosAcerto.panoTrocado}")
+                Log.d("DEBUG_FIX", "   String numeroPano: '${dadosAcerto.numeroPano}'")
+                Log.d("DEBUG_FIX", "   Mesas com panoNovoId: ${mesasComPanoNovo.size}")
+                mesasComPanoNovo.forEachIndexed { idx, mesa ->
+                    Log.d("DEBUG_FIX", "   [$idx] Mesa ${mesa.numero} → panoNovoId=${mesa.panoNovoId}")
+                }
+                Log.d("DEBUG_FIX", "═══════════════════════════════════════")
+
+                // 2. DECISÃO: Se houver mesas com pano novo, registrar no histórico
+                if (mesasComPanoNovo.isNotEmpty()) {
+                    Log.d("DEBUG_FIX", "✅ Detectada troca de pano baseada em dados estruturados")
+
                     try {
-                        // ✅ NOVO: Registrar troca de pano no histórico de manutenção (background)
-                        if (dadosAcerto.panoTrocado && com.example.gestaobilhares.core.utils.StringUtils.isNaoVazia(dadosAcerto.numeroPano)) {
-                            registrarTrocaPanoNoHistorico(dadosAcerto.mesas.map { mesa ->
+                        // 3. EXECUÇÃO SEQUENCIAL (impede cancelamento por lifecycle)
+                        // Chamada DIRETA, SEM viewModelScope.launch
+                        registrarTrocaPanoNoHistorico(
+                            mesas = mesasComPanoNovo.map { mesa ->
                                 com.example.gestaobilhares.ui.settlement.MesaDTO(
                                     id = mesa.id,
                                     numero = mesa.numero,
@@ -644,9 +668,29 @@ class SettlementViewModel @Inject constructor(
                                     comissaoFicha = 0.0,
                                     ativa = true
                                 )
-                            }, dadosAcerto.numeroPano ?: "")
-                        }
-                        
+                            },
+                            numeroPano = dadosAcerto.numeroPano ?: ""
+                        )
+
+                        Log.d("DEBUG_FIX", "✅ registrarTrocaPanoNoHistorico CONCLUÍDO")
+
+                    } catch (e: Exception) {
+                        Log.e("DEBUG_FIX", "❌ ERRO ao registrar troca de pano: ${e.message}", e)
+                        // NÃO relançar exceção (não bloquear salvamento financeiro)
+                    }
+                } else {
+                    Log.d("DEBUG_FIX", "ℹ️ Nenhuma mesa com panoNovoId detectada (sem troca)")
+                }
+                
+                // ✅ CORREÇÃO: Emitir resultado APENAS após garantir persistência do pano
+                // O diálogo de resumo deve aparecer instantaneamente
+                _resultadoSalvamento.value = ResultadoSalvamento.Sucesso(acertoId)
+                logOperation("SETTLEMENT", "✅ Resultado de salvamento emitido - diálogo será exibido imediatamente")
+                
+                // ✅ NOVO: Processar uploads e sync em background (sem bloquear UI)
+                // Isso permite que o diálogo apareça imediatamente enquanto o sync acontece em background
+                viewModelScope.launch sync@{
+                    try {
                         // ✅ CRÍTICO: Aguardar tempo suficiente para garantir que uploads de fotos sejam concluídos
                         // O upload para Firebase Storage pode levar alguns segundos dependendo do tamanho da foto
                         // e da velocidade da conexão
@@ -662,12 +706,8 @@ class SettlementViewModel @Inject constructor(
                         appRepository.adicionarAcertoComMesasParaSync(acertoSync, acertoMesas)
                         logOperation("SETTLEMENT", "✅ [BACKGROUND] Acerto $acertoId adicionado à fila de sync com ${acertoMesas.size} mesas")
                         
-                        // ✅ NOVO: Verificar se a atualização foi bem-sucedida (background)
-                        val clienteAtualizado = appRepository.obterClientePorId(clienteId)
-                        logOperation("SETTLEMENT", "🔍 [BACKGROUND] VERIFICAÇÃO: Débito atual na tabela clientes após atualização: R$ ${clienteAtualizado?.debitoAtual}")
                     } catch (e: Exception) {
-                        logError("SETTLEMENT", "Erro ao processar sync em background: ${e.localizedMessage}", e)
-                        // Não emitir erro aqui pois o acerto já foi salvo com sucesso
+                        Log.e("SETTLEMENT", "Erro no sync: ${e.message}")
                     }
                 }
             } catch (e: Exception) {
@@ -685,27 +725,76 @@ class SettlementViewModel @Inject constructor(
 
     /**
      * Registra a troca de pano no histórico de manutenção das mesas.
+     * Use case agora cuida de TUDO (MesaReformada + Histórico + Atualização da Mesa).
      */
-    private suspend fun registrarTrocaPanoNoHistorico(mesas: List<com.example.gestaobilhares.ui.settlement.MesaDTO>, numeroPano: String) {
+    private suspend fun registrarTrocaPanoNoHistorico(
+        mesas: List<com.example.gestaobilhares.ui.settlement.MesaDTO>,
+        numeroPano: String
+    ) {
+        Log.d("DEBUG_CARDS", "")
+        Log.d("DEBUG_CARDS", "╔════════════════════════════════════════╗")
+        Log.d("DEBUG_CARDS", "║   ACERTO - Registrando Troca de Pano  ║")
+        Log.d("DEBUG_CARDS", "╚════════════════════════════════════════╝")
+        Log.d("DEBUG_CARDS", "📋 Total mesas: ${mesas.size}")
+        Log.d("DEBUG_CARDS", "📋 Pano: $numeroPano")
+
         try {
-            Timber.d("SettlementViewModel", "Registrando troca de pano no histórico: $numeroPano")
-            
-            mesas.forEach { mesa ->
-                val historico = HistoricoManutencaoMesa(
-                    mesaId = mesa.id,
-                    numeroMesa = mesa.numero,
-                    tipoManutencao = TipoManutencao.TROCA_PANO,
-                    descricao = "Troca de pano durante acerto - Número: $numeroPano",
-                    responsavel = "Sistema de Acerto",
-                    observacoes = "Troca de pano registrada automaticamente durante o acerto",
-                    dataManutencao = com.example.gestaobilhares.core.utils.DateUtils.obterDataAtual().time
-                )
-                
-                appRepository.inserirHistoricoManutencaoMesa(historico)
-                logOperation("SETTLEMENT", "Histórico de troca de pano registrado para mesa ${mesa.numero}")
+            val panoId = appRepository.buscarPorNumero(numeroPano)?.id
+            Log.d("DEBUG_CARDS", "🔍 Pano ID encontrado: $panoId")
+
+            val dataAtual = com.example.gestaobilhares.core.utils.DateUtils.obterDataAtual().time
+            Log.d("DEBUG_CARDS", "📅 Data atual: $dataAtual")
+
+            mesas.forEachIndexed { index, mesa ->
+                Log.d("DEBUG_CARDS", "")
+                Log.d("DEBUG_CARDS", "─────────────────────────────────────────")
+                Log.d("DEBUG_CARDS", "🔹 Mesa ${index + 1}/${mesas.size}")
+                Log.d("DEBUG_CARDS", "   ID: ${mesa.id}")
+                Log.d("DEBUG_CARDS", "   Número: ${mesa.numero}")
+
+                val descricaoPano = "Troca de pano realizada durante acerto - Pano: $numeroPano"
+
+                Log.d("DEBUG_CARDS", "🚀 Chamando registrarTrocaPanoUseCase...")
+                Log.d("DEBUG_CARDS", "🔍 ANTES DO USE CASE - Thread: ${Thread.currentThread().name}")
+
+                // Garantir execução completa sem ser cancelado pelo lifecycle
+                withContext(Dispatchers.IO) {
+                    val nomeUsuarioLogado = userSessionManager.getCurrentUserName()
+                    Log.d("DEBUG_CARDS", "👤 Usuário logado: $nomeUsuarioLogado")
+                    
+                    registrarTrocaPanoUseCase(
+                        TrocaPanoParams(
+                            mesaId = mesa.id,
+                            numeroMesa = mesa.numero,
+                            panoNovoId = panoId,
+                            dataManutencao = dataAtual,
+                            origem = OrigemTrocaPano.ACERTO,
+                            descricao = descricaoPano,
+                            observacao = null,
+                            nomeUsuario = nomeUsuarioLogado // ✅ CORREÇÃO: Passar usuário real
+                        )
+                    )
+                }
+
+                Log.d("DEBUG_CARDS", "🔍 DEPOIS DO USE CASE - Thread: ${Thread.currentThread().name}")
+                Log.d("DEBUG_CARDS", "✅ Use case executado para mesa ${mesa.numero}")
+                logOperation("SETTLEMENT", "Troca de pano registrada para mesa ${mesa.numero}")
             }
+
+            Log.d("DEBUG_CARDS", "")
+            Log.d("DEBUG_CARDS", "╔════════════════════════════════════════╗")
+            Log.d("DEBUG_CARDS", "║   ACERTO - Concluído com Sucesso       ║")
+            Log.d("DEBUG_CARDS", "╚════════════════════════════════════════╝")
+
         } catch (e: Exception) {
-            Timber.e("SettlementViewModel", "Erro ao registrar troca de pano no histórico: ${e.message}", e)
+            Log.e("DEBUG_CARDS", "")
+            Log.e("DEBUG_CARDS", "╔════════════════════════════════════════╗")
+            Log.e("DEBUG_CARDS", "║   ACERTO - ERRO FATAL                  ║")
+            Log.e("DEBUG_CARDS", "╚════════════════════════════════════════╝")
+            Log.e("DEBUG_CARDS", "Exception: ${e.javaClass.simpleName}")
+            Log.e("DEBUG_CARDS", "Message: ${e.message}")
+            Log.e("DEBUG_CARDS", "StackTrace:", e)
+            Timber.e("SettlementViewModel", "Erro ao registrar troca de pano: ${e.message}", e)
         }
     }
     
@@ -906,6 +995,20 @@ class SettlementViewModel @Inject constructor(
                 )
                 appRepository.atualizarMesa(mesaAtualizada)
                 logOperation("SETTLEMENT", "Mesa $mesaId atualizada com pano $panoId com sucesso")
+                
+                // ════════════════════════════════════════════════════════════════
+                // LOG DIAGNÓSTICO: Rastrear panoId da mesa ANTES de virar DTO
+                // ════════════════════════════════════════════════════════════════
+                Log.w("DEBUG_POPUP", "╔═══════════════════════════════════════════════════╗")
+                Log.w("DEBUG_POPUP", "║  RASTREAMENTO PANO - APÓS ATUALIZAR MESA          ║")
+                Log.w("DEBUG_POPUP", "╚═══════════════════════════════════════════════════╝")
+                Log.w("DEBUG_POPUP", "🔍 Mesa ID: ${mesa.id}")
+                Log.w("DEBUG_POPUP", "🔍 Mesa Número: ${mesa.numero}")
+                Log.w("DEBUG_POPUP", "🔍 mesa.panoAtualId: ${mesaAtualizada.panoAtualId}")
+                Log.w("DEBUG_POPUP", "🔍 panoId recém atribuído: $panoId")
+                Log.w("DEBUG_POPUP", "🔍 Tipo do objeto mesa: ${mesa.javaClass.simpleName}")
+                Log.w("DEBUG_POPUP", "🔍 Tipo do objeto mesaAtualizada: ${mesaAtualizada.javaClass.simpleName}")
+                Log.w("DEBUG_POPUP", "╚═══════════════════════════════════════════════════╝")
             } else {
                 logError("SETTLEMENT", "Mesa $mesaId não encontrada")
             }

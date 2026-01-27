@@ -275,6 +275,10 @@ class AppRepository @Inject constructor(
     suspend fun buscarRotaIdPorCliente(clienteId: Long): Long? = clienteRepository.buscarRotaIdPorCliente(clienteId)
     fun obterClientesPorRotaComDebitoAtual(rotaId: Long): Flow<List<Cliente>> = clienteRepository.obterClientesPorRotaComDebitoAtual(rotaId)
     
+    // ✅ NOVO: Métodos para filtro geral de clientes (Ativos/Inativos)
+    fun buscarClientesAtivos(rotaId: Long): Flow<List<Cliente>> = clienteRepository.buscarClientesAtivos(rotaId)
+    fun buscarClientesInativos(rotaId: Long): Flow<List<Cliente>> = clienteRepository.buscarClientesInativos(rotaId)
+    
     fun buscarClientesPorRotaComCache(rotaId: Long): Flow<List<Cliente>> {
         return _clientesCache.map { cache ->
             cache.filter { it.rotaId == rotaId }
@@ -1922,6 +1926,7 @@ class AppRepository @Inject constructor(
     suspend fun buscarPorNumero(numero: String) = panoRepository.buscarPorNumero(numero)
     suspend fun obterPanoPorId(id: Long) = panoRepository.obterPorId(id)
     suspend fun inserirPanoEstoque(pano: com.example.gestaobilhares.data.entities.PanoEstoque): Long = panoRepository.inserir(pano)
+    suspend fun inserirPanosLote(panos: List<com.example.gestaobilhares.data.entities.PanoEstoque>) = panoRepository.inserirLote(panos)
     suspend fun atualizarPanoEstoque(pano: com.example.gestaobilhares.data.entities.PanoEstoque) = panoRepository.atualizar(pano)
     suspend fun marcarPanoComoUsado(id: Long) = panoRepository.marcarComoUsado(id)
     suspend fun marcarPanoComoUsadoPorNumero(numero: String) = panoRepository.marcarComoUsadoPorNumero(numero)

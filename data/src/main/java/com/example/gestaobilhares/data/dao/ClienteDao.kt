@@ -108,6 +108,35 @@ interface ClienteDao {
     suspend fun migrarAcertos(idAntigo: Long, idNovo: Long): Int
 
     /**
+     * ✅ NOVO: Busca clientes ATIVOS (com mesa OU com débito)
+     * Cliente é considerado ativo se tem mesa locada OU tem débito atual > 0
+     */
+    @Query("""
+        SELECT DISTINCT c.* 
+        FROM clientes c
+        LEFT JOIN mesas m ON c.id = m.cliente_id AND m.ativa = 1
+        LEFT JOIN acertos a ON c.id = a.cliente_id AND a.debito_atual > 0
+        WHERE c.rota_id = :rotaId
+        AND (m.id IS NOT NULL OR a.id IS NOT NULL)
+        ORDER BY c.nome ASC
+    """)
+    fun buscarClientesAtivos(rotaId: Long): Flow<List<Cliente>>
+
+    /**
+     * ✅ NOVO: Busca clientes INATIVOS (sem mesa E sem débito)
+     * Cliente é considerado inativo se não tem mesa locada E não tem débito atual
+     */
+    @Query("""
+        SELECT c.* 
+        FROM clientes c
+        WHERE c.rota_id = :rotaId
+        AND c.id NOT IN (SELECT cliente_id FROM mesas WHERE ativa = 1)
+        AND c.id NOT IN (SELECT cliente_id FROM acertos WHERE debito_atual > 0)
+        ORDER BY c.nome ASC
+    """)
+    fun buscarClientesInativos(rotaId: Long): Flow<List<Cliente>>
+
+    /**
      * ✅ NOVO: Migra contratos de um ID de cliente para outro.
      */
     @Query("UPDATE contratos_locacao SET clienteId = :idNovo WHERE clienteId = :idAntigo")

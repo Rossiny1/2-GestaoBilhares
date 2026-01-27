@@ -11,6 +11,7 @@ import kotlinx.coroutines.launch
 
 import dagger.hilt.android.lifecycle.HiltViewModel
 import javax.inject.Inject
+import java.io.Serializable
 
 /**
  * ViewModel para gerenciar a lista de equipamentos.
@@ -67,6 +68,30 @@ class EquipmentsViewModel @Inject constructor(
     }
 
     /**
+     * Atualiza um equipamento existente no banco de dados.
+     */
+    fun atualizarEquipment(equipment: Equipment) {
+        viewModelScope.launch {
+            try {
+                android.util.Log.d("EquipmentsViewModel", "Atualizando equipamento: ${equipment.name}")
+                
+                val entity = com.example.gestaobilhares.data.entities.Equipment(
+                    id = equipment.id,
+                    name = equipment.name,
+                    description = equipment.description,
+                    quantity = equipment.quantity,
+                    location = equipment.location.ifEmpty { null }
+                )
+                appRepository.atualizarEquipment(entity)
+                android.util.Log.d("EquipmentsViewModel", "Equipamento atualizado com sucesso")
+                
+            } catch (e: Exception) {
+                android.util.Log.e("EquipmentsViewModel", "Erro ao atualizar equipamento: ${e.message}", e)
+            }
+        }
+    }
+
+    /**
      * Recarrega todos os equipamentos.
      * Não precisa fazer nada, pois o Flow já atualiza automaticamente
      */
@@ -85,5 +110,5 @@ data class Equipment(
     val description: String,
     val quantity: Int,
     val location: String
-)
+) : Serializable
 

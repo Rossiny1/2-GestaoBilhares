@@ -726,6 +726,11 @@ class RoutesFragment : Fragment() {
                 Toast.makeText(requireContext(), "Sincronização já em andamento.", Toast.LENGTH_SHORT).show()
                 return
             }
+
+            if (!com.example.gestaobilhares.core.utils.NetworkUtils(requireContext()).isConnected()) {
+                Toast.makeText(requireContext(), "Conecte-se à internet para sincronizar", Toast.LENGTH_SHORT).show()
+                return
+            }
             
             // ✅ NOVO: Validar acesso antes de sincronizar
             lifecycleScope.launch {
@@ -784,6 +789,21 @@ class RoutesFragment : Fragment() {
             dialog.show()
 
             val uiScope = viewLifecycleOwner.lifecycleScope
+            val progressJob = uiScope.launch {
+                syncRepository.syncProgress.collect { progress ->
+                    if (_binding != null) {
+                        progressBar.progress = progress
+                        progressPercent.text = "$progress%"
+                    }
+                }
+            }
+            val messageJob = uiScope.launch {
+                syncRepository.syncMessage.collect { message ->
+                    if (_binding != null && message.isNotBlank()) {
+                        progressStatus.text = message
+                    }
+                }
+            }
 
             // Executar sincronização em background
             viewLifecycleOwner.lifecycleScope.launch {
@@ -794,7 +814,7 @@ class RoutesFragment : Fragment() {
                     // Executar sincronização completa
                     Timber.d("RoutesFragment", "🔄 Iniciando sincronização completa...")
                     val result = withContext(Dispatchers.IO) {
-                        syncRepository.syncAllEntities()
+                        syncRepository.syncAllEntitiesWithProgress()
                     }
                     
                     if (result.success) {
@@ -856,6 +876,8 @@ class RoutesFragment : Fragment() {
                         progressStatus.text = "❌ Erro na sincronização: ${e.message ?: "Erro desconhecido"}"
                     }
                 } finally {
+                    progressJob.cancel()
+                    messageJob.cancel()
                     if (dialog.isShowing) {
                         dialog.dismiss()
                     }

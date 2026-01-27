@@ -151,6 +151,98 @@ class SyncOrchestration(
             )
         }
     }
+
+    /**
+     * ✅ NOVO: Executa sincronização completa emitindo progresso incremental.
+     */
+    suspend fun syncAllWithProgress(onProgress: (percent: Int, status: String) -> Unit): SyncResult {
+        val startTime = System.currentTimeMillis()
+        var totalSynced = 0
+        val errors = mutableListOf<String>()
+
+        return try {
+            Timber.tag(TAG).d("🚀 Iniciando sincronização completa com progresso...")
+
+            val handlers = listOf(
+                SyncHandlerEntry("rotas", rotaSyncHandler),
+                SyncHandlerEntry("colaboradores", colaboradorSyncHandler),
+                SyncHandlerEntry("clientes", clienteSyncHandler),
+                SyncHandlerEntry("mesas", mesaSyncHandler),
+                SyncHandlerEntry("contratos", contratoSyncHandler),
+                SyncHandlerEntry("acertos", acertoSyncHandler),
+                SyncHandlerEntry("despesas", despesaSyncHandler),
+                SyncHandlerEntry("ciclos", cicloSyncHandler),
+                SyncHandlerEntry("colaborador_rotas", colaboradorRotaSyncHandler),
+                SyncHandlerEntry("meta_colaborador", metaColaboradorSyncHandler),
+                SyncHandlerEntry("metas", metaSyncHandler),
+                SyncHandlerEntry("assinaturas", assinaturaSyncHandler),
+                SyncHandlerEntry("veiculos", veiculoSyncHandler),
+                SyncHandlerEntry("equipamentos", equipamentoSyncHandler),
+                SyncHandlerEntry("estoque", estoqueSyncHandler)
+            )
+
+            val totalSteps = handlers.size * 2
+            var currentStep = 0
+
+            for (handlerEntry in handlers) {
+                try {
+                    onProgress(
+                        ((currentStep.toDouble() / totalSteps) * 100).toInt().coerceAtLeast(1),
+                        "Sincronizando ${handlerEntry.name} (pull)..."
+                    )
+                    val pullResult = syncHandler(handlerEntry.name, handlerEntry.handler)
+                    totalSynced += pullResult.syncedCount
+                    if (pullResult.error != null) {
+                        errors.add("${handlerEntry.name} (pull): ${pullResult.error}")
+                    }
+                    currentStep++
+
+                    onProgress(
+                        ((currentStep.toDouble() / totalSteps) * 100).toInt().coerceAtLeast(1),
+                        "Enviando ${handlerEntry.name} (push)..."
+                    )
+                    val pushResult = pushHandler(handlerEntry.name, handlerEntry.handler)
+                    totalSynced += pushResult.pushedCount
+                    if (pushResult.error != null) {
+                        errors.add("${handlerEntry.name} (push): ${pushResult.error}")
+                    }
+                    currentStep++
+                } catch (e: Exception) {
+                    val error = "Erro em ${handlerEntry.name}: ${e.message}"
+                    Timber.tag(TAG).e(e, error)
+                    errors.add(error)
+                    currentStep = (currentStep + 2).coerceAtMost(totalSteps)
+                }
+            }
+
+            val duration = System.currentTimeMillis() - startTime
+            onProgress(100, "Finalizando sincronização...")
+
+            syncCore.saveSyncMetadata(
+                entityType = "global_sync",
+                syncCount = totalSynced,
+                durationMs = duration,
+                error = if (errors.isNotEmpty()) errors.joinToString("; ") else null
+            )
+
+            SyncResult(
+                success = errors.isEmpty(),
+                syncedCount = totalSynced,
+                durationMs = duration,
+                errors = errors
+            )
+        } catch (e: Exception) {
+            val duration = System.currentTimeMillis() - startTime
+            val error = "Erro na sincronização completa: ${e.message}"
+            Timber.tag(TAG).e(e, error)
+            SyncResult(
+                success = false,
+                syncedCount = totalSynced,
+                durationMs = duration,
+                errors = listOf(error)
+            )
+        }
+    }
     
     /**
      * Sincroniza um handler específico.

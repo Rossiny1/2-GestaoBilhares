@@ -41,9 +41,16 @@ class EquipmentsFragment : Fragment() {
     }
 
     private fun setupRecyclerView() {
-        adapter = EquipmentsAdapter { equipment ->
-            // TODO: Implementar navegação para detalhes do equipamento
-        }
+        adapter = EquipmentsAdapter(
+            onEquipmentClick = { equipment ->
+                // TODO: Implementar navegação para detalhes do equipamento
+            },
+            onEditClick = { equipment ->
+                // Abrir dialog de edição com dados preenchidos
+                val dialog = AddEditEquipmentDialog.newInstance(equipment)
+                dialog.show(parentFragmentManager, "EditEquipmentDialog")
+            }
+        )
         binding.rvEquipments.layoutManager = LinearLayoutManager(requireContext())
         binding.rvEquipments.adapter = adapter
     }

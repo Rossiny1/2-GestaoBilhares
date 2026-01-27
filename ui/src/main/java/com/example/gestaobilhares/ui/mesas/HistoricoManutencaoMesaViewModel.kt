@@ -7,6 +7,9 @@ import com.example.gestaobilhares.data.entities.HistoricoManutencaoMesa
 import com.example.gestaobilhares.data.entities.Mesa
 import com.example.gestaobilhares.data.entities.TipoManutencao
 import com.example.gestaobilhares.data.repository.AppRepository
+import com.example.gestaobilhares.ui.mesas.usecases.OrigemTrocaPano
+import com.example.gestaobilhares.ui.mesas.usecases.RegistrarTrocaPanoUseCase
+import com.example.gestaobilhares.ui.mesas.usecases.TrocaPanoParams
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -21,7 +24,8 @@ import javax.inject.Inject
  */
 @HiltViewModel
 class HistoricoManutencaoMesaViewModel @Inject constructor(
-    private val appRepository: AppRepository
+    private val appRepository: AppRepository,
+    private val registrarTrocaPanoUseCase: RegistrarTrocaPanoUseCase
 ) : BaseViewModel() {
 
     private val _mesa = MutableStateFlow<Mesa?>(null)
@@ -77,6 +81,36 @@ class HistoricoManutencaoMesaViewModel @Inject constructor(
                 
             } catch (e: Exception) {
                 _errorMessage.value = "Erro ao carregar histórico: ${e.message}"
+            } finally {
+                hideLoading()
+            }
+        }
+    }
+
+    fun registrarTrocaPanoUnificada(
+        mesaId: Long,
+        numeroMesa: String,
+        panoNovoId: Long?,
+        descricao: String?,
+        observacao: String?
+    ) {
+        viewModelScope.launch {
+            try {
+                showLoading()
+                registrarTrocaPanoUseCase(
+                    TrocaPanoParams(
+                        mesaId = mesaId,
+                        numeroMesa = numeroMesa,
+                        panoNovoId = panoNovoId,
+                        dataManutencao = System.currentTimeMillis(),
+                        origem = OrigemTrocaPano.NOVA_REFORMA,
+                        descricao = descricao,
+                        observacao = observacao
+                    )
+                )
+                carregarHistoricoMesa(mesaId)
+            } catch (e: Exception) {
+                _errorMessage.value = "Erro ao registrar troca de pano: ${e.message}"
             } finally {
                 hideLoading()
             }

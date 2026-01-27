@@ -59,6 +59,7 @@ class NovaReformaFragment : Fragment() {
     private var fotoUri: Uri? = null
     private var fotoPath: String? = null
     private var numeroPanoSelecionado: String? = null
+    private var panoSelecionadoId: Long? = null
     
     // ✅ NOVO: Inicialização segura do ImageCompressionUtils
     private val imageCompressionUtils: ImageCompressionUtils by lazy {
@@ -469,15 +470,13 @@ class NovaReformaFragment : Fragment() {
             } else {
                 "Troca de pano realizada durante reforma"
             }
-            
-            historicoViewModel.registrarManutencao(
+
+            historicoViewModel.registrarTrocaPanoUnificada(
                 mesaId = mesa.id,
                 numeroMesa = mesa.numero,
-                tipoManutencao = TipoManutencao.TROCA_PANO,
+                panoNovoId = panoSelecionadoId,
                 descricao = descricaoPano,
-                responsavel = "Sistema de Reforma",
-                observacoes = mesaReformada.observacoes,
-                fotoDepois = fotoReforma
+                observacao = mesaReformada.observacoes
             )
         }
         
@@ -554,7 +553,7 @@ class NovaReformaFragment : Fragment() {
      */
     private fun registrarPanoReforma(panoSelecionado: com.example.gestaobilhares.data.entities.PanoEstoque) {
         Timber.d("NovaReformaFragment", "Registrando pano ${panoSelecionado.numero} para reforma")
-        
+
         // Marcar pano como usado no estoque
         viewModel.marcarPanoComoUsado(panoSelecionado.id, "Usado em reforma da mesa ${mesaSelecionada?.numero}")
         
@@ -565,6 +564,7 @@ class NovaReformaFragment : Fragment() {
         }
         
         numeroPanoSelecionado = panoSelecionado.numero
+        panoSelecionadoId = panoSelecionado.id
         Timber.d("NovaReformaFragment", "Pano selecionado armazenado: $numeroPanoSelecionado")
         Toast.makeText(requireContext(), "Pano ${panoSelecionado.numero} selecionado", Toast.LENGTH_SHORT).show()
     }

@@ -173,13 +173,24 @@ class MetaCadastroViewModel @Inject constructor(
             try {
                 Timber.d("Criando ciclo para rota %d", rotaId)
                 
+                // Usar ano atual dinâmico
+                val anoAtual = java.util.Calendar.getInstance().get(java.util.Calendar.YEAR)
+                
                 // Buscar próximo número de ciclo
-                val proximoNumero = appRepository.buscarProximoNumeroCiclo(rotaId, 2024)
+                val proximoNumero = appRepository.buscarProximoNumeroCiclo(rotaId, anoAtual)
+                
+                // Reset anual: se próximo número for 1, significa que estamos começando novo ciclo anual
+                val numeroCicloFinal = if (proximoNumero == 1) {
+                    Timber.d("Reset anual detectado para rota %d no ano %d", rotaId, anoAtual)
+                    1 // Começar do 1 para novo ano
+                } else {
+                    proximoNumero
+                }
                 
                 val novoCiclo = CicloAcertoEntity(
                     rotaId = rotaId,
-                    numeroCiclo = proximoNumero,
-                    ano = 2024,
+                    numeroCiclo = numeroCicloFinal,
+                    ano = anoAtual,
                     dataInicio = System.currentTimeMillis(),
                     dataFim = System.currentTimeMillis() + (30L * 24 * 60 * 60 * 1000), // 30 dias
                     status = com.example.gestaobilhares.data.entities.StatusCicloAcerto.EM_ANDAMENTO,
@@ -187,7 +198,7 @@ class MetaCadastroViewModel @Inject constructor(
                 )
                 
                 val cicloId = appRepository.inserirCicloAcerto(novoCiclo)
-                Timber.d("Ciclo criado com ID: %d", cicloId)
+                Timber.d("Ciclo criado com ID: %d (ano: %d, número: %d)", cicloId, anoAtual, numeroCicloFinal)
                 
                 _cicloCriado.value = true
                 _message.value = "Ciclo criado com sucesso! Recarregando..."
@@ -210,21 +221,32 @@ class MetaCadastroViewModel @Inject constructor(
             try {
                 Timber.d("Criando ciclo futuro para rota %d", rotaId)
                 
+                // Usar ano atual dinâmico
+                val anoAtual = java.util.Calendar.getInstance().get(java.util.Calendar.YEAR)
+                
                 // Buscar próximo número de ciclo
-                val proximoNumero = appRepository.buscarProximoNumeroCiclo(rotaId, 2024)
+                val proximoNumero = appRepository.buscarProximoNumeroCiclo(rotaId, anoAtual)
+                
+                // Reset anual: se próximo número for 1, significa que estamos começando novo ciclo anual
+                val numeroCicloFinal = if (proximoNumero == 1) {
+                    Timber.d("Reset anual detectado para ciclo futuro da rota %d no ano %d", rotaId, anoAtual)
+                    1 // Começar do 1 para novo ano
+                } else {
+                    proximoNumero
+                }
                 
                 val novoCiclo = CicloAcertoEntity(
                     rotaId = rotaId,
-                    numeroCiclo = proximoNumero,
-                    ano = 2024,
-                    dataInicio = System.currentTimeMillis() + (30L * 24 * 60 * 60 * 1000), // Início em 30 dias
-                    dataFim = System.currentTimeMillis() + (60L * 24 * 60 * 60 * 1000), // Fim em 60 dias
+                    numeroCiclo = numeroCicloFinal,
+                    ano = anoAtual,
+                    dataInicio = System.currentTimeMillis(),
+                    dataFim = System.currentTimeMillis() + (30L * 24 * 60 * 60 * 1000), // 30 dias
                     status = com.example.gestaobilhares.data.entities.StatusCicloAcerto.PLANEJADO,
                     debitoTotal = 0.0
                 )
                 
                 val cicloId = appRepository.inserirCicloAcerto(novoCiclo)
-                Timber.d("Ciclo futuro criado com ID: %d", cicloId)
+                Timber.d("Ciclo futuro criado com ID: %d (ano: %d, número: %d)", cicloId, anoAtual, numeroCicloFinal)
                 
                 _cicloCriado.value = true
                 _message.value = "Ciclo futuro criado com sucesso! Recarregando..."

@@ -120,8 +120,8 @@
 
                     <ImageView
                         android:id="@+id/ivLocationIcon"
-                        android:layout_width="16dp"
-                        android:layout_height="16dp"
+                        android:layout_width="32dp"
+                        android:layout_height="32dp"
                         android:layout_marginEnd="8dp"
                         android:src="@drawable/ic_location"
                         android:clickable="true"
@@ -192,20 +192,27 @@
 
                             <TextView
                                 android:id="@+id/tvLastVisit"
-                                android:layout_width="wrap_content"
+                                android:layout_width="match_parent"
                                 android:layout_height="wrap_content"
                                 android:textColor="?attr/colorPrimary"
-                                android:textSize="16sp"
+                                android:textSize="14sp"
                                 android:textStyle="bold"
+                                android:gravity="center"
+                                android:ellipsize="end"
+                                android:maxLines="1"
+                                android:singleLine="true"
                                 tools:text="15/05/2024" />
 
                             <TextView
-                                android:layout_width="wrap_content"
+                                android:layout_width="match_parent"
                                 android:layout_height="wrap_content"
                                 android:text="Última Visita"
                                 android:textColor="?attr/colorOnSurfaceVariant"
-                                android:textSize="11sp"
-                                android:layout_marginTop="2dp" />
+                                android:textSize="10sp"
+                                android:layout_marginTop="2dp"
+                                android:gravity="center"
+                                android:maxLines="1"
+                                android:ellipsize="end" />
 
                         </LinearLayout>
 
@@ -232,20 +239,27 @@
 
                             <TextView
                                 android:id="@+id/tvClientCurrentDebt"
-                                android:layout_width="wrap_content"
+                                android:layout_width="match_parent"
                                 android:layout_height="wrap_content"
                                 android:textColor="@color/red_600"
-                                android:textSize="16sp"
+                                android:textSize="14sp"
                                 android:textStyle="bold"
+                                android:gravity="center"
+                                android:ellipsize="end"
+                                android:maxLines="1"
+                                android:singleLine="true"
                                 tools:text="R$ 450,00" />
 
                             <TextView
-                                android:layout_width="wrap_content"
+                                android:layout_width="match_parent"
                                 android:layout_height="wrap_content"
                                 android:text="Débito Atual"
                                 android:textColor="?attr/colorOnSurfaceVariant"
-                                android:textSize="11sp"
-                                android:layout_marginTop="2dp" />
+                                android:textSize="10sp"
+                                android:layout_marginTop="2dp"
+                                android:gravity="center"
+                                android:maxLines="1"
+                                android:ellipsize="end" />
 
                         </LinearLayout>
 

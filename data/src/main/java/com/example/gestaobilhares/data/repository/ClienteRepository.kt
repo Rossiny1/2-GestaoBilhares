@@ -177,5 +177,19 @@ class ClienteRepository constructor(
             null
         }
     }
+    
+    /**
+     * ✅ NOVO: Busca clientes ATIVOS (com mesa OU com débito)
+     */
+    fun buscarClientesAtivos(rotaId: Long): Flow<List<Cliente>> {
+        return clienteDao.buscarClientesAtivos(rotaId)
+    }
+    
+    /**
+     * ✅ NOVO: Busca clientes INATIVOS (sem mesa E sem débito)
+     */
+    fun buscarClientesInativos(rotaId: Long): Flow<List<Cliente>> {
+        return clienteDao.buscarClientesInativos(rotaId)
+    }
 } 
 

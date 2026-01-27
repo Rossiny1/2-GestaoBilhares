@@ -1,0 +1,31 @@
+﻿
+01-23 14:51:56.675  3684  3684 E DEBUG_CARDS: ÔØî Erro ao carregar cards:
+01-23 14:51:56.675  3684  3684 E DEBUG_CARDS: kotlinx.coroutines.JobCancellationException: Job was cancelled; 
+job=SupervisorJobImpl{Cancelling}@7dca838
+01-23 14:52:33.146  3684  3684 D DEBUG_CARDS: 
+01-23 14:52:33.146  3684  3684 D DEBUG_CARDS: ÔöÅÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔ
+öüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöô
+01-23 14:52:33.146  3684  3684 D DEBUG_CARDS: Ôöâ  CARREGANDO CARDS - Reforma de Mesas  Ôöâ
+01-23 14:52:33.146  3684  3684 D DEBUG_CARDS: ÔöùÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔ
+öüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöø
+01-23 14:52:33.203  3684  3684 D DEBUG_CARDS: ­ƒôè Dados recebidos:
+01-23 14:52:33.203  3684  3684 D DEBUG_CARDS:    - Total MesasReformadas: 0
+01-23 14:52:33.203  3684  3684 D DEBUG_CARDS:    - Total HistoricoManutencaoMesa: 0
+01-23 14:52:33.203  3684  3684 D DEBUG_CARDS:    - Total Mesas: 2
+01-23 14:52:33.203  3684  3684 D DEBUG_CARDS: 
+01-23 14:52:33.203  3684  3684 D DEBUG_CARDS: ­ƒôï MesasReformadas (primeiras 5):
+01-23 14:52:33.203  3684  3684 D DEBUG_CARDS: 
+01-23 14:52:33.203  3684  3684 D DEBUG_CARDS: ­ƒöì Reformas do ACERTO encontradas: 0
+01-23 14:52:33.204  3684  3684 D DEBUG_CARDS: 
+01-23 14:52:33.204  3684  3684 D DEBUG_CARDS: ­ƒöì Hist├│ricos do ACERTO encontrados: 0
+01-23 14:52:33.204  3684  3684 D DEBUG_CARDS: 
+01-23 14:52:33.204  3684  3684 D DEBUG_CARDS: ­ƒôè IDs com atividade:
+01-23 14:52:33.204  3684  3684 D DEBUG_CARDS:    - IDs de Reformas: 0
+01-23 14:52:33.204  3684  3684 D DEBUG_CARDS:    - IDs de Hist├│rico: 0
+01-23 14:52:33.204  3684  3684 D DEBUG_CARDS:    - Total ├║nicos: 0
+01-23 14:52:33.205  3684  3684 D DEBUG_CARDS: 
+01-23 14:52:33.205  3684  3684 D DEBUG_CARDS: Ô£à Cards gerados: 0
+01-23 14:52:33.205  3684  3684 D DEBUG_CARDS: ÔöùÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔ
+öüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöø
+
+

@@ -1,0 +1,13 @@
+﻿--------- beginning of main
+01-23 15:09:58.419   769 15577 W AudioALSACaptureDataProviderNormal: readThread, latency_in_s,0.000002,0.039139,0.000143, totalTime 0.039284 > logTimeout 0.022000 TIMEOUT!!
+--------- beginning of system
+01-23 15:09:58.504   540   540 D io_stats: !@ 179,0 r 44701591 765336701 w 2193111 54476764 d 1275679 48360004 f 1793029 2074971 iot 13715008 13238797 th 102400 102400 89908 pt 21916 inp 0 0 142140.160
+01-23 15:09:58.579   769 15577 W AudioALSACaptureDataProviderNormal: readThread, latency_in_s,0.000006,0.039510,0.000131, totalTime 0.039646 > logTimeout 0.022000 TIMEOUT!!
+01-23 15:09:58.719   769 15577 W AudioALSACaptureDataProviderNormal: readThread, latency_in_s,0.000005,0.039457,0.000134, totalTime 0.039596 > logTimeout 0.022000 TIMEOUT!!
+01-23 15:09:58.759  1391  1745 D SemNscXgbMsL1: Probability - Cloud gaming: [0.011434746]
+01-23 15:09:58.762  1391  1745 D SemNscXgbMsL1: Probability - Real time: [0.01530348]
+01-23 15:09:58.763  1391  1745 D SemNscXgbMsL1: Probability - Non real time: [0.87256014]
+01-23 15:09:58.763  1391  1745 D SemNscXgbMsL1: 1 sample inference time: 3.645616 msecs
+01-23 15:09:58.765  1391  1745 D SemNscXgbL2Rt: L2 RT 1 sample inference time: 2.061 msecs
+01-23 15:09:58.767  1391  1745 D SemNscXgbL2Nrt: L2 NRT 1 sample inference time: 1.483616 msecs
+01-23 15:09:58.839   769 15577 W AudioALSACaptureDataProviderNormal: readThread, latency_in_s,0.000005,0.039870,0.000146, totalTime 0.040020 > logTimeout 0.022000 TIMEOUT!!

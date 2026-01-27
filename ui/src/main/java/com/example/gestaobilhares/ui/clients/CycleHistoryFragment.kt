@@ -16,9 +16,11 @@ import com.example.gestaobilhares.ui.databinding.FragmentCycleHistoryBinding
 import com.example.gestaobilhares.ui.clients.adapter.CycleHistoryAdapter
 import com.example.gestaobilhares.data.repository.AppRepository
 import com.google.android.material.snackbar.Snackbar
+import com.google.android.material.dialog.MaterialAlertDialogBuilder
 import kotlinx.coroutines.launch
 import com.example.gestaobilhares.ui.clients.CycleHistoryItem
 import dagger.hilt.android.AndroidEntryPoint
+import java.util.Calendar
 
 /**
  * Fragment para exibir o histórico de ciclos de acerto de uma rota
@@ -212,8 +214,31 @@ class CycleHistoryFragment : Fragment() {
     }
 
     private fun mostrarDialogoFiltros() {
-        // TODO: Implementar diálogo de filtros por período
-        mostrarFeedback("Filtros serão implementados na próxima fase", Snackbar.LENGTH_SHORT)
+        val anoAtual = Calendar.getInstance().get(Calendar.YEAR)
+        val anos = (anoAtual downTo anoAtual - 4).toList()
+        val opcoes = listOf("Últimos 12 meses") + anos.map { it.toString() }
+
+        MaterialAlertDialogBuilder(requireContext())
+            .setTitle("Filtrar ciclos")
+            .setItems(opcoes.toTypedArray()) { _, index ->
+                if (index == 0) {
+                    viewModel.limparFiltros(rotaId)
+                    return@setItems
+                }
+
+                val anoSelecionado = anos[index - 1]
+                val inicio = Calendar.getInstance().apply {
+                    set(anoSelecionado, Calendar.JANUARY, 1, 0, 0, 0)
+                    set(Calendar.MILLISECOND, 0)
+                }
+                val fim = Calendar.getInstance().apply {
+                    set(anoSelecionado, Calendar.DECEMBER, 31, 23, 59, 59)
+                    set(Calendar.MILLISECOND, 999)
+                }
+
+                viewModel.filtrarPorPeriodo(rotaId, inicio.time, fim.time)
+            }
+            .show()
     }
 
     /**
