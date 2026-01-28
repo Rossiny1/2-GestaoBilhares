@@ -33,6 +33,10 @@ class ClientRegisterViewModel @Inject constructor(
     private val _clienteAtualizado = MutableStateFlow<Boolean>(false)
     val clienteAtualizado: StateFlow<Boolean> = _clienteAtualizado.asStateFlow()
 
+    // ✅ NOVO: Estado para controlar se o débito inicial é editável
+    private val _debitoInicialEditavel = MutableStateFlow<Boolean>(true)
+    val debitoInicialEditavel: StateFlow<Boolean> = _debitoInicialEditavel.asStateFlow()
+
     // ✅ NOVO: Estado para erro de cliente duplicado
     private val _clienteDuplicado = MutableStateFlow<Boolean>(false)
     val clienteDuplicado: StateFlow<Boolean> = _clienteDuplicado.asStateFlow()
@@ -124,6 +128,8 @@ class ClientRegisterViewModel @Inject constructor(
         _novoClienteId.value = null
         _clienteAtualizado.value = false
         _clienteDuplicado.value = false
+        // ✅ NOVO: Resetar estado do débito inicial para novo cadastro
+        _debitoInicialEditavel.value = true
     }
 
     fun resetStatusDuplicado() {
@@ -141,6 +147,9 @@ class ClientRegisterViewModel @Inject constructor(
                 
                 val cliente = appRepository.obterClientePorId(clienteId)
                 _clienteParaEdicao.value = cliente
+                
+                // ✅ NOVO: Bloquear edição do débito inicial quando for edição
+                _debitoInicialEditavel.value = false
                 
                 // Carregar débito atual também
                 if (cliente != null) {

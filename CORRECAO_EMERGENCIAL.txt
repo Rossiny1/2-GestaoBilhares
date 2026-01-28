@@ -1,0 +1,19 @@
+// CORREÇÃO EMERGENCIAL - Arquivo corrompido, vou criar apenas a correção necessária
+
+// 1. Importador CORRIGIDO (já feito)
+// 2. Remover atualização perigosa do cliente
+
+// No SettlementViewModel.kt, substituir as linhas 306-309:
+                                val firebaseCliente = obterClienteDoFirebase(clienteId)
+                                if (firebaseCliente != null) {
+                                    logOperation("SETTLEMENT", "✅ Cliente encontrado no Firebase: ${firebaseCliente.nome}")
+                                    logOperation("SETTLEMENT", "💰 Débito inicial do Firebase: R$ ${firebaseCliente.debitoInicial}")
+                                    _debitoAnterior.value = firebaseCliente.debitoInicial
+                                    
+                                    // ❌ NÃO ATUALIZAR CLIENTE PARA EVITAR SOBRESCREVER debito_inicial
+                                    // appRepository.atualizarCliente(firebaseCliente)
+                                    logOperation("SETTLEMENT", "⚠️ Cliente encontrado no Firebase mas não salvo localmente para preservar debito_inicial")
+                                } else {
+                                    logError("SETTLEMENT", "❌ Cliente não encontrado no Firebase também")
+                                    _debitoAnterior.value = 0.0
+                                }

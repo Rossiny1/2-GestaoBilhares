@@ -1,0 +1,338 @@
+# 🚀 WINDSURF RULES - GESTÃO DE BILHARES
+
+> Regras e configurações otimizadas para WindSurf baseadas na documentação do projeto  
+> Versão: 1.0  
+> Baseado em: PROJECT_README.md, DEV_GUIDE.md, TECHNICAL_DEBT.md  
+> Stack: Kotlin + Android + MVVM + Hilt + Room + Firebase
+
+---
+
+## 🎯 OBJETIVO
+
+Configurar WindSurf para desenvolvimento com **ALTA AUTONOMIA** seguindo o protocolo Gates (máximo 2 builds por problema) e diagnóstico baseado em evidência.
+
+---
+
+## 🔧 REGRAS DE CODIFICAÇÃO
+
+### 1. Arquitetura Obrigatória
+- **MVVM** com ViewModels, Repositories e DAOs
+- **Hilt** para injeção de dependências (@Inject, @HiltViewModel)
+- **StateFlow** (não LiveData) para streams reativos
+- **Coroutines** para operações assíncronas
+
+### 2. Multi-tenancy por Rota
+```kotlin
+// OBRIGATÓRIO em todas as entidades
+data class Cliente(
+    val empresa_id: String,
+    val rota_id: String,
+    // ... outros campos
+)
+
+// Validação de acesso
+if (!userSessionManager.canAccessRota(rota_id)) {
+    throw SecurityException("Acesso negado")
+}
+```
+
+### 3. Offline-First
+```kotlin
+// Room é a fonte da verdade
+suspend fun getClientes(): Flow<List<Cliente>> = flow {
+    // 1. Emitir local imediatamente
+    emitAll(dao.getAllClientes())
+    
+    // 2. Sync em background se online
+    if (networkUtils.isConnected()) {
+        syncFromFirestore()
+    }
+}
+```
+
+### 4. Padrão de Logs
+```kotlin
+private const val TAG = "[DIAGNOSTICO]"
+
+Log.d(TAG, "INICIANDO salvarAcerto")
+Log.d(TAG, "ANTES: usuarioId=$usuarioId")
+Log.d(TAG, "DEPOIS: acertoId=$acertoId")
+```
+
+---
+
+## 🚪 GATES DE DIAGNÓSTICO (Protocolo Obrigatório)
+
+### Gate 0 - Diagnóstico Primeiro
+```
+PROBLEMA IDENTIFICADO
+├─ Regressão / "funcionava antes"? → Static Analysis (máx 1 build)
+├─ Erro visível no código?         → Static Analysis (máx 1 build)
+└─ Código parece OK mas falha?    → Dynamic Analysis (logs) (máx 2 builds)
+```
+
+### Gate 1 - Plano Cirúrgico
+- [ ] Arquivo-alvo identificado
+- [ ] Linhas específicas
+- [ ] Mudança exata definida
+- [ ] Validação mínima estabelecida
+
+### Gate 2 - Escopo Delimitado
+- [ ] Arquivos que serão modificados
+- [ ] Arquivos que NÃO serão tocados
+- [ ] Dependências impactadas
+
+### Gate 3 - Execução Incremental
+- [ ] Uma mudança por vez
+- [ ] Validação imediata
+- [ ] Rollback se piorar
+
+### Gate 4 - Parada Obrigatória
+- [ ] Máximo 2 builds sem sucesso
+- [ ] 3 tentativas sem solução
+- [ ] Pedir ajuda humana
+
+---
+
+## 🔨 COMANDOS ESSENCIAIS (WindSurf)
+
+### Build (SEMPRE .bat)
+```bash
+# Build debug
+.\gradlew.bat :app:assembleDebug
+
+# Com cache e paralelismo
+.\gradlew.bat :app:assembleDebug --build-cache --parallel
+
+# Testes
+.\gradlew.bat testDebugUnitTest
+```
+
+### ADB Customizado
+```bash
+# Path obrigatório
+set ADB_PATH=C:\Users\Rossiny\Desktop\2-GestaoBilhares\android-sdk\platform-tools\adb.exe
+
+# Logs por tag
+%ADB_PATH% logcat -s [DIAGNOSTICO]:D -v time
+
+# Múltiplas tags
+%ADB_PATH% logcat -s [DIAGNOSTICO]:D [SYNC]:D [CONFLICT]:D *:E
+```
+
+### Busca no Código
+```bash
+# Encontrar componentes
+rg "SettlementViewModel" --type kt -n
+rg "sync_operations" --type kt -C 5
+
+# Arqueologia (regressão)
+rg "usuarioId" --type kt -C 3
+rg "groupBy" --type kt
+```
+
+---
+
+## 📁 ESTRUTURA DE ARQUIVOS
+
+### Padrão de Nomes
+```
+data/src/main/java/.../data/
+├── dao/
+│   ├── ClienteDao.kt
+│   ├── AcertoDao.kt
+│   └── SyncOperationDao.kt
+├── repository/
+│   ├── ClienteRepository.kt (interface)
+│   ├── ClienteRepositoryImpl.kt
+│   └── AppRepository.kt (FACADE - NÃO REFACTORAR)
+└── usecases/
+    └── RegistrarTrocaPanoUseCase.kt
+
+ui/src/main/java/.../ui/
+├── settlement/
+│   ├── SettlementFragment.kt
+│   └── SettlementViewModel.kt
+└── cliente/
+    ├── ClienteFragment.kt
+    └── ClienteViewModel.kt
+```
+
+### Firestore Path (OBRIGATÓRIO)
+```
+empresas/{empresaId}/entidades/{collection}/items/{itemId}
+```
+
+---
+
+## 🚨 REGRAS ANTI-LOOP
+
+### Proibido
+- ❌ Mais de 2 builds por problema
+- ❌ Pular Gate 0 (diagnóstico)
+- ❌ Usar LiveData (só StateFlow)
+- ❌ Acessar DAO/Firebase diretamente da UI
+- ❌ Esquecer `rota_id` em entidades
+- ❌ Usar path ADB padrão (usar customizado)
+
+### Obrigatório
+- ✅ Static Analysis primeiro
+- ✅ Logs com [TAG] estruturada
+- ✅ Comandos `.bat` sempre
+- ✅ Multi-tenancy por rota
+- ✅ Room como fonte da verdade
+- ✅ MVVM + Hilt + StateFlow
+
+---
+
+## 🔍 RECEITAS DE DIAGNÓSTICO
+
+### Campo está Null
+```kotlin
+// 1. Encontrar criação
+rg "HistoricoManutencao" --type kt -C 3
+
+// 2. Ver construtor
+data class HistoricoManutencao(
+    val mesaId: Long,
+    val usuarioId: Long?  // ← Nullable?
+)
+
+// 3. Ver instanciação
+HistoricoManutencao(
+    mesaId = 1
+    // FALTA usuarioId!
+)
+```
+
+### Dados não aparecem
+```kotlin
+// CAMADA 1: DAO - Query correta?
+@Query("SELECT * FROM historico WHERE acertoId = :id")
+
+// CAMADA 2: ViewModel - Transforma certo?
+val items = repository.getHistorico(id)
+    .groupBy { it.mesaId }  // ← Agrupando?
+
+// CAMADA 3: UI - Observa certo?
+items.collectAsState()  // StateFlow correto?
+```
+
+### PERMISSION_DENIED
+```bash
+# 1. Ver path no código
+Log.d("PATH", "Acessando: ${docRef.path}")
+
+# 2. Verificar campos obrigatórios
+data.empresa_id == empresaId  // ✓
+data.rota_id in rotasPermitidas  // ✓
+
+# 3. Verificar token
+%ADB_PATH% logcat -s FirebaseAuth:D | grep "claims"
+```
+
+---
+
+## 📊 MÉTRICAS E MONITORAMENTO
+
+### Build Performance
+- **Meta:** < 5 minutos com cache
+- **Comando:** `.\gradlew.bat :app:assembleDebug --build-cache --parallel`
+
+### Test Coverage
+- **Atual:** 5-7%
+- **Meta 2 semanas:** 30%
+- **Meta 1 mês:** 60%
+
+### Sync Performance
+- **Meta:** < 2 segundos
+- **Monitoramento:** Logs [SYNC] com timestamps
+
+---
+
+## 🎯 WORKFLOWS DE DESENVOLVIMENTO
+
+### Workflow 1: Bug Fix
+1. **Gate 0:** Static Analysis do código
+2. **Gate 1:** Identificar arquivo/linha do problema
+3. **Gate 2:** Definir mudança exata
+4. **Gate 3:** Implementar mudança
+5. **Validar:** Build + Testes
+6. **Gate 4:** Parar se falhar após 2 builds
+
+### Workflow 2: Nova Feature
+1. **Ler:** PROJECT_README.md (seção componente)
+2. **Seguir:** Padrão MVVM + Hilt
+3. **Implementar:** DAO → Repository → ViewModel → UI
+4. **Testar:** Unitários primeiro
+5. **Integrar:** Sync com Firestore
+6. **Validar:** Multi-tenancy + Offline-first
+
+### Workflow 3: Refatoração
+1. **Identificar:** Débito em TECHNICAL_DEBT.md
+2. **Planejar:** Mudanças incrementais
+3. **Executar:** Uma classe por vez
+4. **Testar:** Sem regressões
+5. **Documentar:** Atualizar docs
+
+---
+
+## 🚀 AUTOMAÇÃO WINDSURF
+
+### Snippets Úteis
+```kotlin
+// ViewModel pattern
+@HiltViewModel
+class ${ViewModelName} @Inject constructor(
+    private val repository: ${RepositoryName}
+) : ViewModel() {
+    
+    private val _uiState = MutableStateFlow(${UiStateName}.InitialState)
+    val uiState: StateFlow<${UiStateName}> = _uiState.asStateFlow()
+}
+
+// DAO pattern
+@Dao
+interface ${EntityName}Dao {
+    @Query("SELECT * FROM ${tableName}")
+    fun getAll(): Flow<List<${EntityName}>>
+    
+    @Insert(onConflict = OnConflictStrategy.REPLACE)
+    suspend fun insert(entity: ${EntityName}): Long
+}
+```
+
+### Validações Automáticas
+- [ ] Multi-tenancy respeitado?
+- [ ] Offline-first mantido?
+- [ ] StateFlow usado?
+- [ ] Logs estruturados?
+- [ ] Build passa?
+
+---
+
+## 📋 CHECKLIST FINAL
+
+Antes de considerar tarefa concluída:
+
+- [ ] **Build passa:** `.\gradlew.bat :app:assembleDebug`
+- [ ] **Testes passam:** `.\gradlew.bat testDebugUnitTest`
+- [ ] **Arquitetura MVVM:** ViewModels → Repositories → DAOs
+- [ ] **Multi-tenancy:** `rota_id` presente e validado
+- [ ] **Offline-first:** Room primeiro, sync depois
+- [ ] **Logs estruturados:** [TAG] padrão seguido
+- [ ] **Máximo 2 builds:** Protocolo Gates respeitado
+- [ ] **Zero regressões:** Funcionalidades intactas
+
+---
+
+## 🔗 REFERÊNCIAS
+
+- **PROJECT_README.md:** Arquitetura e componentes
+- **DEV_GUIDE.md:** Protocolo Gates e diagnóstico
+- **TECHNICAL_DEBT.md:** Débitos priorizados
+- **Stack:** Kotlin 1.9.20 + Android SDK 34 + Hilt + Room + Firebase
+
+---
+
+*Configuração otimizada para desenvolvimento autônomo e eficiente.*

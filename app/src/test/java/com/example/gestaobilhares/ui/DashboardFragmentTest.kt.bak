@@ -1,0 +1,219 @@
+package com.example.gestaobilhares.ui
+
+import android.os.Bundle
+import android.view.LayoutInflater
+import android.view.View
+import android.view.ViewGroup
+import androidx.fragment.app.Fragment
+import androidx.fragment.app.FragmentFactory
+import androidx.fragment.app.testing.FragmentScenario
+import androidx.fragment.app.viewModels
+import androidx.lifecycle.Lifecycle
+import androidx.navigation.NavController
+import androidx.navigation.fragment.NavHostFragment
+import androidx.test.core.app.ApplicationProvider
+import com.example.gestaobilhares.ui.dashboard.DashboardFragment
+import com.example.gestaobilhares.ui.dashboard.DashboardViewModel
+import com.example.gestaobilhares.ui.databinding.FragmentDashboardBinding
+import com.google.truth.Truth.assertThat
+import io.mockk.mockk
+import org.junit.Before
+import org.junit.Test
+
+/**
+ * Testes unitários para DashboardFragment.
+ * Valida inicialização, binding, ViewModel e comportamento básico.
+ */
+class DashboardFragmentTest {
+    
+    private lateinit var fragment: DashboardFragment
+    
+    @Before
+    fun setup() {
+        fragment = DashboardFragment()
+    }
+    
+    @Test
+    fun `dashboardFragment deve ser criado corretamente`() {
+        // GIVEN: Fragment factory com ViewModel mockado
+        
+        // WHEN: Criar fragment
+        val createdFragment = DashboardFragment()
+        
+        // THEN: Fragment deve ser criado
+        assertThat(createdFragment).isNotNull()
+        assertThat(createdFragment).isInstanceOf(DashboardFragment::class.java)
+    }
+    
+    @Test
+    fun `onCreateView deve inflar layout corretamente`() {
+        // GIVEN: Context e inflater mockados
+        val context = ApplicationProvider.getApplicationContext<android.content.Context>()
+        val inflater = LayoutInflater.from(context)
+        val container: ViewGroup? = null
+        val savedInstanceState: Bundle? = null
+        
+        // WHEN: Criar view
+        val view = fragment.onCreateView(inflater, container, savedInstanceState)
+        
+        // THEN: View deve ser criada e não nula
+        assertThat(view).isNotNull()
+        assertThat(view).isInstanceOf(View::class.java)
+    }
+    
+    @Test
+    fun `onCreateView deve configurar binding corretamente`() {
+        // GIVEN: Fragment com binding configurado
+        val context = ApplicationProvider.getApplicationContext<android.content.Context>()
+        val inflater = LayoutInflater.from(context)
+        fragment.onCreateView(inflater, null, null)
+        
+        // WHEN: Verificar binding
+        // THEN: Binding deve estar acessível
+        assertThat(fragment.binding).isNotNull()
+        assertThat(fragment.binding.root).isNotNull()
+    }
+    
+    @Test
+    fun `onViewCreated deve configurar toolbar corretamente`() {
+        // GIVEN: Fragment com binding configurado
+        val context = ApplicationProvider.getApplicationContext<android.content.Context>()
+        val inflater = LayoutInflater.from(context)
+        fragment.onCreateView(inflater, null, null)
+        
+        // WHEN: Chamar onViewCreated
+        fragment.onViewCreated(mock(), Bundle())
+        
+        // THEN: Toolbar deve estar configurada
+        assertThat(fragment.binding.toolbar).isNotNull()
+        // Navigation click listener deve estar configurado (verificado indiretamente)
+    }
+    
+    @Test
+    fun `fragment deve ter ViewModel injetado`() {
+        // GIVEN: Fragment criado
+        
+        // WHEN: Verificar ViewModel
+        // THEN: ViewModel deve estar disponível via delegation
+        assertThat(fragment.viewModel).isNotNull()
+        assertThat(fragment.viewModel).isInstanceOf(DashboardViewModel::class.java)
+    }
+    
+    @Test
+    fun `fragment deve lidar com ciclo de vida corretamente`() {
+        // GIVEN: FragmentScenario
+        val scenario = FragmentScenario.launchInContainer(
+            fragmentClass = DashboardFragment::class.java,
+            initialState = Lifecycle.State.INITIALIZED
+        )
+        
+        // WHEN: Mover para estados do ciclo de vida
+        scenario.moveToState(Lifecycle.State.CREATED)
+        scenario.moveToState(Lifecycle.State.STARTED)
+        scenario.moveToState(Lifecycle.State.RESUMED)
+        
+        // THEN: Fragment deve estar visível e funcional
+        scenario.onFragment { fragment ->
+            assertThat(fragment).isNotNull()
+            assertThat(fragment.binding).isNotNull()
+            assertThat(fragment.viewModel).isNotNull()
+        }
+        
+        scenario.close()
+    }
+    
+    @Test
+    fun `fragment deve preservar estado em recreacao`() {
+        // GIVEN: FragmentScenario
+        val scenario = FragmentScenario.launchInContainer(DashboardFragment::class.java)
+        
+        // WHEN: Recrear fragment
+        scenario.recreate()
+        
+        // THEN: Estado deve ser preservado
+        scenario.onFragment { fragment ->
+            assertThat(fragment).isNotNull()
+            assertThat(fragment.binding).isNotNull()
+            assertThat(fragment.viewModel).isNotNull()
+        }
+        
+        scenario.close()
+    }
+    
+    @Test
+    fun `binding deve ser limpo em onDestroyView`() {
+        // GIVEN: FragmentScenario
+        val scenario = FragmentScenario.launchInContainer(DashboardFragment::class.java)
+        
+        // WHEN: Destruir view
+        scenario.moveToState(Lifecycle.State.DESTROYED)
+        
+        // THEN: Binding deve ser nullificado
+        scenario.onFragment { fragment ->
+            // Em teste, não podemos verificar diretamente se _binding é null,
+            // mas podemos garantir que não há exceção
+            assertThat(fragment).isNotNull()
+        }
+        
+        scenario.close()
+    }
+    
+    @Test
+    fun `fragment deve ser compativel com navigation`() {
+        // GIVEN: FragmentScenario com NavHostFragment
+        val navHostFragment = NavHostFragment()
+        val scenario = FragmentScenario.launchInContainer(
+            fragmentClass = DashboardFragment::class.java,
+            initialState = Lifecycle.State.CREATED
+        )
+        
+        // WHEN: Fragment está no NavHost
+        // THEN: Não deve haver exceção com navigation
+        scenario.onFragment { fragment ->
+            assertThat(fragment).isNotNull()
+            // Navigation deve estar disponível através do fragment
+            assertThat(fragment.findNavController()).isNotNull()
+        }
+        
+        scenario.close()
+    }
+    
+    @Test
+    fun `fragment deve ter configuracao de moeda correta`() {
+        // GIVEN: Fragment criado
+        
+        // WHEN: Verificar configuração de moeda
+        // THEN: Formatação deve estar configurada (verificado indiretamente)
+        assertThat(fragment).isNotNull()
+        // A moeda é configurada no companion object ou em init
+    }
+    
+    @Test
+    fun `fragment deve lidar com savedInstanceState nulo`() {
+        // GIVEN: Fragment com savedInstanceState nulo
+        
+        // WHEN: Criar view com savedInstanceState nulo
+        val context = ApplicationProvider.getApplicationContext<android.content.Context>()
+        val inflater = LayoutInflater.from(context)
+        val view = fragment.onCreateView(inflater, null, null)
+        
+        // THEN: Não deve haver exceção
+        assertThat(view).isNotNull()
+    }
+    
+    @Test
+    fun `fragment deve lidar com savedInstanceState nao nulo`() {
+        // GIVEN: Fragment com savedInstanceState
+        val savedInstanceState = Bundle()
+        savedInstanceState.putString("test_key", "test_value")
+        
+        val context = ApplicationProvider.getApplicationContext<android.content.Context>()
+        val inflater = LayoutInflater.from(context)
+        
+        // WHEN: Criar view com savedInstanceState
+        val view = fragment.onCreateView(inflater, null, savedInstanceState)
+        
+        // THEN: Não deve haver exceção
+        assertThat(view).isNotNull()
+    }
+}

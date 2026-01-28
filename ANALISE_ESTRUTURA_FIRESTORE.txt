@@ -1,0 +1,166 @@
+# 📊 ANÁLISE DA ESTRUTURA REAL DO FIRESTORE
+
+> **Data:** 27/01/2026  
+> **Fonte:** Código Kotlin do projeto  
+> **Status:** Estrutura hierárquica confirmada
+
+---
+
+## 🎯 **ESTRUTURA MAPEADA**
+
+### **Path Completo para Colaboradores:**
+```kotlin
+// Código encontrado em múltiplos arquivos:
+val docRef = firestore
+    .collection("empresas")
+    .document(empresaId)  // ou "empresa_001"
+    .collection("colaboradores")
+    .document(uid)
+
+// Path esperado: empresas/{empresaId}/colaboradores/{uid}
+```
+
+**Arquivos que usam este path:**
+- `ColaboradorManagementViewModel.kt` (linhas 229-230, 246-249)
+- `AuthViewModel.kt` (linhas 313-314, 1606-1608, 1891-1893, 2041-2042)
+- `ColaboradorFirestoreRepository.kt` (linhas 42-44, 148-150, 222-224, 267-269)
+- `AppRepository.kt` (linhas 809-811, 930-932)
+- `ColaboradorSyncHandler.kt` (linhas 49-51)
+
+---
+
+### **Path Completo para Entidades:**
+```kotlin
+// Código encontrado em BaseSyncHandler:
+return firestore
+    .collection(COLLECTION_EMPRESAS)
+    .document(companyId)
+    .collection("entidades")
+    .document(collectionName)
+    .collection("items")
+
+// Path esperado: empresas/{empresaId}/entidades/{collectionName}/items/{id}
+```
+
+**Arquivos que usam este path:**
+- `BaseSyncHandler.kt` (linhas 138-143)
+- `LoginDiagnostics.kt` (linhas 110-114)
+- `diagnostico-login-firestore.kt` (linhas 75-79, 106-110)
+
+**Collections em "entidades":**
+- `rotas` → empresas/{empresaId}/entidades/rotas/items/{id}
+- `clientes` → empresas/{empresaId}/entidades/clientes/items/{id}
+- `acertos` → empresas/{empresaId}/entidades/acertos/items/{id}
+- `mesas` → empresas/{empresaId}/entidades/mesas/items/{id}
+
+---
+
+## 🔍 **ESTRUTURA COMPLETA CONFIRMADA**
+
+```
+empresas/
+└─ {empresaId}/ (ex: "empresa_001")
+   ├─ colaboradores/
+   │  └─ {uid}/
+   │     ├─ firebase_uid
+   │     ├─ nome
+   │     ├─ email
+   │     ├─ rotasPermitidas
+   │     ├─ nivel_acesso
+   │     ├─ aprovado
+   │     └─ ...
+   └─ entidades/
+      ├─ rotas/
+      │  └─ items/
+      │     └─ {rotaId}/
+      │        ├─ nome
+      │        ├─ ativa
+      │        └─ ...
+      ├─ clientes/
+      │  └─ items/
+      │     └─ {clienteId}/
+      │        ├─ nome
+      │        ├─ rotaId
+      │        └─ ...
+      ├─ acertos/
+      │  └─ items/
+      │     └─ {acertoId}/
+      │        ├─ valor
+      │        ├─ rotaId
+      │        └─ ...
+      └─ mesas/
+         └─ items/
+            └─ {mesaId}/
+               ├─ numero
+               ├─ rotaId
+               └─ ...
+```
+
+---
+
+## ❌ **ESTRUTURA INCORRETA (IMPLEMENTADA ANTES)**
+
+```
+clientes/ (raiz) ❌
+acertos/ (raiz) ❌
+mesas/ (raiz) ❌
+rotas/ (raiz) ❌
+usuarios/ (raiz) ❌
+```
+
+---
+
+## ✅ **ESTRUTURA CORRETA (PROJETO REAL)**
+
+```
+empresas/empresa_001/colaboradores/{uid} ✅
+empresas/empresa_001/entidades/rotas/items/{id} ✅
+empresas/empresa_001/entidades/clientes/items/{id} ✅
+empresas/empresa_001/entidades/acertos/items/{id} ✅
+empresas/empresa_001/entidades/mesas/items/{id} ✅
+```
+
+---
+
+## 📋 **CONSTANTES IMPORTANTES**
+
+```kotlin
+// BaseSyncHandler.kt
+const val COLLECTION_EMPRESAS = "empresas"
+const val COLLECTION_COLABORADORES = "colaboradores"
+
+// Sync usa empresas/{empresaId}/entidades/{collectionName}/items/{id}
+```
+
+---
+
+## 🎯 **CONCLUSÃO DA ANÁLISE**
+
+### **✅ Confirmado:**
+1. **Estrutura hierárquica** com `empresas/{empresaId}/` como raiz
+2. **Colaboradores** em `empresas/{empresaId}/colaboradores/{uid}`
+3. **Entidades** em `empresas/{empresaId}/entidades/{collectionName}/items/{id}`
+4. **Multi-tenancy** por empresa + rota (não apenas por rota)
+
+### **❌ Problema Original:**
+- Security Rules criadas para estrutura flat
+- App usa estrutura hierárquica completa
+- PERMISSION_DENIED para todas as operações
+
+### **🔧 Correção Necessária:**
+- Reescrever Security Rules para estrutura hierárquica
+- Implementar validação por empresa + rota
+- Manter compatibilidade com código existente
+
+---
+
+## 📝 **NOTAS PARA IMPLEMENTAÇÃO**
+
+1. **Empresa ID fixo:** `empresa_001` (hardcoded em vários lugares)
+2. **Collections entidades:** Sempre usam subcollection `items`
+3. **Multi-tenancy real:** Por empresa + rota (não apenas rota)
+4. **Colaboradores:** Diretamente sob empresa (sem `items`)
+
+---
+
+*Análise concluída - Estrutura hierárquica confirmada*

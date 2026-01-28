@@ -169,12 +169,12 @@
 
                     </com.google.android.material.textfield.TextInputLayout>
 
-                    <!-- Cidade -->
+                    <!-- Município -->
                     <com.google.android.material.textfield.TextInputLayout
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
                         android:layout_marginBottom="16dp"
-                        android:hint="Cidade"
+                        android:hint="Município"
                         style="@style/Widget.MaterialComponents.TextInputLayout.OutlinedBox.ExposedDropdownMenu"
                         app:boxStrokeColor="?attr/colorPrimary"
                         app:hintTextColor="?attr/colorPrimary">
@@ -305,6 +305,41 @@
                             android:inputType="numberDecimal"
                             android:digits="0123456789,."
                             android:maxLines="1" />
+
+                    </com.google.android.material.textfield.TextInputLayout>
+
+                    <!-- Label Débito Inicial (Migração) -->
+                    <TextView
+                        android:id="@+id/lblDebitoInicial"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_marginBottom="8dp"
+                        android:layout_marginStart="4dp"
+                        android:text="Débito Inicial (migração)"
+                        android:textSize="12sp"
+                        android:textColor="?attr/colorOnSurfaceVariant" />
+
+                    <!-- Débito Inicial (Migração) -->
+                    <com.google.android.material.textfield.TextInputLayout
+                        android:id="@+id/tilDebitoInicial"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:layout_marginBottom="16dp"
+                        android:hint="Débito Inicial"
+                        app:boxStrokeColor="?attr/colorOnSurfaceVariant"
+                        app:hintTextColor="?attr/colorOnSurfaceVariant"
+                        app:prefixText="R$ "
+                        app:startIconDrawable="@drawable/ic_money"
+                        app:startIconTint="?attr/colorOnSurfaceVariant">
+
+                        <com.google.android.material.textfield.TextInputEditText
+                            android:id="@+id/etDebitoInicial"
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:inputType="numberDecimal"
+                            android:maxLines="1"
+                            android:text="0.00"
+                            android:textColor="?attr/colorOnSurface" />
 
                     </com.google.android.material.textfield.TextInputLayout>
 

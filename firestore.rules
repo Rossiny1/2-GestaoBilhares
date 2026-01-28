@@ -2,384 +2,191 @@ rules_version = '2';
 service cloud.firestore {
   match /databases/{database}/documents {
 
-    // =================================================================
-    // 🔐 FUNÇÕES AUXILIARES (SECURITY HELPERS)
-    // =================================================================
+    // ═══════════════════════════════════════════════════════
+    // HELPERS (Funções auxiliares)
+    // ═══════════════════════════════════════════════════════
 
-    // 1. Admin Global (usuário rossinys ou claim admin)
-    function isAdmin() {
-      // ✅ MELHORADO: Check case-insensitive role AND explicit boolean claim
-      return request.auth != null && (
-        request.auth.token.role.lower() == 'admin' || 
-        request.auth.token.admin == true ||
-        request.auth.token.email == "rossinys@gmail.com"
-      );
+    function isAuthenticated() {
+      return request.auth != null;
     }
 
-    // 2. Pertence à empresa (Multi-tenancy)
     function belongsToCompany(empresaId) {
-      return request.auth != null && 
-             request.auth.token.companyId == empresaId;
+      // Verificar se usuário pertence à empresa
+      return isAuthenticated() && 
+             exists(/databases/$(database)/documents/empresas/$(empresaId)/colaboradores/$(request.auth.uid));
     }
 
-    // 3. Admin da Empresa (Pode alterar dados da empresa específica)
-    function isCompanyAdmin(empresaId) {
-      // ✅ MELHORADO: Check case-insensitive role
-      return request.auth != null && (
-        isAdmin() || 
-        (belongsToCompany(empresaId) && (
-          request.auth.token.role.lower() == 'manager' || 
-          request.auth.token.role.lower() == 'admin'
-        ))
-      );
+    function belongsToUserRoute(empresaId, rotaId) {
+      // Verificar se rota está nas permitidas do colaborador
+      return belongsToCompany(empresaId) &&
+             get(/databases/$(database)/documents/empresas/$(empresaId)/colaboradores/$(request.auth.uid))
+             .data.rotasPermitidas.hasAny([rotaId]);
     }
 
-    // =================================================================
-    // 🚫 COLEÇÕES BLOQUEADAS (Apenas Admin Global)
-    // =================================================================
-    
-    match /logsAuditoria/{logId} { allow read: if request.auth != null; allow write: if isAdmin(); }
-    match /historicoManutencaoMesa/{item} { allow read: if request.auth != null; allow write: if isAdmin(); }
-    match /historicoManutencaoVeiculo/{item} { allow read: if request.auth != null; allow write: if isAdmin(); }
-    match /historicoCombustivelVeiculo/{item} { allow read: if request.auth != null; allow write: if isAdmin(); }
-    match /equipamentos/{item} { allow read: if request.auth != null; allow write: if isAdmin(); }
-    match /panoEstoque/{item} { allow read: if request.auth != null; allow write: if isAdmin(); }
-    match /panoMesa/{item} { allow read: if request.auth != null; allow write: if isAdmin(); }
-    match /stockItem/{item} { allow read: if request.auth != null; allow write: if isAdmin(); }
-    match /veiculos/{item} { allow read: if request.auth != null; allow write: if isAdmin(); }
-    match /mesaVendida/{item} { allow read: if request.auth != null; allow write: if isAdmin(); }
-    match /mesaReformada/{item} { allow read: if request.auth != null; allow write: if isAdmin(); }
-    match /contratos/{contratoId} { allow read: if request.auth != null; allow write: if isAdmin(); }
-
-    // =================================================================
-    // ✅ COLEÇÕES GLOBAIS COM ACESSO RESTRITO
-    // =================================================================
-
-    // 👤 USUÁRIOS/COLABORADORES GLOBAIS
-    // Cada usuário pode ler/escrever apenas seu próprio documento
-    match /colaboradores/{userId} {
-      allow read: if isAdmin() || (request.auth != null && request.auth.uid == userId);
-      allow write: if isAdmin() || (request.auth != null && request.auth.uid == userId);
+    function isAdmin(empresaId) {
+      // Verificar se colaborador é admin da empresa
+      return belongsToCompany(empresaId) &&
+             get(/databases/$(database)/documents/empresas/$(empresaId)/colaboradores/$(request.auth.uid))
+             .data.nivel_acesso == "ADMIN";
     }
 
-    // =================================================================
-    // 🏢 MULTI-TENANCY (DADOS POR EMPRESA)
-    // =================================================================
-    
-    // ✅ NOVO SCHEMA: Colaboradores por UID (lookup direto)
-    // Estrutura: empresas/{empresaId}/colaboradores/{firebaseUid}
-    match /empresas/{empresaId}/colaboradores/{uid} {
-      // ✅ SUPERADMIN: rossinys@gmail.com tem acesso total
-      // Admin pode ler/escrever qualquer colaborador
-      allow read, write: if isAdmin();
-      
-      // ✅ CORREÇÃO: Admin da empresa pode atualizar colaboradores da mesma empresa
-      allow update: if isCompanyAdmin(empresaId);
-      
-      // Usuário autenticado pode ler/escrever seu próprio documento
-      allow read: if request.auth != null && request.auth.uid == uid;
-      allow write: if request.auth != null && request.auth.uid == uid;
-      
-      // Permitir criação para onboarding (usuário autenticado pode criar seu próprio perfil)
-      // ✅ MULTI-TENANCY: Verificar que empresaId do path corresponde ao companyId do token
-      // ✅ SUPERADMIN: rossinys@gmail.com pode criar seu perfil automaticamente
-      // ✅ PRIMEIRO LOGIN: Permitir criação se usuário ainda não tem companyId (onboarding)
-      allow create: if request.auth != null && 
-                     request.auth.uid == uid &&
-                     // Verificar que os dados do documento estão corretos
-                     (request.resource.data.firebase_uid == uid ||
-                      request.resource.data.firebaseUid == uid ||
-                      // ✅ CORREÇÃO: Permitir criação se email no documento for rossinys@gmail.com
-                      // (mesmo que token não tenha email ainda)
-                      request.resource.data.email == "rossinys@gmail.com") &&
-                     // ✅ MULTI-TENANCY: Garantir que empresa_id e companyId no documento correspondem ao path
-                     (request.resource.data.empresa_id == empresaId || 
-                      request.resource.data.companyId == empresaId ||
-                      // ✅ CORREÇÃO: Permitir criação para superadmin mesmo sem empresa_id
-                      request.resource.data.email == "rossinys@gmail.com") &&
-                     // ✅ MULTI-TENANCY: Se usuário já tem companyId no token, deve corresponder ao empresaId
-                     // Se não tem (primeiro login), permitir criação (companyId será adicionado depois)
-                     // ✅ CORREÇÃO: Superadmin pode criar sem companyId no token
-                     (isAdmin() || 
-                      request.resource.data.email == "rossinys@gmail.com" ||
-                      !('companyId' in request.auth.token) || 
-                      belongsToCompany(empresaId));
-      
-      // Colegas da mesma empresa podem ler (para listar equipe)
-      allow read: if belongsToCompany(empresaId);
-      
-      // ✅ COMPATIBILIDADE: Permitir leitura sem autenticação para colaboradores aprovados e ativos
-      // Necessário para login em app vazio quando Firebase Auth autentica mas perfil ainda não existe
-      allow read: if request.auth == null && 
-                     resource.data.aprovado == true && 
-                     resource.data.ativo == true;
-    }
-    
-    // 1️⃣ COLABORADORES DA EMPRESA (Schema Antigo - Mantido para compatibilidade durante migração)
-    match /empresas/{empresaId}/entidades/colaboradores/items/{itemId} {
-      // LEITURA:
-      // 1. ✅ SUPERADMIN: rossinys@gmail.com tem acesso total
-      // 2. Admin Global
-      // 3. Colegas da mesma empresa (para listar equipe)
-      // 4. O próprio usuário (bootstrapping via email match se claim falhar)
-      // 5. ✅ CORREÇÃO: Usuários autenticados podem ler colaboradores aprovados e ativos
-      // 6. ✅ Busca sem autenticação para login em app vazio (apenas aprovados e ativos)
-      allow read: if isAdmin() || 
-                  belongsToCompany(empresaId) || 
-                  // ✅ CORREÇÃO: Quando autenticado, permitir leitura se:
-                  // - É o próprio usuário (email ou UID match), OU
-                  // - É superadmin (rossinys@gmail.com), OU
-                  // - Colaborador está aprovado e ativo (permite busca após Firebase Auth)
-                  (request.auth != null && (
-                    request.auth.token.email == resource.data.email || 
-                    request.auth.uid == resource.data.firebaseUid ||
-                    request.auth.uid == resource.data.firebase_uid ||
-                    request.auth.token.email == "rossinys@gmail.com" ||
-                    (resource.data.aprovado == true && resource.data.ativo == true)
-                  )) ||
-                  // ✅ Busca sem autenticação para login em app vazio
-                  (request.auth == null && 
-                   resource.data.aprovado == true && 
-                   resource.data.ativo == true);
-
-      // ESCRITA: 
-      // 1. ✅ SUPERADMIN: rossinys@gmail.com tem acesso total
-      // 2. Admin Global ou Admin Empresa
-      // 3. O PRÓPRIO USUÁRIO (para atualizar seu status/senha)
-      // 4. ✅ NOVO: Usuário anônimo pode CRIAR (para cadastros públicos sem login)
-      //    - Apenas criação (create), não atualização/deleção
-      //    - Apenas se aprovado = false (cadastro pendente)
-      //    - Verifica se é usuário anônimo (sem email no token)
-      allow create: if isAdmin() || isCompanyAdmin(empresaId) || 
-                    (request.auth != null && (
-                      request.auth.uid == resource.data.firebaseUid || 
-                      request.auth.token.email == resource.data.email ||
-                      request.auth.token.email == "rossinys@gmail.com" ||
-                      // ✅ SUPERADMIN: rossinys@gmail.com pode criar seu próprio perfil automaticamente
-                      (request.auth.token.email == "rossinys@gmail.com" && 
-                       request.resource.data.email == "rossinys@gmail.com") ||
-                      // Permitir criação anônima apenas para cadastros pendentes
-                      // Usuário anônimo: verifica se não tem email OU se email está vazio
-                      (request.auth.token.email == null || request.auth.token.email == "") &&
-                      request.resource.data.aprovado == false &&
-                      (request.resource.data.aprovadoPor == null || request.resource.data.aprovadoPor == "")
-                    ));
-      
-      // Atualização e deleção: apenas autenticados com permissão
-      // ✅ SUPERADMIN: rossinys@gmail.com tem acesso total
-      allow update, delete: if isAdmin() || isCompanyAdmin(empresaId) || 
-                             (request.auth != null && (
-                               request.auth.uid == resource.data.firebaseUid || 
-                               request.auth.token.email == resource.data.email ||
-                               request.auth.token.email == "rossinys@gmail.com"
-                             ));
+    function isApproved(empresaId) {
+      // Verificar se colaborador está aprovado
+      return belongsToCompany(empresaId) &&
+             get(/databases/$(database)/documents/empresas/$(empresaId)/colaboradores/$(request.auth.uid))
+             .data.aprovado == true;
     }
 
-    // Suporte para busca global via collectionGroup("items")
-    // Essencial para login em fresh install onde o empresaId ainda é desconhecido
-    // ✅ CORREÇÃO: Para collectionGroup queries, permitir usuários autenticados fazerem queries
-    // A validação de segurança é feita no documento individual (regra acima)
-    // ✅ SUPERADMIN: rossinys@gmail.com tem acesso total via collectionGroup
-    match /{path=**}/items/{itemId} {
-      allow read: if isAdmin() ||
-                  // ✅ CORREÇÃO CRÍTICA: Usuários autenticados podem fazer queries collectionGroup
-                  // Isso permite buscar colaborador após Firebase Auth autenticar
-                  (request.auth != null && (
-                    request.auth.token.email == resource.data.email || 
-                    request.auth.uid == resource.data.firebaseUid ||
-                    request.auth.uid == resource.data.firebase_uid ||
-                    request.auth.token.email == "rossinys@gmail.com" ||
-                    // Permitir leitura de colaboradores aprovados e ativos quando autenticado
-                    (('nivel_acesso' in resource.data || 'nivelAcesso' in resource.data) &&
-                     resource.data.aprovado == true && 
-                     resource.data.ativo == true)
-                  )) ||
-                  // ✅ Permitir busca sem autenticação para colaboradores aprovados e ativos
-                  (request.auth == null && 
-                   ('nivel_acesso' in resource.data || 'nivelAcesso' in resource.data) &&
-                   resource.data.aprovado == true && 
-                   resource.data.ativo == true);
+    function isOwner(empresaId, userId) {
+      // Verificar se o documento pertence ao usuário
+      return isAuthenticated() && 
+             request.auth.uid == userId;
     }
 
-    // 2️⃣ DADOS DA EMPRESA (Clientes, Acertos, Mesas, Rotas, etc.)
-    // Regra: Qualquer usuário autenticado pode LER (filtro via path no App)
-    // Escrita exige claims corretas ou ser Admin
-    
-    // ✅ CORREÇÃO: Permitir queries na coleção items para usuários autenticados
-    // Isso permite que Users façam list queries (collectionRef.get()) para sincronização
-    // ✅ CORREÇÃO CRÍTICA: Permitir queries sem autenticação para colaboradores aprovados e ativos
-    // Necessário para login em app vazio quando login online falha
-    match /empresas/{empresaId}/entidades/{collectionName}/items {
-      allow read: if request.auth != null ||
-                    // ✅ CORREÇÃO CRÍTICA: Permitir queries sem autenticação apenas para colaboradores
-                    // Verifica se é a coleção de colaboradores E se o documento tem campos de colaborador
-                    (request.auth == null && 
-                     collectionName == "colaboradores" &&
-                     // Nota: Para queries de coleção, não temos acesso a resource.data individual
-                     // Mas a regra de documento individual (linha 70-89) já cobre isso
-                     true);
-      // ✅ CORREÇÃO PUSH: Permitir escrita para qualquer usuário autenticado
-      // O código do app já faz filtro de segurança (apenas rotas atribuídas ao usuário)
-      allow write: if request.auth != null;
-    }
-    
-    // Documentos individuais dentro de items
-    match /empresas/{empresaId}/entidades/{collectionName}/items/{itemId} {
-      allow read: if request.auth != null ||
-                    // ✅ CORREÇÃO CRÍTICA: Permitir leitura sem autenticação para colaboradores aprovados e ativos
-                    // Isso permite o fallback direto na empresa_001 funcionar
-                    (request.auth == null && 
-                     collectionName == "colaboradores" &&
-                     // Verificar campos únicos de colaboradores para garantir segurança
-                     'nivel_acesso' in resource.data &&
-                     'email' in resource.data &&
-                     'aprovado' in resource.data &&
-                     'ativo' in resource.data &&
-                     resource.data.aprovado == true && 
-                     resource.data.ativo == true);
-      // ✅ CORREÇÃO PUSH: Permitir escrita para qualquer usuário autenticado
-      // O código do app já faz filtro de segurança (apenas rotas atribuídas ao usuário)
-      allow write: if request.auth != null; 
-    }
-    
-    // Regra Genérica para subcoleções profundas da empresa
-    match /empresas/{empresaId}/{document=**} {
-      allow read: if request.auth != null;
-      allow write: if isAdmin() || isCompanyAdmin(empresaId);
+    // ═══════════════════════════════════════════════════════
+    // COLLECTION: empresas (RAIZ)
+    // ═══════════════════════════════════════════════════════
+
+    match /empresas/{empresaId} {
+      // Leitura da empresa: qualquer colaborador aprovado
+      allow read: if isApproved(empresaId);
+
+      // Escrita da empresa: apenas admins
+      allow write: if isAdmin(empresaId);
+
+      // ───────────────────────────────────────────────────
+      // SUBCOLLECTION: colaboradores
+      // ───────────────────────────────────────────────────
+
+      match /colaboradores/{colaboradorId} {
+        // Leitura: colaboradores da mesma empresa aprovados
+        allow read: if belongsToCompany(empresaId) || isAdmin(empresaId);
+
+        // Criação: qualquer autenticado pode se registrar (primeiro acesso)
+        // O app cria com aprovado=false, admin aprova depois
+        allow create: if isAuthenticated() && 
+                         request.resource.data.firebase_uid == request.auth.uid &&
+                         request.resource.data.empresa_id == empresaId;
+
+        // Atualização: admin pode tudo, colaborador só pode alterar dados próprios (exceto campos críticos)
+        allow update: if isAdmin(empresaId) || 
+                         (request.auth.uid == resource.data.firebase_uid && 
+                          !request.resource.data.diff(resource.data).affectedKeys().hasAny(['nivel_acesso', 'rotasPermitidas', 'aprovado', 'empresa_id']));
+
+        // Deleção: apenas admins
+        allow delete: if isAdmin(empresaId);
+      }
+
+      // ───────────────────────────────────────────────────
+      // SUBCOLLECTION: entidades
+      // ───────────────────────────────────────────────────
+
+      match /entidades/{collectionName} {
+        // Leitura da collection: apenas colaboradores aprovados
+        allow list: if isApproved(empresaId);
+
+        // ─────────────────────────────────────────────────
+        // SUBCOLLECTION: items (onde ficam os documentos reais)
+        // ─────────────────────────────────────────────────
+
+        match /items/{itemId} {
+          // ═══════════════════════════════════════════════════════
+          // REGRAS GERAIS PARA TODAS AS ENTIDADES
+          // ═══════════════════════════════════════════════════════
+          
+          // ROTAS
+          allow read, write: if collectionName == "rotas" && (
+            // Leitura: colaboradores aprovados
+            (request.method == 'get' && isApproved(empresaId)) ||
+            // Escrita: apenas admins
+            (request.method in ['create', 'update', 'delete'] && isAdmin(empresaId))
+          );
+
+          // CLIENTES
+          allow read: if collectionName == "clientes" && 
+                       isApproved(empresaId) && 
+                       belongsToUserRoute(empresaId, resource.data.rota_id);
+          
+          allow create: if collectionName == "clientes" && 
+                         isApproved(empresaId) && 
+                         belongsToUserRoute(empresaId, request.resource.data.rota_id) &&
+                         request.resource.data.empresa_id == empresaId;
+          
+          allow update: if collectionName == "clientes" && 
+                         (isAdmin(empresaId) || 
+                          (isApproved(empresaId) && 
+                           belongsToUserRoute(empresaId, resource.data.rota_id) &&
+                           request.resource.data.empresa_id == empresaId));
+          
+          allow delete: if collectionName == "clientes" && isAdmin(empresaId);
+
+          // ACERTOS
+          allow read: if collectionName == "acertos" && 
+                       isApproved(empresaId) && 
+                       belongsToUserRoute(empresaId, resource.data.rota_id);
+          
+          allow create: if collectionName == "acertos" && 
+                         isApproved(empresaId) && 
+                         belongsToUserRoute(empresaId, request.resource.data.rota_id) &&
+                         request.resource.data.empresa_id == empresaId;
+          
+          allow update: if collectionName == "acertos" && 
+                         (isAdmin(empresaId) || 
+                          (isApproved(empresaId) && 
+                           belongsToUserRoute(empresaId, resource.data.rota_id) &&
+                           request.resource.data.empresa_id == empresaId));
+          
+          allow delete: if collectionName == "acertos" && isAdmin(empresaId);
+
+          // MESAS
+          allow read: if collectionName == "mesas" && 
+                       isApproved(empresaId) && 
+                       belongsToUserRoute(empresaId, resource.data.rota_id);
+          
+          allow create: if collectionName == "mesas" && 
+                         isApproved(empresaId) && 
+                         belongsToUserRoute(empresaId, request.resource.data.rota_id) &&
+                         request.resource.data.empresa_id == empresaId;
+          
+          allow update: if collectionName == "mesas" && 
+                         (isAdmin(empresaId) || 
+                          (isApproved(empresaId) && 
+                           belongsToUserRoute(empresaId, resource.data.rota_id) &&
+                           request.resource.data.empresa_id == empresaId));
+          
+          allow delete: if collectionName == "mesas" && isAdmin(empresaId);
+
+          // DESPESAS
+          allow read: if collectionName == "despesas" && 
+                       isApproved(empresaId) && 
+                       belongsToUserRoute(empresaId, resource.data.rota_id);
+          
+          allow create: if collectionName == "despesas" && 
+                         isApproved(empresaId) && 
+                         belongsToUserRoute(empresaId, request.resource.data.rota_id) &&
+                         request.resource.data.empresa_id == empresaId;
+          
+          allow update: if collectionName == "despesas" && 
+                         (isAdmin(empresaId) || 
+                          (isApproved(empresaId) && 
+                           belongsToUserRoute(empresaId, resource.data.rota_id) &&
+                           request.resource.data.empresa_id == empresaId));
+          
+          allow delete: if collectionName == "despesas" && isAdmin(empresaId);
+
+          // OUTRAS ENTIDADES (fallback)
+          allow read: if isApproved(empresaId);
+          allow write: if isAdmin(empresaId);
+        }
+      }
     }
 
-    // =================================================================
-    // 🏚️ COLEÇÕES LEGADO (Ciclos, Despesas, Acertos Antigos)
-    // ✅ VERSÃO SEGURA: SEM FALLBACKS PERMISSIVOS
-    // =================================================================
-    
-    // ✅ REMOVIDO: Função hasCompanyAccess não utilizada
-    // A função belongsToCompany() já cobre essa funcionalidade
-    
-    // CICLOS: Dados de ciclos de trabalho
-    match /ciclos/{cicloId} {
-      allow read: if request.auth != null && (
-        isAdmin() ||
-        ('companyId' in request.auth.token && 
-         (!('empresaId' in resource.data) || 
-          request.auth.token.companyId == resource.data.empresaId))
-      );
-      
-      allow create: if request.auth != null && (
-        isAdmin() ||
-        ('companyId' in request.auth.token && 
-         (!('empresaId' in request.resource.data) || 
-          request.auth.token.companyId == request.resource.data.empresaId))
-      );
-      
-      allow update, delete: if request.auth != null && (
-        isAdmin() ||
-        ('companyId' in request.auth.token && 
-         (!('empresaId' in resource.data) || 
-          request.auth.token.companyId == resource.data.empresaId))
-      );
-    }
-    
-    // DESPESAS: Despesas operacionais
-    match /despesas/{despesaId} {
-      allow read: if request.auth != null && (
-        isAdmin() ||
-        ('companyId' in request.auth.token && 
-         (!('empresaId' in resource.data) || 
-          request.auth.token.companyId == resource.data.empresaId))
-      );
-      
-      allow create: if request.auth != null && (
-        isAdmin() ||
-        ('companyId' in request.auth.token && 
-         (!('empresaId' in request.resource.data) || 
-          request.auth.token.companyId == request.resource.data.empresaId))
-      );
-      
-      allow update, delete: if request.auth != null && (
-        isAdmin() ||
-        ('companyId' in request.auth.token && 
-         (!('empresaId' in resource.data) || 
-          request.auth.token.companyId == resource.data.empresaId))
-      );
-    }
-    
-    // ACERTOS: Histórico de acertos financeiros
-    match /acertos/{acertoId} {
-      allow read: if request.auth != null && (
-        isAdmin() ||
-        ('companyId' in request.auth.token && 
-         (!('empresaId' in resource.data) || 
-          request.auth.token.companyId == resource.data.empresaId))
-      );
-      
-      allow create: if request.auth != null && (
-        isAdmin() ||
-        ('companyId' in request.auth.token && 
-         (!('empresaId' in request.resource.data) || 
-          request.auth.token.companyId == request.resource.data.empresaId))
-      );
-      
-      allow update, delete: if request.auth != null && (
-        isAdmin() ||
-        ('companyId' in request.auth.token && 
-         (!('empresaId' in resource.data) || 
-          request.auth.token.companyId == resource.data.empresaId))
-      );
-    }
-    
-    // MESAS: Cadastro de mesas
-    match /mesas/{mesaId} {
-      allow read: if request.auth != null && (
-        isAdmin() ||
-        ('companyId' in request.auth.token && 
-         (!('empresaId' in resource.data) || 
-          request.auth.token.companyId == resource.data.empresaId))
-      );
-      
-      allow create: if request.auth != null && (
-        isAdmin() ||
-        ('companyId' in request.auth.token && 
-         (!('empresaId' in request.resource.data) || 
-          request.auth.token.companyId == request.resource.data.empresaId))
-      );
-      
-      allow update, delete: if request.auth != null && (
-        isAdmin() ||
-        ('companyId' in request.auth.token && 
-         (!('empresaId' in resource.data) || 
-          request.auth.token.companyId == resource.data.empresaId))
-      );
-    }
-    
-    // ROTAS: Rotas de entrega/coleta
-    match /rotas/{rotaId}/{document=**} {
-      allow read: if request.auth != null && (
-        isAdmin() ||
-        ('companyId' in request.auth.token)
-      );
-      
-      allow write: if request.auth != null && (
-        isAdmin() ||
-        ('companyId' in request.auth.token && 
-         (!('empresaId' in request.resource.data) || 
-          request.auth.token.companyId == request.resource.data.empresaId))
-      );
-    }
-    
-    // CLIENTES: Cadastro de clientes
-    match /clientes/{clienteId}/{document=**} {
-      allow read: if request.auth != null && (
-        isAdmin() ||
-        ('companyId' in request.auth.token)
-      );
-      
-      allow write: if request.auth != null && (
-        isAdmin() ||
-        ('companyId' in request.auth.token && 
-         (!('empresaId' in request.resource.data) || 
-          request.auth.token.companyId == request.resource.data.empresaId))
-      );
+    // ═══════════════════════════════════════════════════════
+    // FALLBACK: Negar tudo que não foi explicitamente permitido
+    // ═══════════════════════════════════════════════════════
+
+    match /{document=**} {
+      allow read, write: if false;
     }
   }
 }

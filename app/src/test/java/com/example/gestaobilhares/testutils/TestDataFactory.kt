@@ -2,6 +2,7 @@ package com.example.gestaobilhares.testutils
 
 import com.example.gestaobilhares.data.entities.*
 import java.util.Date
+import java.time.LocalDateTime
 
 /**
  * Helper object para criar mocks de entidades em testes.
@@ -22,8 +23,8 @@ object TestDataFactory {
         valorFicha: Double = 2.0,
         comissaoFicha: Double = 0.5,
         ativo: Boolean = true,
-        dataCadastro: Date = Date(),
-        dataUltimaAtualizacao: Date = Date()
+        dataCadastro: Long = System.currentTimeMillis(),
+        dataUltimaAtualizacao: Long = System.currentTimeMillis()
     ) = Cliente(
         id = id,
         rotaId = rotaId,
@@ -45,9 +46,9 @@ object TestDataFactory {
         id: Long = 1L,
         clienteId: Long = 1L,
         colaboradorId: Long? = 1L,
-        dataAcerto: Date = Date(),
-        periodoInicio: Date = Date(),
-        periodoFim: Date = Date(),
+        dataAcerto: Long = System.currentTimeMillis(),
+        periodoInicio: Long = System.currentTimeMillis(),
+        periodoFim: Long = System.currentTimeMillis(),
         totalMesas: Double = 100.0,
         debitoAnterior: Double = 0.0,
         valorTotal: Double = 100.0,
@@ -76,8 +77,8 @@ object TestDataFactory {
         debitoAtual = debitoAtual,
         status = status,
         observacoes = observacoes,
-        dataCriacao = Date(),
-        dataFinalizacao = Date(),
+        dataCriacao = System.currentTimeMillis(),
+        dataFinalizacao = null,
         metodosPagamentoJson = "{\"$metodoPagamento\": $valorRecebido}",
         rotaId = rotaId,
         cicloId = cicloId
@@ -88,8 +89,8 @@ object TestDataFactory {
         rotaId: Long = 1L,
         numeroCiclo: Int = 1,
         ano: Int = 2025,
-        dataInicio: Date = Date(),
-        dataFim: Date = Date(),
+        dataInicio: Long = System.currentTimeMillis(),
+        dataFim: Long = System.currentTimeMillis(),
         status: StatusCicloAcerto = StatusCicloAcerto.EM_ANDAMENTO,
         totalClientes: Int = 10,
         observacoes: String = "",
@@ -129,7 +130,7 @@ object TestDataFactory {
         valor: Double = 100.0,
         descricao: String = "Despesa teste",
         categoria: String = "Transporte",
-        dataHora: java.time.LocalDateTime = java.time.LocalDateTime.now()
+        dataHora: Long = System.currentTimeMillis()
     ) = Despesa(
         id = id,
         rotaId = rotaId,
@@ -147,7 +148,7 @@ object TestDataFactory {
         clienteId: Long = 1L,
         numeroMesa: String = "Mesa 1",
         ativa: Boolean = true,
-        dataCadastro: Date = Date()
+        dataCadastro: Long = System.currentTimeMillis()
     ) = Mesa(
         id = id,
         clienteId = clienteId,

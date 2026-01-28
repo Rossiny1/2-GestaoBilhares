@@ -1,0 +1,702 @@
+# 🏗️ WINDSURF ARCHITECTURE - REGRAS DE ARQUITETURA
+
+> Regras de arquitetura MVVM + Hilt + Multi-tenancy para WindSurf  
+> Stack: Kotlin + Android + Room + Firebase + Coroutines + StateFlow  
+> Baseado em PROJECT_README.md e DEV_GUIDE.md
+
+---
+
+## 🎯 OBJETIVO
+
+Configurar WindSurf com **regras de arquitetura rígidas** para:
+- **MVVM consistente** em todos componentes
+- **Hilt para DI** (@Inject, @HiltViewModel)
+- **Multi-tenancy por rota** obrigatório
+- **Offline-first** com Room como fonte da verdade
+- **StateFlow** (não LiveData) para streams reativos
+
+---
+
+## 📐 ARQUITETURA OBRIGATÓRIA
+
+### Stack Principal
+
+```yaml
+# WindSurf: Stack tecnológico imutável
+tech_stack:
+  language: "Kotlin 1.9.20"
+  architecture: "MVVM"
+  di_framework: "Hilt 2.51"
+  database: "Room (offline-first)"
+  backend: "Firebase (Firestore + Auth)"
+  async: "Coroutines + StateFlow"
+  navigation: "Navigation Component"
+  build: "Gradle 8.2 (.bat sempre)"
+```
+
+### Módulos do Projeto
+
+```yaml
+# WindSurf: Estrutura de módulos
+project_modules:
+  app: "Módulo principal e configuração"
+  core: "Utilitários compartilhados"
+  data: "Camada de dados (Room + Firebase)"
+  ui: "Camada de apresentação (Fragments + ViewModels)"
+  sync: "Sincronização offline-first"
+
+# Regra: NÃO quebrar estrutura de módulos
+```
+
+---
+
+## 🎭 CAMADA DE APRESENTAÇÃO (UI)
+
+### ViewModels (Padrão Obrigatório)
+
+```kotlin
+// WindSurf: Template ViewModel
+@HiltViewModel
+class [Nome]ViewModel @Inject constructor(
+    private val repository: [Nome]Repository,
+    private val userSessionManager: UserSessionManager
+) : ViewModel() {
+    
+    // StateFlow obrigatório (não LiveData)
+    private val _uiState = MutableStateFlow([Nome]UiState.Initial)
+    val uiState: StateFlow<[Nome]UiState> = _uiState.asStateFlow()
+    
+    // Logs estruturados obrigatórios
+    private companion object {
+        private const val TAG = "[DIAGNOSTICO]"
+    }
+    
+    // Validação de multi-tenancy
+    fun executarAcao(dados: Dados) {
+        if (!userSessionManager.canAccessRota(dados.rota_id)) {
+            Log.w(TAG, "Acesso negado à rota: ${dados.rota_id}")
+            return
+        }
+        
+        Log.d(TAG, "INICIANDO executarAcao")
+        // ... implementação
+    }
+}
+```
+
+### Fragments (Padrão Obrigatório)
+
+```kotlin
+// WindSurf: Template Fragment
+@AndroidEntryPoint
+class [Nome]Fragment : Fragment() {
+    
+    private val viewModel: [Nome]ViewModel by viewModels()
+    private var _binding: Fragment[Nome]Binding? = null
+    private val binding get() = _binding!!
+    
+    override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
+        super.onViewCreated(view, savedInstanceState)
+        
+        // Observar StateFlow (não LiveData)
+        viewLifecycleOwner.lifecycleScope.launch {
+            viewModel.uiState
+                .flowWithLifecycle(viewLifecycleOwner.lifecycle)
+                .collect { state ->
+                    when (state) {
+                        is [Nome]UiState.Success -> updateUI(state.data)
+                        is [Nome]UiState.Error -> showError(state.message)
+                        [Nome]UiState.Loading -> showLoading()
+                    }
+                }
+        }
+    }
+}
+```
+
+### Validações de UI
+
+```yaml
+# WindSurf: Validações automáticas de UI
+ui_validations:
+  required:
+    - "@AndroidEntryPoint em Fragments"
+    - "@HiltViewModel em ViewModels"
+    - "StateFlow ao invés de LiveData"
+    - "flowWithLifecycle para observação"
+    
+  forbidden:
+    - "Acesso direto a DAOs"
+    - "Acesso direto a Firebase"
+    - "LiveData em novos componentes"
+    - "ViewModels sem injeção"
+```
+
+---
+
+## 🗄️ CAMADA DE DADOS (DATA)
+
+### Entities (Multi-tenancy Obrigatório)
+
+```kotlin
+// WindSurf: Template Entity com multi-tenancy
+@Entity(tableName = "[nome]")
+data class [Nome]Entity(
+    @PrimaryKey val id: String,
+    
+    // Campos OBRIGATÓRIOS de multi-tenancy
+    val empresa_id: String,
+    val rota_id: String,
+    
+    // Campo OBRIGATÓRIO para sync
+    val dataUltimaAtualizacao: Long = System.currentTimeMillis(),
+    
+    // Campos de negócio
+    val nome: String,
+    val ativo: Boolean = true,
+    
+    // Campos opcionais
+    val descricao: String? = null
+) {
+    // Validações no construtor
+    init {
+        require(empresa_id.isNotBlank()) { "empresa_id obrigatório" }
+        require(rota_id.isNotBlank()) { "rota_id obrigatório" }
+    }
+}
+```
+
+### DAOs (Padrão Obrigatório)
+
+```kotlin
+// WindSurf: Template DAO
+@Dao
+interface [Nome]Dao {
+    
+    // Query principal sempre com filtro de rota
+    @Query("SELECT * FROM [nome] WHERE rota_id = :rotaId AND ativo = 1")
+    fun getByRota(rotaId: String): Flow<List<[Nome]Entity>>
+    
+    // Busca por ID (sempre verificar rota)
+    @Query("SELECT * FROM [nome] WHERE id = :id AND rota_id = :rotaId")
+    suspend fun getById(id: String, rotaId: String): [Nome]Entity?
+    
+    // Inserir com conflito
+    @Insert(onConflict = OnConflictStrategy.REPLACE)
+    suspend fun insert(entity: [Nome]Entity): Long
+    
+    // Atualizar timestamp
+    @Query("UPDATE [nome] SET dataUltimaAtualizacao = :timestamp WHERE id = :id")
+    suspend fun updateTimestamp(id: String, timestamp: Long = System.currentTimeMillis())
+    
+    // Soft delete (não deletar fisicamente)
+    @Query("UPDATE [nome] SET ativo = 0 WHERE id = :id AND rota_id = :rotaId")
+    suspend fun softDelete(id: String, rotaId: String)
+}
+```
+
+### Repositories (Interface + Implementação)
+
+```kotlin
+// WindSurf: Interface Repository
+interface [Nome]Repository {
+    fun getByRota(rotaId: String): Flow<List<[Nome]>>
+    suspend fun getById(id: String, rotaId: String): [Nome]?
+    suspend fun save(entity: [Nome]): Result<[Nome]>
+    suspend fun delete(id: String, rotaId: String): Result<Unit>
+}
+
+// WindSurf: Implementação Repository
+@Singleton
+class [Nome]RepositoryImpl @Inject constructor(
+    private val dao: [Nome]Dao,
+    private val firestore: FirebaseFirestore,
+    private val syncRepository: SyncRepository,
+    private val userSessionManager: UserSessionManager
+) : [Nome]Repository {
+    
+    override fun getByRota(rotaId: String): Flow<List<[Nome]>> = flow {
+        // 1. Emitir local imediatamente (offline-first)
+        val local = dao.getByRota(rotaId).first()
+        emit(local.map { it.toDomain() })
+        
+        // 2. Sync em background se online
+        if (networkUtils.isConnected()) {
+            syncFromFirestore(rotaId)
+        }
+    }
+    
+    private suspend fun syncFromFirestore(rotaId: String) {
+        // Validação de multi-tenancy
+        if (!userSessionManager.canAccessRota(rotaId)) {
+            throw SecurityException("Acesso negado à rota: $rotaId")
+        }
+        
+        // Sync com Firestore
+        val empresaId = userSessionManager.getCurrentEmpresaId()
+        val collection = firestore
+            .collection("empresas")
+            .document(empresaId)
+            .collection("entidades")
+            .collection("[nome]")
+            .whereEqualTo("rota_id", rotaId)
+            
+        val documents = collection.get().await()
+        // ... processar documentos
+    }
+}
+```
+
+---
+
+## 🔧 INJEÇÃO DE DEPENDÊNCIAS (HILT)
+
+### Modules Obrigatórios
+
+```kotlin
+// WindSurf: Module de Repositories
+@Module
+@InstallIn(SingletonComponent::class)
+abstract class RepositoryModule {
+    
+    @Binds
+    @Singleton
+    abstract fun bind[Nome]Repository(
+        impl: [Nome]RepositoryImpl
+    ): [Nome]Repository
+    
+    // AppRepository é FACADE - NÃO refatorar
+    @Binds
+    @Singleton
+    abstract fun bindAppRepository(
+        impl: AppRepositoryImpl
+    ): AppRepository
+}
+
+// WindSurf: Module de DAOs
+@Module
+@InstallIn(SingletonComponent::class)
+object DaoModule {
+    
+    @Provides
+    @Singleton
+    fun provide[Nome]Dao(database: AppDatabase): [Nome]Dao {
+        return database.[nome]Dao()
+    }
+}
+```
+
+### Application com Hilt
+
+```kotlin
+// WindSurf: Application configurada
+@HiltAndroidApp
+class GestaoBilharesApplication : Application() {
+    
+    override fun onCreate() {
+        super.onCreate()
+        
+        // Configurar WorkManager para sync
+        configureWorkManager()
+        
+        // Inicializar logs estruturados
+        configureLogging()
+    }
+    
+    private fun configureWorkManager() {
+        // SyncWorker configurado para 6 horas
+        val constraints = Constraints.Builder()
+            .setRequiredNetworkType(NetworkType.CONNECTED)
+            .setRequiresBatteryNotLow(true)
+            .setRequiresCharging(true)
+            .build()
+            
+        val syncRequest = PeriodicWorkRequestBuilder<SyncWorker>(
+            6, TimeUnit.HOURS
+        ).setConstraints(constraints).build()
+        
+        WorkManager.getInstance(this)
+            .enqueueUniquePeriodicWork(
+                "sync_worker",
+                ExistingPeriodicWorkPolicy.KEEP,
+                syncRequest
+            )
+    }
+}
+```
+
+---
+
+## 🔐 MULTI-TENANCY (OBRIGATÓRIO)
+
+### Validação de Acesso
+
+```kotlin
+// WindSurf: UserSessionManager com validações
+@Singleton
+class UserSessionManager @Inject constructor(
+    private val auth: FirebaseAuth,
+    private val firestore: FirebaseFirestore
+) {
+    
+    fun canAccessRota(rotaId: String): Boolean {
+        val currentUser = auth.currentUser ?: return false
+        val rotasPermitidas = getRotasPermitidas()
+        return rotasPermitidas.contains(rotaId)
+    }
+    
+    fun canManageCollaboradores(): Boolean {
+        val nivel = getNivelAcesso()
+        return nivel == "ADMIN"
+    }
+    
+    fun getCurrentEmpresaId(): String {
+        // Buscar dos claims do Firebase Auth
+        return auth.currentUser?.let { user ->
+            // Implementar busca de empresa_id
+            "empresa001" // Temporário
+        } ?: throw SecurityException("Usuário não autenticado")
+    }
+    
+    fun getRotasPermitidas(): List<String> {
+        // Buscar dos claims ou Firestore
+        return auth.currentUser?.let { user ->
+            // Implementar busca de rotasPermitidas
+            listOf("037-Salinas", "034-Bonito") // Temporário
+        } ?: emptyList()
+    }
+}
+```
+
+### Firestore Path (Padrão Obrigatório)
+
+```kotlin
+// WindSurf: Path padrão Firestore
+object FirestorePaths {
+    
+    fun getEntityPath(empresaId: String, collection: String, itemId: String): String {
+        return "empresas/$empresaId/entidades/$collection/items/$itemId"
+    }
+    
+    fun getCollectionPath(empresaId: String, collection: String): String {
+        return "empresas/$empresaId/entidades/$collection/items"
+    }
+    
+    // Exemplos:
+    // Cliente: empresas/empresa001/entidades/clientes/items/cliente001
+    // Acerto: empresas/empresa001/entidades/acertos/items/acerto001
+    // Mesa:   empresas/empresa001/entidades/mesas/items/mesa001
+}
+```
+
+### Security Rules (Validação)
+
+```javascript
+// WindSurf: Security Rules com multi-tenancy
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    
+    // Helper function para validar rota
+    function belongsToUserRoute(empresaId, rotaId) {
+      return request.auth != null &&
+             request.auth.token.empresa_id == empresaId &&
+             request.auth.token.rotasPermitidas.contains(rotaId);
+    }
+    
+    // Entidades com multi-tenancy
+    match /empresas/{empresaId}/entidades/{collection}/items/{itemId} {
+      allow read, write: if belongsToUserRoute(empresaId, resource.data.rota_id);
+      allow create: if belongsToUserRoute(empresaId, request.resource.data.rota_id);
+    }
+    
+    // Colaboradores
+    match /empresas/{empresaId}/colaboradores/{uid} {
+      allow read, write: if request.auth != null &&
+                          request.auth.token.empresa_id == empresaId &&
+                          request.auth.uid == uid;
+    }
+  }
+}
+```
+
+---
+
+## 🔄 OFFLINE-FIRST (OBRIGATÓRIO)
+
+### Estratégia Cache-First
+
+```kotlin
+// WindSurf: Repository com cache-first
+class [Nome]RepositoryImpl @Inject constructor(
+    private val dao: [Nome]Dao,
+    private val firestore: FirebaseFirestore,
+    private val networkUtils: NetworkUtils
+) {
+    
+    fun getAll(rotaId: String): Flow<List<[Nome]>> = flow {
+        // 1. Emitir local imediatamente
+        val local = dao.getByRota(rotaId).first()
+        emit(local.map { it.toDomain() })
+        
+        // 2. Sync em background se online
+        if (networkUtils.isConnected()) {
+            try {
+                val remotos = fetchFromFirestore(rotaId)
+                dao.insertAll(remotos.map { it.toEntity() })
+                
+                // 3. Emitir dados atualizados
+                val atualizados = dao.getByRota(rotaId).first()
+                emit(atualizados.map { it.toDomain() })
+            } catch (e: Exception) {
+                // Falha silenciosa - usa cache
+                Log.w("[SYNC]", "Falha sync, usando cache", e)
+            }
+        }
+    }
+}
+```
+
+### Sync Operations
+
+```kotlin
+// WindSurf: SyncOperation para fila offline
+@Entity(tableName = "sync_operations")
+data class SyncOperation(
+    @PrimaryKey val id: String = UUID.randomUUID().toString(),
+    val entityType: String,
+    val entityId: String,
+    val operation: String, // CREATE, UPDATE, DELETE
+    val data: String, // JSON dos dados
+    val status: String = "PENDING", // PENDING, PROCESSING, SUCCESS, FAILED
+    val retryCount: Int = 0,
+    val maxRetries: Int = 3,
+    val lastError: String? = null,
+    val createdAt: Long = System.currentTimeMillis(),
+    val processedAt: Long? = null,
+    
+    // Multi-tenancy
+    val empresa_id: String,
+    val rota_id: String
+)
+```
+
+---
+
+## 📊 VALIDAÇÕES AUTOMÁTICAS
+
+### WindSurf: Checks de Arquitetura
+
+```yaml
+# WindSurf: Validações automáticas ao criar/modificar arquivos
+architecture_validations:
+  viewmodel_checks:
+    required:
+      - "@HiltViewModel"
+      - "@Inject constructor"
+      - "StateFlow (não LiveData)"
+      - "Logs com [TAG]"
+    forbidden:
+      - "Acesso direto a DAO"
+      - "Acesso direto a Firebase"
+      
+  entity_checks:
+    required:
+      - "@Entity"
+      - "empresa_id: String"
+      - "rota_id: String"
+      - "dataUltimaAtualizacao: Long"
+    validations:
+      - "require() nos campos obrigatórios"
+      
+  repository_checks:
+    required:
+      - "Interface + Implementação"
+      - "@Inject constructor"
+      - "Flow para streams"
+      - "Validação de rota_id"
+      
+  fragment_checks:
+    required:
+      - "@AndroidEntryPoint"
+      - "viewModels() delegation"
+      - "flowWithLifecycle"
+      - "StateFlow observation"
+```
+
+### Validações de Build
+
+```yaml
+# WindSurf: Validações automáticas no build
+build_validations:
+  pre_build:
+    - "Verificar .bat no comando"
+    - "Validar imports Hilt"
+    - "Checar multi-tenancy"
+    
+  post_build:
+    - "Verificar warnings"
+    - "Validar test coverage"
+    - "Checar performance"
+    
+  failure_analysis:
+    - "Identificar tipo de erro"
+    - "Sugerir correção"
+    - "Verificar se é loop"
+```
+
+---
+
+## 🎯 SNIPPETS AUTOMÁTICOS
+
+### ViewModel Completo
+
+```bash
+# WindSurf: Gerar ViewModel completo
+/wind arch viewmodel [Nome]
+
+# Gera:
+@HiltViewModel
+class [Nome]ViewModel @Inject constructor(
+    private val repository: [Nome]Repository,
+    private val userSessionManager: UserSessionManager
+) : ViewModel() {
+    
+    private val _uiState = MutableStateFlow<[Nome]UiState>.Initial)
+    val uiState: StateFlow<[Nome]UiState> = _uiState.asStateFlow()
+    
+    private companion object {
+        private const val TAG = "[DIAGNOSTICO]"
+    }
+}
+```
+
+### Entity com Multi-tenancy
+
+```bash
+# WindSurf: Gerar Entity completa
+/wind arch entity [Nome]
+
+# Gera:
+@Entity(tableName = "[nome]")
+data class [Nome]Entity(
+    @PrimaryKey val id: String,
+    val empresa_id: String,
+    val rota_id: String,
+    val dataUltimaAtualizacao: Long = System.currentTimeMillis()
+) {
+    init {
+        require(empresa_id.isNotBlank()) { "empresa_id obrigatório" }
+        require(rota_id.isNotBlank()) { "rota_id obrigatório" }
+    }
+}
+```
+
+### Repository Pattern
+
+```bash
+# WindSurf: Gerar Repository completo
+/wind arch repository [Nome]
+
+# Gera interface + implementação com:
+# - Cache-first strategy
+# - Multi-tenancy validation
+# - Offline-first sync
+# - Error handling
+```
+
+---
+
+## 📋 CHECKLIST FINAL
+
+### Validação de Componentes
+
+```yaml
+# WindSurf: Checklist obrigatório para cada componente
+component_validation:
+  viewmodel:
+    - [ ] @HiltViewModel presente
+    - [ ] @Inject constructor correto
+    - [ ] StateFlow usado (não LiveData)
+    - [ ] Logs com [TAG] estruturados
+    - [ ] Validação de multi-tenancy
+    - [ ] Sem acesso direto a DAO/Firebase
+    
+  entity:
+    - [ ] @Entity annotation
+    - [ ] empresa_id presente
+    - [ ] rota_id presente
+    - [ ] dataUltimaAtualizacao presente
+    - [ ] require() nos campos obrigatórios
+    - [ ] PrimaryKey definido
+    
+  repository:
+    - [ ] Interface + Implementação
+    - [ ] @Inject constructor
+    - [ ] Flow para streams reativos
+    - [ ] Cache-first strategy
+    - [ ] Validação de rota_id
+    - [ ] Error handling adequado
+    
+  fragment:
+    - [ ] @AndroidEntryPoint
+    - [ ] viewModels() delegation
+    - [ ] flowWithLifecycle
+    - [ ] StateFlow observation
+    - [ ] Sem binding direto de dados
+```
+
+### Validação de Arquitetura
+
+```yaml
+# WindSurf: Validação geral da arquitetura
+architecture_validation:
+  mvvm:
+    - [ ] ViewModels → Repositories → DAOs
+    - [ ] UI não acessa dados diretamente
+    - [ ] Separação clara de responsabilidades
+    
+  di:
+    - [ ] Hilt configurado
+    - [ ] @Inject usado consistentemente
+    - [ ] Modules bem definidos
+    - [ ] Sem injeção manual
+    
+  multi_tenancy:
+    - [ ] rota_id em todas entities
+    - [ ] Validação de acesso
+    - [ ] Firestore path correto
+    - [ ] Security rules atualizadas
+    
+  offline_first:
+    - [ ] Room como fonte da verdade
+    - [ ] Cache-first strategy
+    - [ ] Sync operations funcionando
+    - [ ] WorkManager configurado
+```
+
+---
+
+## 🚀 BENEFÍCIOS
+
+### Para IAs
+- **Arquitetura padronizada:** Sem variação
+- **Validações automáticas:** Qualidade garantida
+- **Snippets inteligentes:** Desenvolvimento rápido
+- **Zero configuração:** Tudo pronto
+
+### Para Humanos
+- **Código consistente:** Padrões mantidos
+- **Facilidade de manutenção:** Arquitetura clara
+- **Qualidade assegurada:** Validações automáticas
+- **Produtividade:** Ferramentas auxiliares
+
+### Para Projeto
+- **Evolução segura:** Base sólida
+- **Multi-tenancy robusto:** Isolamento garantido
+- **Offline-first:** Funciona sem internet
+- **Performance:** Cache e otimizações
+
+---
+
+*Arquitetura configurada e validada para desenvolvimento eficiente.*

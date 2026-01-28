@@ -137,6 +137,33 @@ interface ClienteDao {
     fun buscarClientesInativos(rotaId: Long): Flow<List<Cliente>>
 
     /**
+     * ✅ NOVO: Busca cliente com débito total calculado (débito_inicial + soma(debito_restante dos acertos))
+     */
+    @RewriteQueriesToDropUnusedColumns
+    @Query("""
+        SELECT c.*, 
+               (c.debito_inicial + COALESCE(SUM(a.debito_atual), 0.0)) as debito_total
+        FROM clientes c
+        LEFT JOIN acertos a ON c.id = a.cliente_id AND a.debito_atual > 0
+        WHERE c.id = :clienteId
+        GROUP BY c.id
+    """)
+    suspend fun buscarClienteComDebitoTotal(clienteId: Long): Cliente?
+
+    /**
+     * ✅ NOVO: Busca clientes por rota com débito total calculado
+     */
+    @RewriteQueriesToDropUnusedColumns
+    @Query("""
+        SELECT c.*, 
+               (c.debito_inicial + c.debito_atual) as debito_total
+        FROM clientes c
+        WHERE c.rota_id = :rotaId
+        ORDER BY c.nome ASC
+    """)
+    fun buscarClientesPorRotaComDebitoTotal(rotaId: Long): Flow<List<Cliente>>
+
+    /**
      * ✅ NOVO: Migra contratos de um ID de cliente para outro.
      */
     @Query("UPDATE contratos_locacao SET clienteId = :idNovo WHERE clienteId = :idAntigo")

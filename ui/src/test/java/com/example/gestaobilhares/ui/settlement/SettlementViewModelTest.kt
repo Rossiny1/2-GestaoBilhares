@@ -4,6 +4,7 @@ import androidx.arch.core.executor.testing.InstantTaskExecutorRule
 import com.example.gestaobilhares.data.repository.AppRepository
 import com.example.gestaobilhares.data.entities.*
 import com.example.gestaobilhares.ui.mesas.usecases.RegistrarTrocaPanoUseCase
+import com.example.gestaobilhares.core.utils.UserSessionManager
 import com.google.common.truth.Truth.assertThat
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
@@ -43,6 +44,9 @@ class SettlementViewModelTest {
     @Mock
     private lateinit var registrarTrocaPanoUseCase: RegistrarTrocaPanoUseCase
 
+    @Mock
+    private lateinit var userSessionManager: UserSessionManager
+
     private lateinit var viewModel: SettlementViewModel
     private val testDispatcher = StandardTestDispatcher()
 
@@ -58,7 +62,7 @@ class SettlementViewModelTest {
             }
         })
         
-        viewModel = SettlementViewModel(appRepository, registrarTrocaPanoUseCase)
+        viewModel = SettlementViewModel(appRepository, registrarTrocaPanoUseCase, userSessionManager)
     }
 
     @After
@@ -252,10 +256,27 @@ class SettlementViewModelTest {
         whenever(appRepository.atualizarDebitoAtualCliente(any(), any())).thenReturn(Unit)
         whenever(appRepository.atualizarValoresCiclo(any())).thenReturn(Unit)
         whenever(appRepository.inserirHistoricoManutencaoMesa(any())).thenReturn(2000L)
+        // ✅ Mock para buscarPorNumero (necessário para troca de pano)
+        whenever(appRepository.buscarPorNumero("P123")).thenReturn(com.example.gestaobilhares.data.entities.PanoEstoque(
+            id = 123L, 
+            numero = "P123", 
+            cor = "Azul", 
+            tamanho = "Médio", 
+            material = "Veludo", 
+            disponivel = true, 
+            observacoes = null
+        ))
         
         val dadosAcerto = SettlementViewModel.DadosAcerto(
             mesas = listOf(
-                SettlementViewModel.MesaAcerto(id = 1, numero = "M1", relogioInicial = 100, relogioFinal = 200, tipoMesa = TipoMesa.SINUCA)
+                SettlementViewModel.MesaAcerto(
+                    id = 1, 
+                    numero = "M1", 
+                    relogioInicial = 100, 
+                    relogioFinal = 200, 
+                    tipoMesa = TipoMesa.SINUCA,
+                    panoNovoId = 123L  // ✅ Adicionado para ativar troca de pano
+                )
             ),
             representante = "R",
             panoTrocado = true,

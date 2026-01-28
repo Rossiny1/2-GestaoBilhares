@@ -289,8 +289,20 @@ class SettlementViewModel @Inject constructor(
                         _debitoAnterior.value = ultimoAcerto.debitoAtual
                         logOperation("SETTLEMENT", "✅ MODO NOVO ACERTO: Débito anterior carregado: R$ ${ultimoAcerto.debitoAtual}")
                     } else {
-                        logOperation("SETTLEMENT", "ℹ️ MODO NOVO ACERTO: Nenhum acerto anterior encontrado, débito anterior: R$ 0,00")
-                        _debitoAnterior.value = 0.0
+                        // ✅ NOVO: Buscar débito inicial da importação (se não houver acertos)
+                        logOperation("SETTLEMENT", "🔍 MODO NOVO ACERTO: Buscando cliente para obter débito inicial - clienteId: $clienteId")
+                        val cliente = appRepository.obterClientePorId(clienteId)
+                        
+                        if (cliente != null) {
+                            logOperation("SETTLEMENT", "✅ MODO NOVO ACERTO: Cliente encontrado: ${cliente.nome}")
+                            logOperation("SETTLEMENT", "💰 Débito inicial local: R$ ${cliente.debitoInicial}")
+                            val debitoInicial = cliente.debitoInicial
+                            _debitoAnterior.value = debitoInicial
+                            logOperation("SETTLEMENT", "ℹ️ MODO NOVO ACERTO: Usando débito inicial: R$ $debitoInicial")
+                        } else {
+                            logError("SETTLEMENT", "❌ Cliente não encontrado no Room - ID: $clienteId")
+                            _debitoAnterior.value = 0.0
+                        }
                     }
                 }
                 

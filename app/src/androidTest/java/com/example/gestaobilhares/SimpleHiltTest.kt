@@ -1,0 +1,46 @@
+package com.example.gestaobilhares
+
+import android.content.Context
+import androidx.test.core.app.ApplicationProvider
+import com.example.gestaobilhares.core.utils.UserSessionManager
+import com.google.common.truth.Truth.assertThat
+import dagger.hilt.android.testing.HiltAndroidRule
+import dagger.hilt.android.testing.HiltAndroidTest
+import dagger.hilt.android.testing.HiltTestApplication
+import org.junit.Before
+import org.junit.Rule
+import org.junit.Test
+import javax.inject.Inject
+
+/**
+ * Teste simples para verificar se o Hilt TestInstallIn está funcionando.
+ */
+@HiltAndroidTest
+class SimpleHiltTest {
+
+    @get:Rule
+    var hiltRule = HiltAndroidRule(this)
+
+    @Inject
+    lateinit var userSessionManager: UserSessionManager
+
+    @Inject
+    lateinit var context: Context
+
+    @Before
+    fun setUp() {
+        hiltRule.inject()
+    }
+
+    @Test
+    fun `injecao de dependencias deve funcionar`() {
+        // GIVEN: TestModule configurado com replaces
+
+        // WHEN: Aplicação inicializada com Hilt
+
+        // THEN: Dependências devem ser injetadas corretamente
+        assertThat(userSessionManager).isNotNull()
+        assertThat(context).isNotNull()
+        assertThat(context).isEqualTo(ApplicationProvider.getApplicationContext())
+    }
+}

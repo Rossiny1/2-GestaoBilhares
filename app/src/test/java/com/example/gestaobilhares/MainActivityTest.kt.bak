@@ -1,0 +1,177 @@
+package com.example.gestaobilhares
+
+import android.os.Bundle
+import androidx.appcompat.app.AppCompatActivity
+import androidx.test.core.app.ActivityScenario
+import androidx.test.core.app.ApplicationProvider
+import androidx.test.ext.junit.runners.AndroidJUnit4
+import com.example.gestaobilhares.core.utils.NetworkUtils
+import com.example.gestaobilhares.data.repository.AppRepository
+import com.example.gestaobilhares.sync.SyncRepository
+import com.example.gestaobilhares.ui.databinding.ActivityMainBinding
+import com.google.truth.Truth.assertThat
+import org.junit.Before
+import org.junit.Test
+import org.junit.runner.RunWith
+import org.mockito.Mock
+import org.mockito.MockitoAnnotations
+import org.mockito.kotlin.every
+import org.mockito.kotlin.mockk
+import org.mockito.kotlin.verify
+import kotlinx.coroutines.test.runTest
+import javax.inject.Inject
+
+/**
+ * Testes unitários para MainActivity.
+ * Valida inicialização, injeção de dependências e comportamento básico.
+ */
+@RunWith(AndroidJUnit4::class)
+class MainActivityTest {
+    
+    @Inject
+    lateinit var appRepository: AppRepository
+    
+    @Inject
+    lateinit var networkUtils: NetworkUtils
+    
+    @Inject
+    lateinit var syncRepository: com.example.gestaobilhares.sync.SyncRepository
+    
+    @Before
+    fun setup() {
+        MockitoAnnotations.openMocks(this)
+    }
+    
+    @Test
+    fun `mainActivity deve ser injetada com dependencias corretamente`() {
+        // GIVEN: Configuração Hilt de teste
+        
+        // WHEN: Verificação das dependências injetadas
+        // THEN: Dependências devem ser não nulas
+        assertThat(appRepository).isNotNull()
+        assertThat(networkUtils).isNotNull()
+        assertThat(syncRepository).isNotNull()
+    }
+    
+    @Test
+    fun `mainActivity deve inicializar corretamente`() {
+        // GIVEN: Scenario para MainActivity
+        var activity: MainActivity? = null
+        
+        // WHEN: Lançar activity
+        val scenario = ActivityScenario.launch(MainActivity::class.java)
+        
+        scenario.onActivity {
+            activity = it
+        }
+        
+        // THEN: Activity deve ser criada e binding inicializado
+        scenario.moveToState(org.junit.runner.RunWith.State.CREATED)
+        scenario.onActivity {
+            assertThat(it).isNotNull()
+            assertThat(it.binding.root).isNotNull()
+        }
+        
+        scenario.close()
+    }
+    
+    @Test
+    fun `mainActivity deve configurar viewBinding corretamente`() {
+        // GIVEN: Scenario para MainActivity
+        
+        // WHEN: Lançar activity
+        val scenario = ActivityScenario.launch(MainActivity::class.java)
+        
+        // THEN: ViewBinding deve estar configurado
+        scenario.onActivity { activity ->
+            assertThat(activity.binding).isNotNull()
+            assertThat(activity.binding.root).isNotNull()
+            // Verificar que o conteúdo foi setado
+            assertThat(activity.binding.root.parent).isNull() // Root não tem pai ainda
+        }
+        
+        scenario.close()
+    }
+    
+    @Test
+    fun `mainActivity deve ter navigation configurado`() {
+        // GIVEN: Scenario para MainActivity
+        
+        // WHEN: Lançar activity
+        val scenario = ActivityScenario.launch(MainActivity::class.java)
+        
+        // THEN: Navigation deve estar disponível (verificado indiretamente)
+        scenario.onActivity { activity ->
+            // Verificar que não há exceção ao acessar componentes relacionados à navegação
+            assertThat(activity.supportFragmentManager).isNotNull()
+            assertThat(activity.supportFragmentManager.fragments).isNotNull()
+        }
+        
+        scenario.close()
+    }
+    
+    @Test
+    fun `mainActivity deve gerenciar onBackPressed corretamente`() {
+        // GIVEN: Scenario para MainActivity
+        
+        // WHEN: Lançar activity
+        val scenario = ActivityScenario.launch(MainActivity::class.java)
+        
+        // THEN: Callback de voltar deve estar configurado
+        scenario.onActivity { activity ->
+            // Verificar estado inicial
+            assertThat(activity.isSyncingOnExit).isFalse()
+            
+            // Simular estado de sync
+            activity.isSyncingOnExit = true
+            assertThat(activity.isSyncingOnExit).isTrue()
+            
+            // Resetar estado
+            activity.isSyncingOnExit = false
+            assertThat(activity.isSyncingOnExit).isFalse()
+        }
+        
+        scenario.close()
+    }
+    
+    @Test
+    fun `mainActivity deve ser compativel com lifecycle`() {
+        // GIVEN: Scenario para MainActivity
+        
+        // WHEN: Testar ciclo de vida básico
+        val scenario = ActivityScenario.launch(MainActivity::class.java)
+        
+        // THEN: Activity deve passar pelos estados do ciclo de vida sem erros
+        scenario.moveToState(org.junit.runner.RunWith.State.CREATED)
+        scenario.moveToState(org.junit.runner.RunWith.State.STARTED)
+        scenario.moveToState(org.junit.runner.RunWith.State.RESUMED)
+        scenario.moveToState(org.junit.runner.RunWith.State.STARTED)
+        scenario.moveToState(org.junit.runner.RunWith.State.DESTROYED)
+        
+        // Se chegou aqui, não houve exceção no ciclo de vida
+        assertThat(true).isTrue()
+        
+        scenario.close()
+    }
+    
+    @Test
+    fun `mainActivity deve preservar instancia em recreacao`() {
+        // GIVEN: Scenario para MainActivity
+        
+        // WHEN: Simular recreação
+        val scenario = ActivityScenario.launch(MainActivity::class.java)
+        
+        // THEN: Activity deve ser recriada com dependências corretas
+        scenario.recreate()
+        
+        scenario.onActivity { activity ->
+            assertThat(activity).isNotNull()
+            assertThat(activity.binding).isNotNull()
+            assertThat(appRepository).isNotNull()
+            assertThat(networkUtils).isNotNull()
+            assertThat(syncRepository).isNotNull()
+        }
+        
+        scenario.close()
+    }
+}

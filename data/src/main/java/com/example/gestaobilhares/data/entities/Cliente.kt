@@ -114,6 +114,10 @@ data class Cliente(
     @SerializedName("debito_atual")
     val debitoAtual: Double = 0.0,
     
+    @ColumnInfo(name = "debito_inicial")
+    @SerializedName("debito_inicial")
+    val debitoInicial: Double = 0.0,
+    
     @ColumnInfo(name = "ativo")
     @SerializedName("ativo")
     val ativo: Boolean = true,

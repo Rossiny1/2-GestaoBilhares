@@ -1,0 +1,625 @@
+# 🛠️ WINDSURF COMMANDS - COMANDOS ESSENCIAIS OTIMIZADOS
+
+> Comandos essenciais do projeto configurados para WindSurf  
+> Build otimizado com cache | ADB customizado | Logs estruturados  
+> Baseado em PROJECT_README.md e DEV_GUIDE.md
+
+---
+
+## 🎯 OBJETIVO
+
+Configurar WindSurf com comandos **otimizados e padronizados** para:
+- Build rápido (com cache e paralelismo)
+- ADB customizado (path específico do projeto)
+- Logs estruturados (com tags padrão)
+- Busca eficiente no código
+- Deploy automatizado
+
+---
+
+## 🚀 COMANDOS DE BUILD
+
+### Build Debug (Principal)
+
+```bash
+# WindSurf: Comando principal de build
+/wind build
+
+# Execução:
+.\gradlew.bat :app:assembleDebug --build-cache --parallel
+
+# Meta: < 5 minutos com cache
+# Saída: app/build/outputs/apk/debug/app-debug.apk
+```
+
+### Build Release
+
+```bash
+# WindSurf: Build de produção
+/wind build_release
+
+# Execução:
+.\gradlew.bat :app:assembleRelease
+
+# Meta: APK otimizado e assinado
+# Saída: app/build/outputs/apk/release/app-release.apk
+```
+
+### Build Otimizado
+
+```bash
+# WindSurf: Build ultra-rápido
+/wind build_fast
+
+# Execução:
+.\gradlew.bat :app:assembleDebug --build-cache --parallel -x lint
+
+# Otimizações:
+# - Cache ativo
+# - Paralelismo máximo
+# - Pula lint (economiza tempo)
+```
+
+### Build por Módulo
+
+```bash
+# WindSurf: Build específico por módulo
+/wind build_module [nome]
+
+# Exemplos:
+/wind build_module data     # Apenas módulo data
+/wind build_module ui       # Apenas módulo ui
+/wind build_module sync     # Apenas módulo sync
+
+# Execução:
+.\gradlew.bat :[MODULE]:assembleDebug
+```
+
+---
+
+## 🧪 COMANDOS DE TESTES
+
+### Testes Unitários
+
+```bash
+# WindSurf: Executar testes unitários
+/wind test
+
+# Execução:
+.\gradlew.bat testDebugUnitTest
+
+# Meta: < 2 minutos
+# Cobertura atual: 5-7%
+```
+
+### Testes de Integração
+
+```bash
+# WindSurf: Testes instrumentados
+/wind test_integration
+
+# Execução:
+.\gradlew.bat connectedDebugAndroidTest
+
+# Requer: Emulador ou dispositivo conectado
+```
+
+### Testes Específicos
+
+```bash
+# WindSurf: Teste por classe
+/wind test_class [nome]
+
+# Exemplo:
+/wind test_class SettlementViewModelTest
+
+# Execução:
+.\gradlew.bat testDebugUnitTest --tests "*.[ClassName]"
+```
+
+### Cobertura de Código
+
+```bash
+# WindSurf: Gerar relatório de cobertura
+/wind coverage
+
+# Execução:
+.\gradlew.bat jacocoTestReport
+
+# Saída: app/build/reports/jacoco/jacocoTestReport/html/index.html
+```
+
+---
+
+## 📱 ADB CUSTOMIZADO
+
+### Path Obrigatório
+
+```bash
+# WindSurf: Configurar ADB customizado
+/wind adb_setup
+
+# Path do projeto (NÃO o padrão):
+set ADB_PATH=C:\Users\Rossiny\Desktop\2-GestaoBilhares\android-sdk\platform-tools\adb.exe
+
+# Importante: IAs sempre usam este path
+```
+
+### Logs Estruturados
+
+```bash
+# WindSurf: Logs por tag específica
+/wind logs [tag]
+
+# Exemplos:
+/wind logs diagnostico    # [DIAGNOSTICO]:D
+/wind logs sync          # [SYNC]:D
+/wind logs conflict      # [CONFLICT]:D
+/wind logs all           # Todas as tags + erros
+
+# Execução:
+%ADB_PATH% logcat -s [DIAGNOSTICO]:D -v time
+%ADB_PATH% logcat -s [DIAGNOSTICO]:D [SYNC]:D [CONFLICT]:D *:E
+```
+
+### Logs em Arquivo
+
+```bash
+# WindSurf: Salvar logs em arquivo
+/wind logs_save [nome]
+
+# Execução:
+%ADB_PATH% logcat > logs-[timestamp].txt
+
+# Saída: logs-20260128-101500.txt
+```
+
+### Logs por Componente
+
+```bash
+# WindSurf: Logs de componentes específicos
+/wind logs_component [componente]
+
+# Exemplos:
+/wind logs_component firestore
+/wind logs_component auth
+/wind logs_component workmanager
+
+# Execução:
+%ADB_PATH% logcat -s FirebaseFirestore:D FirebaseAuth:D WM-WorkerWrapper:D
+```
+
+---
+
+## 🔍 COMANDOS DE BUSCA
+
+### Busca de Componentes
+
+```bash
+# WindSurf: Encontrar componentes rapidamente
+/wind find [componente]
+
+# Exemplos:
+/wind find SettlementViewModel
+/wind find ClienteDao
+/wind find SyncRepository
+
+# Execução:
+rg "[ComponentName]" --type kt -n
+```
+
+### Busca por Padrão
+
+```bash
+# WindSurf: Buscar padrões no código
+/wind pattern [padrao]
+
+# Exemplos:
+/wind pattern usuarioId
+/wind pattern groupBy
+/wind pattern rota_id
+
+# Execução:
+rg "[pattern]" --type kt -C 5
+```
+
+### Arqueologia (Regressão)
+
+```bash
+# WindSurf: Investigar regressões
+/wind archaeology [termo]
+
+# Execução:
+rg "[termo]" --type kt -C 3
+git blame <arquivo> -L 450,470
+git log --follow -p -- <arquivo>
+```
+
+### Busca Multi-padrão
+
+```bash
+# WindSurf: Buscar múltiplos padrões
+/wind multi_find [padrao1] [padrao2] [padrao3]
+
+# Execução paralela:
+rg "padrao1" --type kt -n &
+rg "padrao2" --type kt -n &
+rg "padrao3" --type kt -n &
+```
+
+---
+
+## 🚀 COMANDOS DE DEPLOY
+
+### Firebase App Distribution
+
+```bash
+# WindSurf: Deploy para testadores
+/wind deploy [notas]
+
+# Execução:
+.\gradlew.bat :app:assembleDebug
+firebase appdistribution:distribute app/build/outputs/apk/debug/app-debug.apk \
+  --app 1:XXXXX:android:XXXXX \
+  --groups testers \
+  --release-notes "[notas]"
+
+# Requer: secrets/google-services.json
+```
+
+### Deploy de Security Rules
+
+```bash
+# WindSurf: Atualizar regras do Firestore
+/wind deploy_rules
+
+# Execução:
+node import-data/deploy-security-rules-v2.js
+
+# Alternativa (PowerShell):
+.\scripts\deploy-regras-firestore.ps1
+```
+
+### Backup Automático
+
+```bash
+# WindSurf: Backup do Firestore
+/wind backup
+
+# Execução:
+firebase firestore:export --project=gestao-bilhares-prod \
+  gs://gestao-bilhares-backups/backup-$(date +%Y%m%d)
+```
+
+---
+
+## 🧹 COMANDOS DE MANUTENÇÃO
+
+### Limpeza de Build
+
+```bash
+# WindSurf: Limpar build e cache
+/wind clean
+
+# Execução:
+.\gradlew.bat clean
+
+# Remove: build/, .gradle/, caches
+```
+
+### Otimização de Cache
+
+```bash
+# WindSurf: Otimizar cache Gradle
+/wind optimize_cache
+
+# Execução:
+.\gradlew.bat :app:assembleDebug --build-cache --parallel --refresh-keys
+
+# Resultado: Builds mais rápidos
+```
+
+### Verificação de Dependências
+
+```bash
+# WindSurf: Verificar dependências
+/wind deps_check
+
+# Execução:
+.\gradlew.bat dependencies
+.\gradlew.bat dependencyUpdates
+
+# Identifica: dependências desatualizadas
+```
+
+### Análise de Código
+
+```bash
+# WindSurf: Análise estática de código
+/wind analyze
+
+# Execução:
+.\gradlew.bat lint
+.\gradlew.bat detekt
+
+# Saída: relatórios de qualidade
+```
+
+---
+
+## 📊 COMANDOS DE MONITORAMENTO
+
+### Status do Projeto
+
+```bash
+# WindSurf: Status geral do projeto
+/wind status
+
+# Verifica:
+# - Build status
+# - Test coverage
+# - Sync operations
+# - Performance metrics
+```
+
+### Monitoramento de Sync
+
+```bash
+# WindSurf: Status da sincronização
+/wind sync_status
+
+# Execução:
+# Verificar fila de sync operations
+# Logs do WorkManager
+# Performance de sync
+```
+
+### Health Check
+
+```bash
+# WindSurf: Verificação completa de saúde
+/wind health_check
+
+# Checks:
+# - Build funcional
+# - Testes passando
+# - Multi-tenancy OK
+# - Offline-first OK
+# - Logs estruturados
+# - ADB customizado
+```
+
+---
+
+## 🔧 COMANDOS DE DESENVOLVIMENTO
+
+### Criar Componente
+
+```bash
+# WindSurf: Criar novo componente seguindo padrões
+/wind create [tipo] [nome]
+
+# Exemplos:
+/wind create entity Cliente
+/wind create dao Cliente
+/wind create repository Cliente
+/wind create viewmodel Cliente
+/wind create fragment Cliente
+```
+
+### Validação de Arquitetura
+
+```bash
+# WindSurf: Validar arquitetura MVVM
+/wind validate_arch
+
+# Verifica:
+# - @HiltViewModel em ViewModels
+# - StateFlow ao invés de LiveData
+# - Injeção de dependências
+# - Multi-tenancy (rota_id)
+```
+
+### Formatação de Código
+
+```bash
+# WindSurf: Formatar código segundo padrões
+/wind format
+
+# Execução:
+.\gradlew.bat ktlintFormat
+
+# Aplica: padrões Kotlin + projeto
+```
+
+---
+
+## 🎮 SNIPPETS AUTOMÁTICOS
+
+### ViewModel Pattern
+
+```bash
+# WindSurf: Gerar ViewModel completo
+/wind snippet viewmodel [Nome]
+
+# Gera:
+@HiltViewModel
+class [Nome]ViewModel @Inject constructor(
+    private val repository: [Nome]Repository
+) : ViewModel() {
+    
+    private val _uiState = MutableStateFlow([Nome]UiState.Initial)
+    val uiState: StateFlow<[Nome]UiState> = _uiState.asStateFlow()
+}
+```
+
+### DAO Pattern
+
+```bash
+# WindSurf: Gerar DAO completo
+/wind snippet dao [Nome]
+
+# Gera:
+@Dao
+interface [Nome]Dao {
+    @Query("SELECT * FROM [nome] WHERE rota_id = :rotaId")
+    fun getByRota(rotaId: String): Flow<List<[Nome]>>
+    
+    @Insert(onConflict = OnConflictStrategy.REPLACE)
+    suspend fun insert(entity: [Nome]): Long
+    
+    @Query("SELECT * FROM [nome] WHERE id = :id")
+    suspend fun getById(id: String): [Nome]?
+}
+```
+
+### Entity Pattern
+
+```bash
+# WindSurf: Gerar Entity com multi-tenancy
+/wind snippet entity [Nome]
+
+# Gera:
+@Entity(tableName = "[nome]")
+data class [Nome]Entity(
+    @PrimaryKey val id: String,
+    val empresa_id: String,
+    val rota_id: String,
+    val dataUltimaAtualizacao: Long = System.currentTimeMillis(),
+    // ... outros campos
+)
+```
+
+---
+
+## 📋 ALIAS E ATALHOS
+
+### Atalhos Rápidos
+
+```bash
+# WindSurf: Atalhos para comandos frequentes
+/wind b          # build
+/wind br         # build_release
+/wind t          # test
+/wind l          # logs
+/wind f          # find
+/wind d          # deploy
+/wind c          # clean
+/wind s          # status
+```
+
+### Comandos de Ajuda
+
+```bash
+# WindSurf: Ajuda integrada
+/wind help              # Lista todos comandos
+/wind help [comando]    # Ajuda específica
+/wind examples          # Exemplos de uso
+/wind docs              # Documentação completa
+```
+
+---
+
+## 🔗 INTEGRAÇÃO COM WORKFLOWS
+
+### Comandos nos Workflows
+
+```yaml
+# WindSurf: Integração com workflows
+workflow_integration:
+  bug_fix_workflow:
+    - /wind status
+    - /wind find [componente]
+    - /wind build
+    - /wind test
+    - /wind validate_arch
+    
+  feature_workflow:
+    - /wind create entity [Nome]
+    - /wind create dao [Nome]
+    - /wind create repository [Nome]
+    - /wind create viewmodel [Nome]
+    - /wind build_fast
+    - /wind test
+    - /wind deploy
+```
+
+### Validações Automáticas
+
+```yaml
+# WindSurf: Validações automáticas
+automatic_validations:
+  on_build:
+    - Verificar .bat no comando
+    - Validar cache ativo
+    - Checar multi-tenancy
+    
+  on_test:
+    - Verificar cobertura
+    - Validar mocks
+    - Checar assertions
+    
+  on_deploy:
+    - Verificar secrets
+    - Validar assinatura
+    - Checar permissões
+```
+
+---
+
+## 📈 MÉTRICAS E PERFORMANCE
+
+### Tempo de Execução
+
+```yaml
+# WindSurf: Métricas de performance
+command_performance:
+  build_debug:
+    target: "< 5 minutos"
+    with_cache: "~2 minutos"
+    
+  test_unit:
+    target: "< 2 minutos"
+    current: "~1 minuto"
+    
+  deploy_app:
+    target: "< 10 minutos"
+    includes: "build + upload"
+```
+
+### Taxa de Sucesso
+
+```yaml
+# WindSurf: Taxa de sucesso dos comandos
+success_rates:
+  build: "95%"
+  test: "90%"
+  deploy: "85%"
+  sync: "95%"
+```
+
+---
+
+## 🎯 BENEFÍCIOS
+
+### Para IAs
+- **Comandos padronizados:** Sem variação
+- **Execução rápida:** Cache e paralelismo
+- **Logs estruturados:** Diagnóstico fácil
+- **Zero configuração:** Tudo pronto
+
+### Para Humanos
+- **Produtividade:** Comandos rápidos
+- **Consistência:** Padrões mantidos
+- **Visibilidade:** Métricas claras
+- **Automação:** Menos trabalho manual
+
+### Para Projeto
+- **Qualidade:** Validações automáticas
+- **Performance:** Builds otimizados
+- **Monitoramento:** Saúde visível
+- **Evolução:** Base sólida
+
+---
+
+*Comandos otimizados para máxima eficiência no WindSurf.*

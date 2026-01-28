@@ -1,0 +1,121 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    // ═══════════════════════════════════════════════════════
+    // HELPERS (Funções auxiliares)
+    // ═══════════════════════════════════════════════════════
+
+    function isAuthenticated() {
+      return request.auth != null;
+    }
+
+    function isOwner(userId) {
+      return request.auth.uid == userId;
+    }
+
+    function belongsToUserRoute(rotaId) {
+      // Verificar se rota está em rotasPermitidas do usuário
+      return isAuthenticated() && 
+             get(/databases/$(database)/documents/usuarios/$(request.auth.uid)).data.rotasPermitidas.hasAny([rotaId]);
+    }
+
+    // ═══════════════════════════════════════════════════════
+    // COLLECTION: clientes
+    // ═══════════════════════════════════════════════════════
+
+    match /clientes/{clienteId} {
+      // Leitura: apenas se cliente pertence à rota permitida do usuário
+      allow read: if isAuthenticated() && 
+                     belongsToUserRoute(resource.data.rotaId);
+
+      // Escrita: apenas se usuário tem acesso à rota E é o criador
+      allow create: if isAuthenticated() && 
+                       belongsToUserRoute(request.resource.data.rotaId) &&
+                       request.resource.data.usuarioCriadorId == request.auth.uid;
+
+      allow update: if isAuthenticated() && 
+                       belongsToUserRoute(resource.data.rotaId) &&
+                       resource.data.usuarioCriadorId == request.auth.uid;
+
+      allow delete: if isAuthenticated() && 
+                       belongsToUserRoute(resource.data.rotaId) &&
+                       resource.data.usuarioCriadorId == request.auth.uid;
+    }
+
+    // ═══════════════════════════════════════════════════════
+    // COLLECTION: acertos
+    // ═══════════════════════════════════════════════════════
+
+    match /acertos/{acertoId} {
+      allow read: if isAuthenticated() && 
+                     belongsToUserRoute(resource.data.rotaId);
+
+      allow create: if isAuthenticated() && 
+                       belongsToUserRoute(request.resource.data.rotaId) &&
+                       request.resource.data.usuarioId == request.auth.uid;
+
+      allow update: if isAuthenticated() && 
+                       belongsToUserRoute(resource.data.rotaId) &&
+                       resource.data.usuarioId == request.auth.uid;
+
+      allow delete: if isAuthenticated() && 
+                       belongsToUserRoute(resource.data.rotaId) &&
+                       resource.data.usuarioId == request.auth.uid;
+    }
+
+    // ═══════════════════════════════════════════════════════
+    // COLLECTION: mesas
+    // ═══════════════════════════════════════════════════════
+
+    match /mesas/{mesaId} {
+      allow read: if isAuthenticated() && 
+                     belongsToUserRoute(resource.data.rotaId);
+
+      allow write: if isAuthenticated() && 
+                      belongsToUserRoute(request.resource.data.rotaId);
+    }
+
+    // ═══════════════════════════════════════════════════════
+    // COLLECTION: rotas
+    // ═══════════════════════════════════════════════════════
+
+    match /rotas/{rotaId} {
+      allow read: if isAuthenticated() && 
+                     belongsToUserRoute(rotaId);
+
+      // Apenas admin pode criar/modificar rotas
+      allow write: if isAuthenticated() && 
+                      get(/databases/$(database)/documents/usuarios/$(request.auth.uid)).data.isAdmin == true;
+    }
+
+    // ═══════════════════════════════════════════════════════
+    // COLLECTION: usuarios (leitura própria apenas)
+    // ═══════════════════════════════════════════════════════
+
+    match /usuarios/{userId} {
+      allow read: if isAuthenticated() && request.auth.uid == userId;
+      allow write: if false; // Usuários gerenciados via Admin SDK
+    }
+
+    // ═══════════════════════════════════════════════════════
+    // COLLECTION: historico_manutencao
+    // ═══════════════════════════════════════════════════════
+
+    match /historico_manutencao/{historicoId} {
+      allow read: if isAuthenticated() && 
+                     belongsToUserRoute(resource.data.rotaId);
+
+      allow write: if isAuthenticated() && 
+                      belongsToUserRoute(resource.data.rotaId);
+    }
+
+    // ═══════════════════════════════════════════════════════
+    // FALLBACK: Negar tudo que não foi explicitamente permitido
+    // ═══════════════════════════════════════════════════════
+
+    match /{document=**} {
+      allow read, write: if false;
+    }
+  }
+}

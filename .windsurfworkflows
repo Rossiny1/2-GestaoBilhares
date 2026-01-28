@@ -1,0 +1,399 @@
+# 🔄 WINDSURF WORKFLOWS - GESTÃO DE BILHARES
+
+> Workflows automatizados para desenvolvimento com alta autonomia  
+> Versão: 1.0  
+> Baseado no protocolo Gates e documentação do projeto
+
+---
+
+## 🎯 WORKFLOWS PRINCIPAIS
+
+### 1. 🔧 BUG FIX WORKFLOW
+**Trigger:** `bug_fix` ou ao identificar erro
+
+```yaml
+name: Bug Fix
+description: Correção de bugs seguindo protocolo Gates (máx 2 builds)
+
+steps:
+  - name: "Gate 0 - Diagnóstico"
+    type: analysis
+    actions:
+      - Ler PROJECT_README.md (seção do componente)
+      - Static Analysis do código (rg, grep)
+      - Classificar bug: Regressão vs Mistério
+      - Definir método: Static (1 build) vs Dynamic (2 builds)
+      
+  - name: "Gate 1 - Plano Cirúrgico"
+    type: planning
+    actions:
+      - Identificar arquivo-alvo
+      - Definir linhas específicas
+      - Descrever mudança exata
+      - Estabelecer validação mínima
+      
+  - name: "Gate 2 - Escopo Delimitado"
+    type: scope
+    actions:
+      - Listar arquivos que serão modificados
+      - Listar arquivos que NÃO serão tocados
+      - Identificar dependências impactadas
+      
+  - name: "Gate 3 - Execução Incremental"
+    type: implementation
+    actions:
+      - Implementar uma mudança por vez
+      - Build: `.\gradlew.bat :app:assembleDebug`
+      - Testar: `.\gradlew.bat testDebugUnitTest`
+      - Rollback se piorar
+      
+  - name: "Gate 4 - Parada Obrigatória"
+    type: validation
+    actions:
+      - Parar após 2 builds sem sucesso
+      - Pedir ajuda humana após 3 tentativas
+      - Documentar solução encontrada
+```
+
+### 2. 🚀 FEATURE DEVELOPMENT WORKFLOW
+**Trigger:** `new_feature` ou `implement`
+
+```yaml
+name: Feature Development
+description: Desenvolvimento de novas funcionalidades seguindo arquitetura
+
+steps:
+  - name: "Análise de Requisitos"
+    type: analysis
+    actions:
+      - Ler PROJECT_README.md (componentes afetados)
+      - Identificar ViewModels, DAOs, Repositories necessários
+      - Verificar regras de negócio no DEV_GUIDE.md
+      
+  - name: "Design da Arquitetura"
+    type: design
+    actions:
+      - Definir entidades (Room + Firestore)
+      - Projetar DAO com queries otimizadas
+      - Implementar Repository com sync
+      - Criar ViewModel com StateFlow
+      
+  - name: "Implementação Camada de Dados"
+    type: data_layer
+    actions:
+      - Criar Entity com empresa_id/rota_id
+      - Implementar DAO com @Query
+      - Criar Repository interface + impl
+      - Adicionar testes unitários
+      
+  - name: "Implementação Camada de UI"
+    type: ui_layer
+    actions:
+      - Criar ViewModel @HiltViewModel
+      - Implementar Fragment com observação StateFlow
+      - Adicionar validações de negócio
+      - Testar integração
+      
+  - name: "Integração e Sync"
+    type: integration
+    actions:
+      - Implementar sync com Firestore
+      - Adicionar em SyncOperation
+      - Testar offline-first
+      - Validar multi-tenancy
+      
+  - name: "Validação Final"
+    type: validation
+    actions:
+      - Build completo: `.\gradlew.bat :app:assembleDebug --build-cache --parallel`
+      - Testes: `.\gradlew.bat testDebugUnitTest`
+      - Verificar checklist do .windsurfrules
+```
+
+### 3. 🔍 DEBUGGING WORKFLOW
+**Trigger:** `debug` ou problema misterioso
+
+```yaml
+name: Debugging
+description: Diagnóstico de problemas complexos com logs e evidências
+
+steps:
+  - name: "Classificação do Problema"
+    type: classification
+    actions:
+      - Identificar tipo: UI, Dados, Sync, Performance
+      - Verificar se é regressão ("funcionava antes")
+      - Escolher método: Static vs Dynamic Analysis
+      
+  - name: "Static Analysis"
+    type: static_analysis
+    actions:
+      - Buscar padrões: `rg "padrão" --type kt -C 5`
+      - Analisar camadas: DAO → Repository → ViewModel → UI
+      - Verificar invariantes do negócio
+      - Identificar ponto de perda de dados
+      
+  - name: "Dynamic Analysis"
+    type: dynamic_analysis
+    actions:
+      - Adicionar logs estratégicos com [TAG]
+      - Build com logs: `.\gradlew.bat :app:assembleDebug`
+      - Capturar logs: `%ADB_PATH% logcat -s [DIAGNOSTICO]:D`
+      - Analisar fluxo de dados
+      
+  - name: "Diagnóstico e Correção"
+    type: fix
+    actions:
+      - Isolar causa raiz
+      - Implementar correção mínima
+      - Validar com build + testes
+      - Documentar solução
+```
+
+### 4. 📊 REFACTORING WORKFLOW
+**Trigger:** `refactor` ou débito técnico
+
+```yaml
+name: Refactoring
+description: Melhoria de código baseado em TECHNICAL_DEBT.md
+
+steps:
+  - name: "Identificação do Débito"
+    type: identification
+    actions:
+      - Consultar TECHNICAL_DEBT.md
+      - Priorizar por criticidade (CRÍTICO > ALTO > MÉDIO)
+      - Verificar impacto no sistema
+      
+  - name: "Planejamento da Refatoração"
+    type: planning
+    actions:
+      - Dividir em mudanças pequenas
+      - Preservar funcionalidades
+      - Planejar testes de regressão
+      
+  - name: "Execução Incremental"
+    type: execution
+    actions:
+      - Refatorar uma classe por vez
+      - Manter testes passando
+      - Build a cada mudança
+      - Verificar não quebrar fluxos
+      
+  - name: "Validação e Documentação"
+    type: validation
+    actions:
+      - Testes completos: `.\gradlew.bat testDebugUnitTest`
+      - Verificar performance
+      - Atualizar documentação
+      - Marcar débito como resolvido
+```
+
+---
+
+## 🎛️ WORKFLOWS AUTOMATIZADOS
+
+### 5. 🚀 QUICK BUILD WORKFLOW
+**Trigger:** `build` ou `compile`
+
+```yaml
+name: Quick Build
+description: Build rápido com cache e validações
+
+steps:
+  - name: "Build Otimizado"
+    command: .\gradlew.bat :app:assembleDebug --build-cache --parallel
+    
+  - name: "Validações Rápidas"
+    checks:
+      - Multi-tenancy respeitado?
+      - Offline-first mantido?
+      - Sem erros de compilação?
+      
+  - name: "Resultado"
+    output: |
+      ✅ Build concluído em {tempo}s
+      📦 APK: app/build/outputs/apk/debug/app-debug.apk
+      🔄 Cache: {status}
+```
+
+### 6. 🧪 TEST WORKFLOW
+**Trigger:** `test` ou `validate`
+
+```yaml
+name: Test Suite
+description: Execução completa de testes
+
+steps:
+  - name: "Testes Unitários"
+    command: .\gradlew.bat testDebugUnitTest
+    
+  - name: "Testes de Integração"
+    command: .\gradlew.bat connectedDebugAndroidTest
+    
+  - name: "Cobertura de Código"
+    analysis:
+      - Atual: {coverage}%
+      - Meta: 30% (2 semanas)
+      - Status: {status}
+      
+  - name: "Relatório"
+    output: |
+      📊 Testes: {pass}/{total} passando
+      🎯 Cobertura: {coverage}%
+      ⚠️ Falhas: {failures}
+```
+
+### 7. 📱 DEPLOY WORKFLOW
+**Trigger:** `deploy` ou `release`
+
+```yaml
+name: Deploy
+description: Deploy para Firebase App Distribution
+
+steps:
+  - name: "Build Release"
+    command: .\gradlew.bat :app:assembleRelease
+    
+  - name: "Upload Firebase"
+    command: firebase appdistribution:distribute app/build/outputs/apk/release/app-release.apk
+    
+  - name: "Notificação"
+    notification:
+      - Versão: {version}
+      - Testers: {group}
+      - Release notes: {notes}
+```
+
+---
+
+## 🔧 WORKFLOWS DE MANUTENÇÃO
+
+### 8. 🔍 MONITORING WORKFLOW
+**Trigger:** `monitor` ou semanal
+
+```yaml
+name: Weekly Monitoring
+description: Monitoramento semanal do sistema
+
+steps:
+  - name: "Violations Firestore"
+    check: Firebase Console → Firestore → Rules
+    time: 15min
+    
+  - name: "Performance Sync"
+    logs: %ADB_PATH% logcat -s [SYNC]:D
+    time: 10min
+    
+  - name: "Estrutura Database"
+    inspector: Database Inspector
+    time: 10min
+    
+  - name: "Relatório"
+    output: monitoramento/relatorios/{date}.md
+```
+
+### 9. 🧹 CLEANUP WORKFLOW
+**Trigger:** `cleanup` ou manutenção
+
+```yaml
+name: Cleanup
+description: Limpeza de arquivos e otimização
+
+steps:
+  - name: "Limpar Build"
+    command: .\gradlew.bat clean
+    
+  - name: "Remover Temporários"
+    files:
+      - *.log
+      - *.tmp
+      - build/
+      - .gradle/
+      
+  - name: "Otimizar Cache"
+    command: .\gradlew.bat :app:assembleDebug --build-cache --parallel
+```
+
+---
+
+## 🎮 COMANDOS RÁPIDOS
+
+### Atalhos do WindSurf
+```bash
+# Iniciar workflow de bug fix
+/wind workflow bug_fix
+
+# Build rápido
+/wind build
+
+# Debug completo
+/wind debug
+
+# Nova feature
+/wind new_feature
+
+# Monitoramento
+/wind monitor
+
+# Refatoração
+/wind refactor
+
+# Testes completos
+/wind test
+
+# Deploy
+/wind deploy
+```
+
+### Snippets Automáticos
+```kotlin
+# ViewModel pattern
+/wind snippet viewmodel
+
+# DAO pattern  
+/wind snippet dao
+
+# Repository pattern
+/wind snippet repository
+
+# Entity com multi-tenancy
+/wind snippet entity
+```
+
+---
+
+## 📋 GATILHOS AUTOMÁTICOS
+
+### Ao Modificar Arquivos
+- **ViewModels**: Verificar MVVM + Hilt + StateFlow
+- **DAOs**: Verificar queries + @Query annotations
+- **Repositories**: Verificar interface + impl + sync
+- **Entities**: Verificar empresa_id + rota_id
+
+### Ao Fazer Build
+- Verificar multi-tenancy
+- Validar offline-first
+- Checar logs estruturados
+- Contar builds (máx 2)
+
+### Ao Falhar Teste
+- Identificar regressão
+- Verificar cobertura
+- Sugerir correção
+- Documentar aprendizado
+
+---
+
+## 🎯 OBJETIVOS DOS WORKFLOWS
+
+1. **Alta Autonomia**: IAs trabalham sem intervenção humana
+2. **Diagnóstico Rápido**: Problemas resolvidos em 15-30 min
+3. **Zero Loops**: Máximo 2 builds por problema
+4. **Qualidade**: Código segue padrões do projeto
+5. **Eficiência**: Build otimizado com cache
+6. **Monitoramento**: Saúde do sistema visível
+
+---
+
+*Workflows otimizados para desenvolvimento ágil e confiável.*

@@ -55,7 +55,7 @@ import timber.log.Timber
         SyncOperationEntity::class, // ? NOVO: FILA DE SINCRONIZAÇÃO OFFLINE-FIRST
         SyncMetadata::class // ? NOVO (2025): METADATA DE SINCRONIZAÇÃO INCREMENTAL
     ],
-    version = 6, // ? MIGRATION: inclusão de metadata de sincronização incremental por usuário
+    version = 7, // ? MIGRATION: débito inicial imutável para migração
     exportSchema = false
 )
 @TypeConverters(Converters::class)
@@ -941,13 +941,27 @@ abstract class AppDatabase : RoomDatabase() {
                     }
                 }
                 
+                // ? NOVO (2025): Migration para versão 6 -> 7 (Débito inicial imutável para migração)
+                val MIGRATION_6_7 = object : androidx.room.migration.Migration(6, 7) {
+                    override fun migrate(database: androidx.sqlite.db.SupportSQLiteDatabase) {
+                        try {
+                            // Adicionar coluna debito_inicial na tabela clientes
+                            database.execSQL("ALTER TABLE clientes ADD COLUMN debito_inicial REAL NOT NULL DEFAULT 0.0")
+                            
+                            Timber.d("Migration 6_7 executada com sucesso - Coluna debito_inicial adicionada")
+                        } catch (e: Exception) {
+                            Timber.w("Erro na migration 6_7: ${e.message}")
+                        }
+                    }
+                }
+                
                 try {
                     val builder = Room.databaseBuilder(
                         context.applicationContext,
                         AppDatabase::class.java,
                         DATABASE_NAME
                     )
-                        .addMigrations(MIGRATION_11_12, MIGRATION_12_13, MIGRATION_13_14, MIGRATION_14_15, MIGRATION_15_16, MIGRATION_16_17, MIGRATION_17_18, MIGRATION_18_19, MIGRATION_19_20, MIGRATION_20_21, MIGRATION_21_22, MIGRATION_22_23, MIGRATION_23_24, MIGRATION_24_25, MIGRATION_25_26, MIGRATION_26_27, MIGRATION_27_28, MIGRATION_28_29, MIGRATION_29_30, MIGRATION_30_31, MIGRATION_3_4, MIGRATION_4_5, MIGRATION_5_6)
+                        .addMigrations(MIGRATION_11_12, MIGRATION_12_13, MIGRATION_13_14, MIGRATION_14_15, MIGRATION_15_16, MIGRATION_16_17, MIGRATION_17_18, MIGRATION_18_19, MIGRATION_19_20, MIGRATION_20_21, MIGRATION_21_22, MIGRATION_22_23, MIGRATION_23_24, MIGRATION_24_25, MIGRATION_25_26, MIGRATION_26_27, MIGRATION_27_28, MIGRATION_28_29, MIGRATION_29_30, MIGRATION_30_31, MIGRATION_3_4, MIGRATION_4_5, MIGRATION_5_6, MIGRATION_6_7)
                         .addCallback(object : RoomDatabase.Callback() {
                             override fun onOpen(db: androidx.sqlite.db.SupportSQLiteDatabase) {
                                 super.onOpen(db)

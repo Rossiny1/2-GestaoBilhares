@@ -1,0 +1,466 @@
+# 🚪 WINDSURF GATES - PROTOCOLO DE DIAGNÓSTICO OBRIGATÓRIO
+
+> Implementação do protocolo Gates (0-4) para WindSurf  
+> Máximo 2 builds por problema | Diagnóstico baseado em evidência  
+> Baseado em DEV_GUIDE.md e PROJECT_README.md
+
+---
+
+## 🎯 OBJETIVO DOS GATES
+
+Resolver problemas com **máxima eficiência**:
+- **Diagnóstico primeiro** (não tentativa-erro)
+- **Máximo 2 builds** por problema
+- **Evidência obrigatória** (código ou logs)
+- **Zero loops infinitos**
+
+---
+
+## 🚪 GATE 0 - DIAGNÓSTICO PRIMEIRO
+
+### Decision Tree Automática
+
+```yaml
+# WindSurf: Classificar problema automaticamente
+gate_0_classification:
+  trigger: Ao identificar problema
+  
+  questions:
+    - "É regressão? (funcionava antes)"
+    - "Erro visível no código?"
+    - "Código parece OK mas falha?"
+    
+  paths:
+    regressao_or_visible_error:
+      method: "static_analysis"
+      max_builds: 1
+      actions:
+        - Ler PROJECT_README.md
+        - Static Analysis com rg/grep
+        - Identificar causa raiz
+        
+    codigo_ok_mas_falha:
+      method: "dynamic_analysis" 
+      max_builds: 2
+      actions:
+        - Adicionar logs estratégicos
+        - Build com logs
+        - Capturar e analisar
+```
+
+### Regras Anti-Loop
+
+```yaml
+# WindSurf: Prevenir loops infinitos
+anti_loop_rules:
+  condition: "gradlew_build_count > 2"
+  
+  actions:
+    - "PARAR IMEDIATAMENTE"
+    - "VOLTAR PARA GATE 0"
+    - "RELER DOCUMENTAÇÃO"
+    - "PEDIR AJUDA HUMANA"
+    
+  message: |
+    🚨 LOOP DETECTADO!
+    
+    Você rodou Gradle mais de 2 vezes.
+    Isso viola o protocolo Gates.
+    
+    Ações:
+    1. PARE de rodar builds
+    2. VOLTE e leia o código calmamente
+    3. Use Static Analysis primeiro
+    4. Se ainda falhar, peça ajuda
+    
+    Motivo: Tentativa-erro gera loops e perda de tempo.
+```
+
+### Static Analysis Toolkit
+
+```bash
+# WindSurf: Comandos automáticos de diagnóstico
+static_analysis_commands:
+  # Encontrar componentes
+  component_search:
+    - rg "SettlementViewModel" --type kt -n
+    - rg "sync_operations" --type kt -C 5
+    
+  # Arqueologia (regressão)
+  archaeology:
+    - rg "usuarioId" --type kt -C 3
+    - rg "groupBy" --type kt
+    - git blame <arquivo> -L 450,470
+    
+  # Verificar padrões
+  pattern_check:
+    - rg "@HiltViewModel" --type kt
+    - rg "StateFlow" --type kt
+    - rg "rota_id" --type kt
+```
+
+---
+
+## 🚪 GATE 1 - PLANO CIRÚRGICO
+
+### Template Automático
+
+```yaml
+# WindSurf: Gerar plano automaticamente
+gate_1_plan_template:
+  required_fields:
+    - arquivo_alvo: "Arquivo exato a modificar"
+    - linhas_especificas: "Número das linhas"
+    - mudanca_exata: "O que será mudado"
+    - validacao_minima: "Como testar"
+    
+  example:
+    problema: "Campo usuarioId está null"
+    arquivo_alvo: "ui/src/main/java/.../SettlementViewModel.kt"
+    linhas_especificas: "455-460"
+    mudanca_exata: "Adicionar usuarioId = userSession.currentUser.id"
+    validacao_minima: "Build passa + testes unitários"
+```
+
+### Validação Automática do Plano
+
+```yaml
+# WindSurf: Verificar se plano é válido
+plan_validation:
+  checks:
+    - "Arquivo existe?"
+    - "Linhas são razoáveis (< 50 linhas)?"
+    - "Mudança é específica (não genérica)?"
+    - "Validação é mensurável?"
+    
+  failures:
+    - "Plano muito vago → Refinar"
+    - "Mudança muito grande → Dividir"
+    - "Validação impossível → Redefinir"
+```
+
+---
+
+## 🚪 GATE 2 - ESCOPO DELIMITADO
+
+### Matriz de Impacto
+
+```yaml
+# WindSurf: Calcular impacto automaticamente
+gate_2_scope_matrix:
+  files_to_change:
+    - "Listar arquivos que SERÃO modificados"
+    - "Justificar cada modificação"
+    
+  files_not_to_touch:
+    - "Listar arquivos que NÃO serão tocados"
+    - "Explicar por que são seguros"
+    
+  dependencies:
+    - "Módulos impactados"
+    - "Testes afetados"
+    - "Configurações alteradas"
+    
+  example:
+    files_to_change:
+      - "SettlementViewModel.kt (adicionar usuarioId)"
+      - "SettlementViewModelTest.kt (atualizar teste)"
+      
+    files_not_to_touch:
+      - "AppRepository.kt (FACADE - não refatorar)"
+      - "SyncRepository.kt (complexo - fora do escopo)"
+```
+
+### Análise de Riscos
+
+```yaml
+# WindSurf: Avaliar riscos automaticamente
+risk_analysis:
+  high_risk:
+    - "Modificar AppRepository"
+    - "Alterar estrutura Firestore"
+    - "Mudar regras de negócio"
+    
+  medium_risk:
+    - "Modificar ViewModels críticos"
+    - "Alterar DAOs"
+    - "Mudar sync handlers"
+    
+  low_risk:
+    - "UI/UX improvements"
+    - "Logs e debugging"
+    - "Refatoração pequena"
+```
+
+---
+
+## 🚪 GATE 3 - EXECUÇÃO INCREMENTAL
+
+### Estratégia de Mudanças
+
+```yaml
+# WindSurf: Executar mudanças incrementalmente
+gate_3_incremental_execution:
+  strategy:
+    - "Uma mudança por vez"
+    - "Build após cada mudança"
+    - "Teste após cada build"
+    - "Rollback se piorar"
+    
+  sequence:
+    1. "Implementar mudança 1"
+    2. "Build: .\gradlew.bat :app:assembleDebug"
+    3. "Teste: .\gradlew.bat testDebugUnitTest"
+    4. "Se OK → próxima mudança"
+    5. "Se falhar → rollback e analisar"
+```
+
+### Validação Automática
+
+```yaml
+# WindSurf: Verificar cada passo
+validation_steps:
+  build_validation:
+    - "Compila sem erros?"
+    - "Warnings aceitáveis?"
+    
+  test_validation:
+    - "Testes passam?"
+    - "Sem regressões?"
+    
+  architecture_validation:
+    - "MVVM mantido?"
+    - "Multi-tenancy respeitado?"
+    - "Offline-first funcionando?"
+```
+
+---
+
+## 🚪 GATE 4 - PARADA OBRIGATÓRIA
+
+### Condições de Parada
+
+```yaml
+# WindSurf: Condições automáticas de parada
+gate_4_stop_conditions:
+  immediate_stop:
+    - "build_count >= 2 AND falhando"
+    - "tentativas >= 3 sem solução"
+    - "regressão detectada"
+    - "loop identificado"
+    
+  actions:
+    - "PARAR imediatamente"
+    - "DOCUMENTAR tentativas"
+    - "ANALISAR padrão do erro"
+    - "PEDIR ajuda humana"
+    
+  message_template: |
+    🚨 GATE 4 - PARADA OBRIGATÓRIA
+    
+    Condições atingidas:
+    - Builds: {build_count}/2 (máximo)
+    - Tentativas: {attempts}/3 (máximo)
+    - Status: {status}
+    
+    Próximos passos:
+    1. PARE de tentar
+    2. Documente o que tentou
+    3. Peça ajuda humana
+    4. Aprenda com o erro
+    
+    Motivo: Protocolo Gates existe para evitar loops.
+```
+
+### Recuperação Automática
+
+```yaml
+# WindSurf: Sugestões automáticas de recuperação
+recovery_suggestions:
+  when_build_fails:
+    - "Verificar imports (Hilt, Room)"
+    - "Checar sintaxe Kotlin"
+    - "Validar multi-tenancy (rota_id)"
+    
+  when_tests_fail:
+    - "Verificar mocks"
+    - "Checar assertions"
+    - "Validar setup de teste"
+    
+  when_regression:
+    - "Git blame no código alterado"
+    - "Comparar com versão funcional"
+    - "Identificar mudança que quebrou"
+```
+
+---
+
+## 🔧 IMPLEMENTAÇÃO WINDSURF
+
+### Triggers Automáticos
+
+```yaml
+# WindSurf: Configurar triggers dos Gates
+windsurf_triggers:
+  on_problem_detected:
+    - "Iniciar Gate 0 automaticamente"
+    - "Classificar tipo de problema"
+    - "Sugerir método (static/dynamic)"
+    
+  on_build_start:
+    - "Verificar Gate 1 completo"
+    - "Validar Gate 2 definido"
+    - "Contar builds (máx 2)"
+    
+  on_build_failure:
+    - "Incrementar contador"
+    - "Verificar Gate 4 conditions"
+    - "Sugerir recuperação"
+    
+  on_success:
+    - "Resetar contadores"
+    - "Documentar solução"
+    - "Atualizar conhecimento"
+```
+
+### Comandos WindSurf
+
+```bash
+# WindSurf: Comandos rápidos dos Gates
+/wind gate0          # Iniciar diagnóstico
+/wind gate1          # Criar plano cirúrgico
+/wind gate2          # Definir escopo
+/wind gate3          # Executar incremental
+/wind gate4          # Verificar parada
+/wind status         # Ver status atual
+/wind reset          # Resetar contadores
+```
+
+### Snippets Automáticos
+
+```kotlin
+// WindSurf: Snippet para diagnóstico
+/wind snippet diagnostic
+
+private const val TAG = "[DIAGNOSTICO]"
+
+Log.d(TAG, "📍 1. Origem: ${origem}")
+Log.d(TAG, "🔄 2. Processando: ${dados}")
+Log.d(TAG, "🎯 3. Resultado: ${resultado}")
+```
+
+```kotlin
+// WindSurf: Snippet para validação
+/wind snippet validation
+
+// Validações obrigatórias
+requireNotNull(data.empresa_id) { "empresa_id obrigatório" }
+requireNotNull(data.rota_id) { "rota_id obrigatório" }
+require(userSessionManager.canAccessRota(data.rota_id)) { "Acesso negado" }
+```
+
+---
+
+## 📊 MÉTRICAS E MONITORAMENTO
+
+### KPIs dos Gates
+
+```yaml
+# WindSurf: Métricas automáticas
+gate_metrics:
+  success_rate:
+    - "Problemas resolvidos / tentativas"
+    - "Meta: > 80%"
+    
+  time_to_resolution:
+    - "Tempo médio por problema"
+    - "Meta: < 30 minutos"
+    
+  build_efficiency:
+    - "Builds por problema"
+    - "Meta: < 2 builds"
+    
+  loop_prevention:
+    - "Loops evitados"
+    - "Meta: 100%"
+```
+
+### Dashboard Automático
+
+```yaml
+# WindSurf: Dashboard em tempo real
+dashboard:
+  current_status:
+    gate: "Gate {current_gate}/4"
+    builds: "{build_count}/2"
+    attempts: "{attempt_count}/3"
+    
+  recent_problems:
+    - timestamp: "2026-01-28 10:15"
+      problem: "Campo null em SettlementViewModel"
+      gate_used: "Gate 0 (Static Analysis)"
+      resolution_time: "12 minutos"
+      builds_used: "1"
+```
+
+---
+
+## 🎯 BENEFÍCIOS ESPERADOS
+
+### Para IAs
+- **Diagnóstico rápido:** 10 minutos vs 2 horas
+- **Zero loops:** Máximo 2 builds garantidos
+- **Alta autonomia:** Trabalham sem intervenção
+- **Aprendizado:** Padronização de soluções
+
+### Para Humanos
+- **Produtividade:** Problemas resolvidos rápido
+- **Qualidade:** Código segue padrões
+- **Confiança:** Sem regressões
+- **Previsibilidade:** Tempo de resolução conhecido
+
+### Para Projeto
+- **Saúde:** Dívida técnica controlada
+- **Performance:** Builds otimizados
+- **Manutenibilidade:** Código documentado
+- **Evolução:** Base sólida para crescimento
+
+---
+
+## 🚀 EXEMPLO COMPLETO
+
+### Problema: Campo usuarioId null
+
+```yaml
+# WindSurf: Exemplo completo do protocolo
+problem_example:
+  gate_0:
+    classification: "regressao"
+    method: "static_analysis"
+    evidence: "git blame mostra linha removida"
+    
+  gate_1:
+    arquivo_alvo: "SettlementViewModel.kt"
+    linhas: "455-460"
+    mudanca: "Adicionar usuarioId = userSession.currentUser.id"
+    validacao: "Build passa + testes unitários"
+    
+  gate_2:
+    files_to_change: ["SettlementViewModel.kt"]
+    files_not_to_touch: ["AppRepository.kt"]
+    dependencies: ["UserSessionManager"]
+    
+  gate_3:
+    passo1: "Adicionar usuarioId na linha 457"
+    build1: "✅ Sucesso"
+    test1: "✅ Passando"
+    
+  resultado:
+    time_to_resolution: "15 minutos"
+    builds_used: "1"
+    status: "Resolvido"
+```
+
+---
+
+*Protocolo Gates implementado e otimizado para WindSurf.*
