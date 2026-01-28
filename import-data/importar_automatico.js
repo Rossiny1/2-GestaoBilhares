@@ -135,8 +135,8 @@ function mapearLinhaParaCliente(linha, rotaId, clienteId) {
         precisao_gps: null,
         data_captura_gps: null,
         rota_id: Number(rotaId), // ID numérico da rota
-        valor_ficha: 15.0, // Valor corrigido: R$ 1,50 * 10 para compensar divisão no app
-        comissao_ficha: 6.0, // Valor corrigido: R$ 0,60 * 10 para compensar divisão no app
+        valor_ficha: 1.5, // ✅ CORREÇÃO: R$ 1,50 (valor direto, app não divide)
+        comissao_ficha: 0.6, // ✅ CORREÇÃO: R$ 0,60 (valor direto, app não divide)
         numero_contrato: null,
         debito_anterior: 0.0,
         debito_atual: 0.0,
@@ -225,7 +225,7 @@ async function obterOuCriarRota(nomeRota, descricao = '') {
 async function processarArquivoCSV(caminhoArquivo, nomeRota, descricaoRota) {
     console.log(`\n📁 Processando arquivo: ${caminhoArquivo}`);
     console.log(`🎯 Rota destino: ${nomeRota}`);
-    console.log(`💰 Valores corrigidos: Ficha 15.0 (R$ 1,50) | Comissão 6.0 (R$ 0,60)`);
+    console.log(`💰 Valores corrigidos: Ficha 1.5 (R$ 1,50) | Comissão 0.6 (R$ 0,60)`);
     console.log(`📝 Capitalização padronizada: Primeira letra maiúscula, conectivos minúsculos`);
 
     const resultados = {
@@ -308,7 +308,7 @@ async function processarArquivoCSV(caminhoArquivo, nomeRota, descricaoRota) {
         console.log(`   ⏱️ Tempo total: ${(tempoTotal / 1000).toFixed(2)}s`);
         console.log(`   🚀 Média: ${(tempoTotal / resultados.sucesso).toFixed(0)}ms/cliente`);
         console.log(`   🔢 Último ID usado: ${proximoClienteId - 1}`);
-        console.log(`   💰 Valores corrigidos aplicados: Ficha 15.0 → R$ 1,50 | Comissão 6.0 → R$ 0,60`);
+        console.log(`   💰 Valores corrigidos aplicados: Ficha 1.5 → R$ 1,50 | Comissão 0.6 → R$ 0,60`);
         console.log(`   📝 Capitalização padronizada aplicada a todos os campos`);
 
         return resultados;
@@ -327,7 +327,7 @@ async function main() {
     console.log('='.repeat(60));
     console.log(`📦 Projeto: gestaobilhares`);
     console.log(`🔑 Usando sua chave existente`);
-    console.log(`💰 Valores corrigidos: Ficha 15.0 (R$ 1,50) | Comissão 6.0 (R$ 0,60)`);
+    console.log(`💰 Valores corrigidos: Ficha 1.5 (R$ 1,50) | Comissão 0.6 (R$ 0,60)`);
     console.log(`📝 Capitalização padronizada: Primeira letra maiúscula, conectivos minúsculos`);
     console.log(`⏰ Início: ${new Date().toLocaleString('pt-BR')}`);
 

@@ -101,7 +101,7 @@
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:textColor="@color/white"
-                    android:textSize="24sp"
+                    android:textSize="20sp"
                     android:textStyle="bold"
                     android:layout_marginBottom="8dp"
                     android:minHeight="32dp"
@@ -140,6 +140,30 @@
                         android:maxLines="2"
                         android:ellipsize="end"
                         tools:text="Rua das Flores, 123 - Centro" />
+
+                </LinearLayout>
+
+                <!-- ✅ NOVO: Município-Estado -->
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:gravity="center_vertical"
+                    android:orientation="horizontal"
+                    android:layout_marginBottom="16dp"
+                    android:minHeight="20dp"
+                    android:layout_marginStart="40dp">
+
+                    <TextView
+                        android:id="@+id/tvClientCityState"
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_weight="1"
+                        android:textColor="@color/white"
+                        android:textSize="14sp"
+                        android:maxLines="1"
+                        android:ellipsize="end"
+                        android:alpha="0.9"
+                        tools:text="Francisco Sá-MG" />
 
                 </LinearLayout>
 

@@ -369,6 +369,15 @@ class ClientDetailFragment : Fragment(), ConfirmarRetiradaMesaDialogFragment.Con
     private fun updateClientUI(cliente: ClienteResumo) {
         binding.tvClientName.text = cliente.nome
         binding.tvClientAddress.text = cliente.endereco
+        
+        // ✅ NOVO: Exibir município-estado se disponível
+        if (!cliente.cidadeEstado.isNullOrBlank()) {
+            binding.tvClientCityState.text = cliente.cidadeEstado
+            binding.tvClientCityState.visibility = View.VISIBLE
+        } else {
+            binding.tvClientCityState.visibility = View.GONE
+        }
+        
         val formattedDebt = NumberFormat.getCurrencyInstance(Locale("pt", "BR")).format(cliente.debitoAtual)
         binding.tvClientCurrentDebt.text = formattedDebt
         binding.tvLastVisit.text = cliente.ultimaVisita

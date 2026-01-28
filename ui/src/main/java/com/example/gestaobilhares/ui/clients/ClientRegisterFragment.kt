@@ -133,8 +133,8 @@ class ClientRegisterFragment : Fragment() {
         binding.etValorFicha.addTextChangedListener(MoneyTextWatcher(binding.etValorFicha))
         binding.etComissaoFicha.addTextChangedListener(MoneyTextWatcher(binding.etComissaoFicha))
 
-        // ✅ NOVO: Configurar dropdowns de estado e cidade
-        setupEstadoCidadeDropdowns()
+        // ✅ NOVO: Configurar dropdowns de estado e município
+        setupEstadoMunicipioDropdowns()
         
         // ✅ NOVO: Definir Minas Gerais como padrão no estado
         definirEstadoPadrao()
@@ -265,6 +265,23 @@ class ClientRegisterFragment : Fragment() {
             viewModel.clienteDuplicado.collect { isDuplicado ->
                 if (isDuplicado) {
                     mostrarAlertaClienteDuplicado()
+                }
+            }
+        }
+        
+        // ✅ NOVO: Observer para controlar edição do débito inicial
+        lifecycleScope.launch {
+            viewModel.debitoInicialEditavel.collect { editavel ->
+                binding.etDebitoInicial.isEnabled = editavel
+                binding.etDebitoInicial.alpha = if (editavel) 1.0f else 0.5f
+                
+                // Atualizar hint e label conforme modo
+                if (editavel) {
+                    binding.tilDebitoInicial.hint = "Ex: 500.00"
+                    binding.lblDebitoInicial.text = "Débito Inicial (migração)"
+                } else {
+                    binding.tilDebitoInicial.hint = ""
+                    binding.lblDebitoInicial.text = "Débito Inicial (não editável)"
                 }
             }
         }
@@ -402,6 +419,12 @@ class ClientRegisterFragment : Fragment() {
                 comissaoFicha = comissaoFicha,
                 numeroContrato = if (numeroContrato.isNotEmpty()) numeroContrato else null,
                 observacoes = if (observations.isNotEmpty()) observations else null,
+                // ✅ NOVO: Débito inicial para migração
+                debitoInicial = try {
+                    binding.etDebitoInicial.text.toString().toDoubleOrNull() ?: 0.0
+                } catch (e: Exception) {
+                    0.0
+                },
                 rotaId = if (args.rotaId != 0L) args.rotaId else {
                     // ✅ CORREÇÃO: Em modo edição, usar rotaId do cliente existente
                     viewModel.clienteParaEdicao.value?.rotaId ?: 1L
@@ -489,10 +512,14 @@ class ClientRegisterFragment : Fragment() {
             etPhone.setText(cliente.telefone ?: "")
             etPhone2.setText(cliente.telefone2 ?: "")
             etEmail.setText(cliente.email ?: "")
-            etValorFicha.setText(cliente.valorFicha.toString())
-            etComissaoFicha.setText(cliente.comissaoFicha.toString())
+            // ✅ CORREÇÃO: Usar MoneyTextWatcher.setValue() para evitar divisão por 100
+            // Como já existe TextWatcher, vamos usar o método parseValue para setar o texto formatado
+            etValorFicha.setText(MoneyTextWatcher.formatValue(cliente.valorFicha))
+            etComissaoFicha.setText(MoneyTextWatcher.formatValue(cliente.comissaoFicha))
             etNumeroContrato.setText(cliente.numeroContrato ?: "")
             etObservations.setText(cliente.observacoes ?: "")
+            // ✅ NOVO: Preencher débito inicial
+            etDebitoInicial.setText(String.format("%.2f", cliente.debitoInicial))
             
             Timber.d("ClientRegisterFragment", "Campos preenchidos com sucesso!")
             
@@ -533,9 +560,9 @@ class ClientRegisterFragment : Fragment() {
     }
 
     /**
-     * ✅ NOVO: Configura os dropdowns de estado e cidade
+     * ✅ NOVO: Configura os dropdowns de estado e município
      */
-    private fun setupEstadoCidadeDropdowns() {
+    private fun setupEstadoMunicipioDropdowns() {
         try {
             // Carregar dados dos estados e cidades
             val estadosCidades = com.example.gestaobilhares.data.model.EstadosCidades.carregarDados(requireContext())
@@ -549,19 +576,19 @@ class ClientRegisterFragment : Fragment() {
             )
             binding.actvEstado.setAdapter(estadosAdapter)
             
-            // Listener para atualizar cidades quando estado for selecionado
+            // Listener para atualizar municípios quando estado for selecionado
             binding.actvEstado.setOnItemClickListener { _, _, position, _ ->
                 val estadoSelecionado = estadosCidades.estados[position]
                 
-                // Criar adapter com filtro para as cidades
-                val cidadesAdapter = android.widget.ArrayAdapter(
+                // Criar adapter com filtro para os municípios
+                val municipiosAdapter = android.widget.ArrayAdapter(
                     requireContext(),
                     android.R.layout.simple_dropdown_item_1line,
                     estadoSelecionado.cidades.sorted() // Ordenar alfabeticamente
                 )
                 
-                binding.actvCidade.setText("") // Limpar cidade atual
-                binding.actvCidade.setAdapter(cidadesAdapter)
+                binding.actvCidade.setText("") // Limpar município atual
+                binding.actvCidade.setAdapter(municipiosAdapter)
                 
                 // Configurar comportamento de digitação
                 binding.actvCidade.threshold = 1 // Mostrar sugestões a partir do primeiro caractere
@@ -571,17 +598,17 @@ class ClientRegisterFragment : Fragment() {
                     }
                 }
                 
-                Timber.d("ClientRegisterFragment", "Estado selecionado: ${estadoSelecionado.nome}, ${estadoSelecionado.cidades.size} cidades carregadas")
+                Timber.d("ClientRegisterFragment", "Estado selecionado: ${estadoSelecionado.nome}, ${estadoSelecionado.cidades.size} municípios carregados")
             }
             
-            // Configurar adapter inicial para cidades (vazio)
+            // Configurar adapter inicial para municípios (vazio)
             binding.actvCidade.setAdapter(android.widget.ArrayAdapter(
                 requireContext(),
                 android.R.layout.simple_dropdown_item_1line,
                 arrayOf<String>()
             ))
             
-            // Configurar comportamento do campo de cidade
+            // Configurar comportamento do campo de município
             binding.actvCidade.setOnClickListener {
                 if (binding.actvEstado.text.toString().isNotEmpty()) {
                     binding.actvCidade.showDropDown()
@@ -592,7 +619,7 @@ class ClientRegisterFragment : Fragment() {
             
         } catch (e: Exception) {
             Timber.e("ClientRegisterFragment", "Erro ao configurar dropdowns: ${e.message}")
-            showErrorDialog("Erro ao carregar estados e cidades: ${e.message}")
+            showErrorDialog("Erro ao carregar estados e municípios: ${e.message}")
         }
     }
     
@@ -605,17 +632,17 @@ class ClientRegisterFragment : Fragment() {
             if (args.clienteId == 0L && binding.actvEstado.text.toString().isEmpty()) {
                 binding.actvEstado.setText("Minas Gerais")
                 
-                // Carregar cidades de Minas Gerais
+                // Carregar municípios de Minas Gerais
                 val estadosCidades = com.example.gestaobilhares.data.model.EstadosCidades.carregarDados(requireContext())
                 val minasGerais = estadosCidades.estados.find { it.nome == "Minas Gerais" }
                 
                 if (minasGerais != null) {
-                    val cidadesAdapter = android.widget.ArrayAdapter(
+                    val municipiosAdapter = android.widget.ArrayAdapter(
                         requireContext(),
                         android.R.layout.simple_dropdown_item_1line,
                         minasGerais.cidades.sorted()
                     )
-                    binding.actvCidade.setAdapter(cidadesAdapter)
+                    binding.actvCidade.setAdapter(municipiosAdapter)
                 }
             }
         } catch (e: Exception) {

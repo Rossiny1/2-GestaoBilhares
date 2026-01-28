@@ -109,6 +109,13 @@ class ClientDetailViewModel @Inject constructor(
 
                 val enderecoExibir = cliente.endereco?.takeIf { it.isNotBlank() }?.trim() ?: DEFAULT_ENDERECO
                 val telefoneExibir = cliente.telefone?.takeIf { it.isNotBlank() }?.trim() ?: DEFAULT_TELEFONE
+                
+                // ✅ NOVO: Criar município-estado no formato "Nome-MG"
+                val cidadeEstado = if (!cliente.cidade.isNullOrBlank() && !cliente.estado.isNullOrBlank()) {
+                    "${cliente.cidade}-${cliente.estado}"
+                } else {
+                    null
+                }
 
                 val diasSemAcerto = ultimoAcerto?.let {
                     val hoje = LocalDate.now()
@@ -125,6 +132,7 @@ class ClientDetailViewModel @Inject constructor(
                     id = cliente.id,
                     nome = cliente.nome,
                     endereco = enderecoExibir,
+                    cidadeEstado = cidadeEstado,
                     telefone = telefoneExibir,
                     valorFicha = cliente.valorFicha,
                     comissaoFicha = cliente.comissaoFicha,
@@ -608,6 +616,7 @@ data class ClienteResumo(
     val id: Long,
     val nome: String,
     val endereco: String,
+    val cidadeEstado: String? = null, // ✅ NOVO: Município-Estado no formato "Nome-MG"
     val telefone: String,
     val valorFicha: Double,
     val comissaoFicha: Double,
